@@ -941,6 +941,29 @@ document.addEventListener('DOMContentLoaded', async () => {
         await loadCourseDetails(currentCourseId);
     };
 
+    // 6.5. SETUP ACCORDIONS LOGIC
+    function setupAccordions() {
+        const accordionHeaders = document.querySelectorAll('.accordion-header');
+        accordionHeaders.forEach(header => {
+            header.addEventListener('click', (e) => {
+                if (e.target.closest('.gear-btn')) return;
+
+                const item = header.closest('.accordion-item');
+                const content = item.querySelector('.accordion-content');
+                if (!content) return;
+                const isActive = item.classList.contains('active');
+
+                if (isActive) {
+                    item.classList.remove('active');
+                    content.style.maxHeight = null;
+                } else {
+                    item.classList.add('active');
+                    content.style.maxHeight = content.scrollHeight + 150 + 'px';
+                }
+            });
+        });
+    }
+
     // 7. CHECKOUT MODAL SETUP
     function setupCheckoutModal() {
         const modal = document.getElementById('checkoutModal');
