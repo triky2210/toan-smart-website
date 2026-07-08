@@ -119,6 +119,9 @@ let currentLessonsMap = {};
 let currentModalAction = ''; // 'edit_lesson', 'create_lesson'
 let currentModalTargetId = null; 
 
+// Lưu trữ các thực thể Sortable để dọn dẹp khi bật tắt
+let activeSortableInstances = [];
+
 document.addEventListener('DOMContentLoaded', async () => {
     const isOnline = (typeof supabaseClient !== 'undefined' && supabaseClient !== null);
     
@@ -171,13 +174,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             isEditModeActive = e.target.checked;
             localStorage.setItem('isEditModeActive', isEditModeActive);
             
-            // Cập nhật hiển thị nút bánh răng
-            const gears = document.querySelectorAll('.gear-btn');
-            gears.forEach(g => {
-                g.style.display = isEditModeActive ? 'inline-flex' : 'none';
-            });
+            // Vẽ lại toàn bộ Syllabus để cập nhật hoặc ẩn biểu tượng kéo thả drag-handle
+            renderSyllabus(currentChapters, currentLessonsMap);
+            renderSidebar(currentCourse);
 
-            // Ẩn tất cả các thanh action bar đang mở nếu tắt chế độ sửa
+            // Ẩn tất cả các thanh action bar đang mở
             if (!isEditModeActive) {
                 const actionBars = document.querySelectorAll('.inline-action-bar');
                 actionBars.forEach(b => b.remove());
@@ -220,7 +221,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (courseError) throw courseError;
                 currentCourse = courseData;
 
-                // Tải chương
+                // Tải chương (Sắp xếp theo order_index)
                 const { data: chaptersData, error: chaptersError } = await supabaseClient
                     .from('chapters')
                     .select('*')
@@ -230,7 +231,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (chaptersError) throw chaptersError;
                 currentChapters = chaptersData;
 
-                // Tải bài giảng
+                // Tải bài giảng (Sắp xếp theo order_index)
                 const chapterIds = currentChapters.map(c => c.id);
                 if (chapterIds.length > 0) {
                     const { data: lessonsData, error: lessonsError } = await supabaseClient
@@ -340,9 +341,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             const header = document.createElement('div');
             header.className = 'accordion-header';
             
+            // Biểu tượng tay nắm kéo thả chương (chỉ hiện khi bật edit mode)
+            const chapterDragHTML = isEditModeActive
+                ? `<i class="fa-solid fa-grip-vertical chapter-drag-handle" style="color: #94A3B8; cursor: grab; margin-right: 12px;" title="Kéo thả để sắp xếp chương"></i>`
+                : '';
+
             // Tên chương + Nút bánh răng kế bên
             header.innerHTML = `
                 <span style="display: flex; align-items: center; gap: 8px;">
+                    ${chapterDragHTML}
                     ${chapter.title}
                     <button class="gear-btn chapter-gear-btn" data-chapter-id="${chapter.id}" style="display: ${isEditModeActive ? 'inline-flex' : 'none'};" title="Quản lý chương"><i class="fa-solid fa-gear"></i></button>
                 </span>
@@ -365,6 +372,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                     const li = document.createElement('li');
                     li.className = 'lesson-item';
                     li.setAttribute('data-id', lesson.id);
+
+                    // Biểu tượng tay nắm kéo thả bài (chỉ hiện khi bật edit mode)
+                    const lessonDragHTML = isEditModeActive
+                        ? `<i class="fa-solid fa-grip-vertical drag-handle" style="color: #94A3B8; cursor: grab; margin-right: 8px;" title="Kéo thả để sắp xếp bài giảng"></i>`
+                        : '';
 
                     // Left Side (Icon + Lesson Name + Gear Icon next to lesson)
                     let iconHTML = '';
@@ -393,6 +405,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                     li.innerHTML = `
                         <div class="lesson-left" style="display: flex; align-items: center; gap: 8px; flex-grow: 1;">
+                            ${lessonDragHTML}
                             ${iconHTML}
                             <span style="font-weight: 500;">${lesson.title}</span>
                             <button class="gear-btn lesson-gear-btn" data-lesson-id="${lesson.id}" style="display: ${isEditModeActive ? 'inline-flex' : 'none'};" title="Sửa bài giảng"><i class="fa-solid fa-gear"></i></button>
@@ -415,6 +428,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Initialize click handlers
         setupAccordions();
         setupInlineGearListeners();
+        
+        // Khởi tạo tính năng kéo thả SortableJS
+        initDragAndDropSorting();
     }
 
     function renderSidebar(course) {
@@ -450,29 +466,113 @@ document.addEventListener('DOMContentLoaded', async () => {
         `;
     }
 
-    function setupAccordions() {
-        const accordionHeaders = document.querySelectorAll('.accordion-header');
-        accordionHeaders.forEach(header => {
-            header.addEventListener('click', (e) => {
-                // Tránh trigger đóng mở accordion khi click vào gear-btn
-                if (e.target.closest('.gear-btn')) return;
+    // 4. KÉO THẢ SẮP XẾP BẰNG SORTABLEJS
+    function initDragAndDropSorting() {
+        // Dọn dẹp các instance cũ trước đó
+        activeSortableInstances.forEach(inst => inst.destroy());
+        activeSortableInstances = [];
 
-                const item = header.closest('.accordion-item');
-                const content = item.querySelector('.accordion-content');
-                const isActive = item.classList.contains('active');
+        // Nếu không bật chế độ chỉnh sửa, không kích hoạt kéo thả
+        if (!isEditModeActive || typeof Sortable === 'undefined') return;
 
-                if (isActive) {
-                    item.classList.remove('active');
-                    content.style.maxHeight = null;
-                } else {
-                    item.classList.add('active');
-                    content.style.maxHeight = content.scrollHeight + 150 + 'px'; // Thêm khoảng đệm cho action bar
-                }
-            });
+        // 1. Kéo thả sắp xếp Chương học (Accordion items)
+        const accordion = document.getElementById('syllabusAccordion');
+        if (accordion) {
+            try {
+                const chapterSortable = new Sortable(accordion, {
+                    animation: 150,
+                    handle: '.chapter-drag-handle', // Chỉ cho kéo bằng tay nắm
+                    onEnd: async () => {
+                        const items = accordion.querySelectorAll('.accordion-item');
+                        const updates = [];
+                        items.forEach((item, index) => {
+                            const id = parseInt(item.getAttribute('data-id'));
+                            updates.push({ id, order_index: index + 1 });
+                        });
+                        await saveNewChapterOrder(updates);
+                    }
+                });
+                activeSortableInstances.push(chapterSortable);
+            } catch (err) {
+                console.error("Lỗi khởi tạo kéo thả chương:", err);
+            }
+        }
+
+        // 2. Kéo thả sắp xếp Bài học trong từng chương
+        const lessonLists = document.querySelectorAll('.lesson-list');
+        lessonLists.forEach(listEl => {
+            try {
+                const lessonSortable = new Sortable(listEl, {
+                    animation: 150,
+                    handle: '.drag-handle', // Chỉ cho kéo bằng tay nắm
+                    onEnd: async () => {
+                        const items = listEl.querySelectorAll('.lesson-item');
+                        const updates = [];
+                        items.forEach((item, index) => {
+                            const id = parseInt(item.getAttribute('data-id'));
+                            updates.push({ id, order_index: index + 1 });
+                        });
+                        await saveNewLessonOrder(updates);
+                    }
+                });
+                activeSortableInstances.push(lessonSortable);
+            } catch (err) {
+                console.error("Lỗi khởi tạo kéo thả bài giảng:", err);
+            }
         });
     }
 
-    // 4. INLINE GEAR LISTENERS & ACTION BARS
+    async function saveNewChapterOrder(updates) {
+        if (isOnline) {
+            try {
+                // Chạy cập nhật hàng loạt song song lên Supabase
+                const promises = updates.map(u => 
+                    supabaseClient.from('chapters').update({ order_index: u.order_index }).eq('id', u.id)
+                );
+                await Promise.all(promises);
+            } catch (err) {
+                console.error("Lỗi cập nhật thứ tự chương trên Supabase:", err);
+                alert("Không thể lưu thứ tự chương mới lên database.");
+            }
+        } else {
+            // Offline
+            updates.forEach(u => {
+                const idx = dbChapters.findIndex(c => c.id == u.id);
+                if (idx !== -1) dbChapters[idx].order_index = u.order_index;
+            });
+            localStorage.setItem('db_chapters', JSON.stringify(dbChapters));
+        }
+
+        // Reload data cục bộ mà không load lại trang
+        loadOfflineData(currentCourseId);
+    }
+
+    async function saveNewLessonOrder(updates) {
+        if (isOnline) {
+            try {
+                // Chạy cập nhật hàng loạt song song lên Supabase
+                const promises = updates.map(u => 
+                    supabaseClient.from('lessons').update({ order_index: u.order_index }).eq('id', u.id)
+                );
+                await Promise.all(promises);
+            } catch (err) {
+                console.error("Lỗi cập nhật thứ tự bài học trên Supabase:", err);
+                alert("Không thể lưu thứ tự bài học mới lên database.");
+            }
+        } else {
+            // Offline
+            updates.forEach(u => {
+                const idx = dbLessons.findIndex(l => l.id == u.id);
+                if (idx !== -1) dbLessons[idx].order_index = u.order_index;
+            });
+            localStorage.setItem('db_lessons', JSON.stringify(dbLessons));
+        }
+
+        // Reload data cục bộ mà không load lại trang
+        loadOfflineData(currentCourseId);
+    }
+
+    // 5. INLINE GEAR LISTENERS & ACTION BARS
     function setupInlineGearListeners() {
         // Nút bánh răng chương
         const chapterGears = document.querySelectorAll('.chapter-gear-btn');
@@ -503,7 +603,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.querySelectorAll('.inline-action-bar').forEach(b => b.remove());
 
         if (existingBar) {
-            // Đã mở trước đó ➔ Đóng lại
             return;
         }
 
@@ -537,7 +636,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('inlineDeleteChapter').onclick = () => deleteChapterInline(chapterId);
     }
 
-    // 5. INLINE ACTIONS IMPLEMENTATION
+    // 6. INLINE ACTIONS IMPLEMENTATION
     window.createChapterInline = async () => {
         const title = prompt("Nhập tên chương học mới:");
         if (!title || !title.trim()) return;
@@ -633,9 +732,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return;
             }
         } else {
-            // Xóa chương cục bộ
             dbChapters = dbChapters.filter(c => c.id != chapterId);
-            // Xóa bài giảng thuộc chương
             dbLessons = dbLessons.filter(l => l.chapter_id != chapterId);
 
             localStorage.setItem('db_chapters', JSON.stringify(dbChapters));
@@ -658,6 +755,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         currentModalTargetId = chapterId;
         quickEditModalTitle.textContent = "Thêm bài học mới";
         
+        // Tính toán thứ tự hiển thị bài học mới mặc định ở cuối chương
+        const existingLessons = currentLessonsMap[chapterId] || [];
+        const nextOrderIndex = existingLessons.length > 0 
+            ? Math.max(...existingLessons.map(l => l.order_index || 1)) + 1 
+            : 1;
+
         quickEditFields.innerHTML = `
             <div class="form-group">
                 <label class="form-label">Tên bài giảng / tài liệu</label>
@@ -684,7 +787,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             </div>
             <div class="form-group" style="margin-top: 16px;">
                 <label class="form-label">Thứ tự hiển thị (Order Index)</label>
-                <input type="number" id="inline_l_order" class="form-control" value="1" required>
+                <input type="number" id="inline_l_order" class="form-control" value="${nextOrderIndex}" required>
             </div>
         `;
 
@@ -699,7 +802,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Tìm thông tin bài giảng
         let lesson = null;
         if (isOnline) {
-            // Tìm trong map của chúng ta
             for (let chId in currentLessonsMap) {
                 const found = currentLessonsMap[chId].find(l => l.id == lessonId);
                 if (found) { lesson = found; break; }
