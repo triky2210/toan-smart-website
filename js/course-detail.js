@@ -1,8 +1,8 @@
-// Toán Smart Website - Dynamic Course Details Page Loader & Interactions
+// Toán Smart Website - Dynamic Course Details Page Loader & Inline Editor
 
 // Mock Data dự phòng khi chạy offline (Không kết nối Supabase)
-const MOCK_COURSES_DETAILS = {
-    1: {
+let dbCourses = JSON.parse(localStorage.getItem('db_courses')) || [
+    {
         id: 1,
         title: "Luyện Thi Vào Lớp 10 Toán Mục Tiêu 9+",
         tag: "grade10",
@@ -24,7 +24,7 @@ const MOCK_COURSES_DETAILS = {
             { icon: "fa-solid fa-shield-halved", text: "Cam kết tiến bộ vượt bậc" }
         ]
     },
-    2: {
+    {
         id: 2,
         title: "Luyện Thi Tốt Nghiệp THPT Chuyên Sâu",
         tag: "thpt",
@@ -46,7 +46,7 @@ const MOCK_COURSES_DETAILS = {
             { icon: "fa-solid fa-shield-halved", text: "Cam kết đầu ra đỗ ĐH NV1" }
         ]
     },
-    3: {
+    {
         id: 3,
         title: "Luyện Tư Duy Định Lượng HSA/APT (ĐGNL)",
         tag: "dgnl",
@@ -68,74 +68,122 @@ const MOCK_COURSES_DETAILS = {
             { icon: "fa-solid fa-shield-halved", text: "Cam kết bứt phá điểm số HSA" }
         ]
     }
-};
+];
 
-const MOCK_CHAPTERS = {
-    1: [
-        { id: 101, title: "Chương 1: Đại số chuyên sâu & Hệ thức Vi-ét ôn thi vào 10" },
-        { id: 102, title: "Chương 2: Hình học phẳng & Tứ giác nội tiếp đường tròn" },
-        { id: 103, title: "Chương 3: Luyện đề thi thử & Chiến thuật tối ưu điểm số" }
-    ],
-    2: [
-        { id: 201, title: "Chương 1: Khảo sát hàm số & Giải tích 12 chuyên sâu" },
-        { id: 202, title: "Chương 2: Tuyệt kỹ Casio & Phương pháp giải nhanh trắc nghiệm 30s" },
-        { id: 203, title: "Chương 3: Hình học không gian & Hình học tọa độ Oxyz" }
-    ],
-    3: [
-        { id: 301, title: "Chương 1: Logic toán học & Kỹ năng phân tích bảng số liệu thực tế" },
-        { id: 302, title: "Chương 2: Tổng ôn toán học phổ thông bám sát cấu trúc đề HSA/APT" }
-    ]
-};
+let dbChapters = JSON.parse(localStorage.getItem('db_chapters')) || [
+    { id: 101, course_id: 1, title: "Chương 1: Đại số chuyên sâu & Hệ thức Vi-ét ôn thi vào 10", order_index: 1 },
+    { id: 102, course_id: 1, title: "Chương 2: Hình học phẳng & Tứ giác nội tiếp đường tròn", order_index: 2 },
+    { id: 103, course_id: 1, title: "Chương 3: Luyện đề thi thử & Chiến thuật tối ưu điểm số", order_index: 3 },
+    { id: 201, course_id: 2, title: "Chương 1: Khảo sát hàm số & Giải tích 12 chuyên sâu", order_index: 1 },
+    { id: 202, course_id: 2, title: "Chương 2: Tuyệt kỹ Casio & Phương pháp giải nhanh trắc nghiệm 30s", order_index: 2 },
+    { id: 203, course_id: 2, title: "Chương 3: Hình học không gian & Hình học tọa độ Oxyz", order_index: 3 },
+    { id: 301, course_id: 3, title: "Chương 1: Logic toán học & Kỹ năng phân tích bảng số liệu thực tế", order_index: 1 },
+    { id: 302, course_id: 3, title: "Chương 2: Tổng ôn toán học phổ thông bám sát cấu trúc đề HSA/APT", order_index: 2 }
+];
 
-const MOCK_LESSONS = {
-    101: [
-        { id: 1001, title: "Bài 1: Phương trình bậc hai & Hệ thức Vi-ét cơ bản", type: "video", url: "https://www.youtube.com/embed/zH0QG_uPez8", duration: "25:12", is_preview: true },
-        { id: 1002, title: "Bài 2: Phương pháp rút gọn biểu thức chứa căn thức bậc hai", type: "pdf", url: "assets/docs/de-thi-thu-toan-vao-10.pdf", duration: "", is_preview: true },
-        { id: 1003, title: "Bài 3: Giải toán bằng cách lập phương trình, hệ phương trình", type: "video", url: "", duration: "", is_preview: false },
-        { id: 1004, title: "Bài 4: Các bài toán chứa tham số m liên quan đến cực trị Vi-ét", type: "video", url: "", duration: "", is_preview: false }
-    ],
-    102: [
-        { id: 1005, title: "Bài 5: Định nghĩa & 4 phương pháp chứng minh Tứ giác nội tiếp", type: "video", url: "", duration: "", is_preview: false },
-        { id: 1006, title: "Bài 6: Các bài toán về tiếp tuyến đường tròn cực kỳ đặc sắc", type: "video", url: "", duration: "", is_preview: false },
-        { id: 1007, title: "Bài 7: Chứng minh ba điểm thẳng hàng, hai đường thẳng vuông góc", type: "video", url: "", duration: "", is_preview: false }
-    ],
-    103: [
-        { id: 1008, title: "Bài 8: Giải đề thi thử bám sát cấu trúc sở GD&ĐT Hà Nội", type: "video", url: "", duration: "", is_preview: false },
-        { id: 1009, title: "Bài 9: Các lỗi sai ngớ ngẩn làm mất điểm Toán tự luận", type: "video", url: "", duration: "", is_preview: false }
-    ],
-    201: [
-        { id: 2001, title: "Bài 1: Sự đồng biến, nghịch biến của hàm số chứa tham số m", type: "video", url: "https://www.youtube.com/embed/zH0QG_uPez8", duration: "28:45", is_preview: true },
-        { id: 2002, title: "Bài 2: Phương pháp cực trị hàm số liên kết đồ thị f'(x)", type: "pdf", url: "assets/docs/so-tay-toan-12.pdf", duration: "", is_preview: true },
-        { id: 2003, title: "Bài 3: Nhận diện đồ thị hàm số và các bài toán biện luận nghiệm", type: "video", url: "", duration: "", is_preview: false }
-    ],
-    202: [
-        { id: 2004, title: "Bài 4: Kỹ thuật Casio giải nhanh tích phân chống sai số nâng cao", type: "video", url: "", duration: "", is_preview: false },
-        { id: 2005, title: "Bài 5: Tối ưu thời gian giải toán số phức bằng máy tính Casio", type: "video", url: "", duration: "", is_preview: false }
-    ],
-    203: [
-        { id: 2006, title: "Bài 6: Phương pháp ghép trục tọa độ Oxyz giải nhanh cực trị hình học", type: "video", url: "", duration: "", is_preview: false },
-        { id: 2007, title: "Bài 7: Góc và khoảng cách trong không gian - Giải nhanh trắc nghiệm", type: "video", url: "", duration: "", is_preview: false }
-    ],
-    301: [
-        { id: 3001, title: "Bài 1: Phương pháp đọc đề, phân tích bảng biểu thống kê phức tạp", type: "video", url: "https://www.youtube.com/embed/zH0QG_uPez8", duration: "32:10", is_preview: true },
-        { id: 3002, title: "Bài 2: Các bài toán tư duy logic, suy luận toán học đặc sắc tuyển chọn", type: "pdf", url: "assets/docs/so-tay-toan-12.pdf", duration: "", is_preview: true },
-        { id: 3003, title: "Bài 3: Kỹ thuật loại trừ phương án nhiễu trong phần thi Định lượng", type: "video", url: "", duration: "", is_preview: false }
-    ],
-    302: [
-        { id: 3004, title: "Bài 4: Chuyên đề Số học & Đại số ôn thi ĐGNL Hà Nội", type: "video", url: "", duration: "", is_preview: false },
-        { id: 3005, title: "Bài 5: Chuyên đề Tổ hợp, Xác suất & Thống kê trong đề ĐGNL TP.HCM", type: "video", url: "", duration: "", is_preview: false }
-    ]
-};
+let dbLessons = JSON.parse(localStorage.getItem('db_lessons')) || [
+    { id: 1001, chapter_id: 101, title: "Bài 1: Phương trình bậc hai & Hệ thức Vi-ét cơ bản", type: "video", url: "https://www.youtube.com/embed/zH0QG_uPez8", duration: "25:12", is_preview: true, order_index: 1 },
+    { id: 1002, chapter_id: 101, title: "Bài 2: Phương pháp rút gọn biểu thức chứa căn thức bậc hai", type: "pdf", url: "assets/docs/de-thi-thu-toan-vao-10.pdf", duration: "", is_preview: true, order_index: 2 },
+    { id: 1003, chapter_id: 101, title: "Bài 3: Giải toán bằng cách lập phương trình, hệ phương trình", type: "video", url: "", duration: "", is_preview: false, order_index: 3 },
+    { id: 1004, chapter_id: 101, title: "Bài 4: Các bài toán chứa tham số m liên quan đến cực trị Vi-ét", type: "video", url: "", duration: "", is_preview: false, order_index: 4 },
+    { id: 1005, chapter_id: 102, title: "Bài 5: Định nghĩa & 4 phương pháp chứng minh Tứ giác nội tiếp", type: "video", url: "", duration: "", is_preview: false, order_index: 1 },
+    { id: 1006, chapter_id: 102, title: "Bài 6: Các bài toán về tiếp tuyến đường tròn cực kỳ đặc sắc", type: "video", url: "", duration: "", is_preview: false, order_index: 2 },
+    { id: 1007, chapter_id: 102, title: "Bài 7: Chứng minh ba điểm thẳng hàng, hai đường thẳng vuông góc", type: "video", url: "", duration: "", is_preview: false, order_index: 3 },
+    { id: 1008, chapter_id: 103, title: "Bài 8: Giải đề thi thử bám sát cấu trúc sở GD&ĐT Hà Nội", type: "video", url: "", duration: "", is_preview: false, order_index: 1 },
+    { id: 1009, chapter_id: 103, title: "Bài 9: Các lỗi sai ngớ ngẩn làm mất điểm Toán tự luận", type: "video", url: "", duration: "", is_preview: false, order_index: 2 },
+    { id: 2001, chapter_id: 201, title: "Bài 1: Sự đồng biến, nghịch biến của hàm số chứa tham số m", type: "video", url: "https://www.youtube.com/embed/zH0QG_uPez8", duration: "28:45", is_preview: true, order_index: 1 },
+    { id: 2002, chapter_id: 201, title: "Bài 2: Phương pháp cực trị hàm số liên kết đồ thị f'(x)", type: "pdf", url: "assets/docs/so-tay-toan-12.pdf", duration: "", is_preview: true, order_index: 2 },
+    { id: 2003, chapter_id: 201, title: "Bài 3: Nhận diện đồ thị hàm số và các bài toán biện luận nghiệm", type: "video", url: "", duration: "", is_preview: false, order_index: 3 },
+    { id: 2004, chapter_id: 202, title: "Bài 4: Kỹ thuật Casio giải nhanh tích phân chống sai số nâng cao", type: "video", url: "", duration: "", is_preview: false, order_index: 1 },
+    { id: 2005, chapter_id: 202, title: "Bài 5: Tối ưu thời gian giải toán số phức bằng máy tính Casio", type: "video", url: "", duration: "", is_preview: false, order_index: 2 },
+    { id: 2006, chapter_id: 203, title: "Bài 6: Phương pháp ghép trục tọa độ Oxyz giải nhanh cực trị hình học", type: "video", url: "", duration: "", is_preview: false, order_index: 1 },
+    { id: 2007, chapter_id: 203, title: "Bài 7: Góc và khoảng cách trong không gian - Giải nhanh trắc nghiệm", type: "video", url: "", duration: "", is_preview: false, order_index: 2 },
+    { id: 3001, chapter_id: 301, title: "Bài 1: Phương pháp đọc đề, phân tích bảng biểu thống kê phức tạp", type: "video", url: "https://www.youtube.com/embed/zH0QG_uPez8", duration: "32:10", is_preview: true, order_index: 1 },
+    { id: 3002, chapter_id: 301, title: "Bài 2: Các bài toán tư duy logic, suy luận toán học đặc sắc tuyển chọn", type: "pdf", url: "assets/docs/so-tay-toan-12.pdf", duration: "", is_preview: true, order_index: 2 },
+    { id: 3003, chapter_id: 301, title: "Bài 3: Kỹ thuật loại trừ phương án nhiễu trong phần thi Định lượng", type: "video", url: "", duration: "", is_preview: false, order_index: 3 },
+    { id: 3004, chapter_id: 302, title: "Bài 4: Chuyên đề Số học & Đại số ôn thi ĐGNL Hà Nội", type: "video", url: "", duration: "", is_preview: false, order_index: 1 },
+    { id: 3005, chapter_id: 302, title: "Bài 5: Chuyên đề Tổ hợp, Xác suất & Thống kê trong đề ĐGNL TP.HCM", type: "video", url: "", duration: "", is_preview: false, order_index: 2 }
+];
 
-document.addEventListener('DOMContentLoaded', () => {
-    // 1. Get Course ID from URL parameter
+// Trạng thái Admin & Edit mode
+let isAdminLoggedIn = false;
+let isEditModeActive = false;
+let currentCourseId = 1;
+
+// Biến lưu trữ động hiện tại tải từ DB/Mock
+let currentCourse = null;
+let currentChapters = [];
+let currentLessonsMap = {};
+
+// Cấu hình popup Modal sửa nhanh
+let currentModalAction = ''; // 'edit_lesson', 'create_lesson'
+let currentModalTargetId = null; 
+
+document.addEventListener('DOMContentLoaded', async () => {
+    const isOnline = (typeof supabaseClient !== 'undefined' && supabaseClient !== null);
+    
+    // Parse URL parameter
     const urlParams = new URLSearchParams(window.location.search);
-    const courseId = parseInt(urlParams.get('id')) || 1; // Default to course 1 if not specified
+    currentCourseId = parseInt(urlParams.get('id')) || 1;
 
     // Elements
     const loadingIndicator = document.getElementById('loadingIndicator');
     const errorIndicator = document.getElementById('errorIndicator');
     const courseDetailLayout = document.getElementById('courseDetailLayout');
+    const adminToolbar = document.getElementById('adminToolbar');
+    const editModeToggle = document.getElementById('editModeToggle');
+
+    // 1. Kiểm tra đăng nhập Admin
+    await checkAdminAuth();
+
+    async function checkAdminAuth() {
+        if (isOnline) {
+            try {
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                if (session) {
+                    isAdminLoggedIn = true;
+                }
+            } catch (err) {
+                console.error("Lỗi Auth Supabase:", err);
+            }
+        } else {
+            // Chế độ demo
+            if (localStorage.getItem('demo_admin_user')) {
+                isAdminLoggedIn = true;
+            }
+        }
+
+        if (isAdminLoggedIn && adminToolbar) {
+            adminToolbar.style.display = 'flex';
+            
+            // Lấy lại trạng thái edit mode nếu có lưu trước đó
+            const savedEditMode = localStorage.getItem('isEditModeActive') === 'true';
+            isEditModeActive = savedEditMode;
+            if (editModeToggle) {
+                editModeToggle.checked = savedEditMode;
+            }
+        }
+    }
+
+    // Toggle Edit Mode
+    if (editModeToggle) {
+        editModeToggle.addEventListener('change', (e) => {
+            isEditModeActive = e.target.checked;
+            localStorage.setItem('isEditModeActive', isEditModeActive);
+            
+            // Cập nhật hiển thị nút bánh răng
+            const gears = document.querySelectorAll('.gear-btn');
+            gears.forEach(g => {
+                g.style.display = isEditModeActive ? 'inline-flex' : 'none';
+            });
+
+            // Ẩn tất cả các thanh action bar đang mở nếu tắt chế độ sửa
+            if (!isEditModeActive) {
+                const actionBars = document.querySelectorAll('.inline-action-bar');
+                actionBars.forEach(b => b.remove());
+            }
+        });
+    }
 
     // Mobil navbar toggle (for subpages)
     const menuToggle = document.querySelector('.menu-toggle');
@@ -151,18 +199,18 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    loadCourseDetails(courseId);
+    // Tải dữ liệu ban đầu
+    await loadCourseDetails(currentCourseId);
 
-    // 2. Fetch logic from Supabase or Mock Data
+    // 2. Tải dữ liệu từ database hoặc offline
     async function loadCourseDetails(id) {
-        let course = null;
-        let chapters = [];
-        let lessonsMap = {}; // key: chapter_id, value: array of lessons
+        currentCourse = null;
+        currentChapters = [];
+        currentLessonsMap = {};
 
-        // Check if database client is configured
-        if (typeof supabaseClient !== 'undefined' && supabaseClient !== null) {
+        if (isOnline) {
             try {
-                // Fetch course info
+                // Tải khóa học
                 const { data: courseData, error: courseError } = await supabaseClient
                     .from('courses')
                     .select('*')
@@ -170,9 +218,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     .single();
 
                 if (courseError) throw courseError;
-                course = courseData;
+                currentCourse = courseData;
 
-                // Fetch chapters
+                // Tải chương
                 const { data: chaptersData, error: chaptersError } = await supabaseClient
                     .from('chapters')
                     .select('*')
@@ -180,10 +228,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     .order('order_index', { ascending: true });
 
                 if (chaptersError) throw chaptersError;
-                chapters = chaptersData;
+                currentChapters = chaptersData;
 
-                // Fetch lessons for all chapters
-                const chapterIds = chapters.map(c => c.id);
+                // Tải bài giảng
+                const chapterIds = currentChapters.map(c => c.id);
                 if (chapterIds.length > 0) {
                     const { data: lessonsData, error: lessonsError } = await supabaseClient
                         .from('lessons')
@@ -193,43 +241,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     if (lessonsError) throw lessonsError;
 
-                    // Group lessons by chapter_id
                     lessonsData.forEach(lesson => {
-                        if (!lessonsMap[lesson.chapter_id]) {
-                            lessonsMap[lesson.chapter_id] = [];
+                        if (!currentLessonsMap[lesson.chapter_id]) {
+                            currentLessonsMap[lesson.chapter_id] = [];
                         }
-                        lessonsMap[lesson.chapter_id].push(lesson);
+                        currentLessonsMap[lesson.chapter_id].push(lesson);
                     });
                 }
-
             } catch (err) {
-                console.error("Lỗi khi tải thông tin từ Supabase. Chuyển sang chế độ dự phòng offline:", err);
-                course = MOCK_COURSES_DETAILS[id];
-                chapters = MOCK_CHAPTERS[id] || [];
-                // Map mock lessons
-                chapters.forEach(c => {
-                    lessonsMap[c.id] = MOCK_LESSONS[c.id] || [];
-                });
+                console.error("Supabase error, loading offline database:", err);
+                loadOfflineData(id);
             }
         } else {
-            // Offline preview mode fallback
-            course = MOCK_COURSES_DETAILS[id];
-            chapters = MOCK_CHAPTERS[id] || [];
-            if (chapters.length > 0) {
-                chapters.forEach(c => {
-                    lessonsMap[c.id] = MOCK_LESSONS[c.id] || [];
-                });
-            }
+            loadOfflineData(id);
         }
 
-        // Render page
-        if (course) {
-            renderCourseIntro(course);
-            renderTargetAudience(course.target_audience);
-            renderSyllabus(chapters, lessonsMap);
-            renderSidebar(course);
+        // Render lên màn hình
+        if (currentCourse) {
+            renderCourseIntro(currentCourse);
+            renderTargetAudience(currentCourse.target_audience);
+            renderSyllabus(currentChapters, currentLessonsMap);
+            renderSidebar(currentCourse);
             
-            // Show Layout, Hide Loading
             loadingIndicator.style.display = 'none';
             courseDetailLayout.style.display = 'grid';
             setupCheckoutModal();
@@ -239,7 +272,21 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // 3. Render functions
+    function loadOfflineData(id) {
+        // Đồng bộ dữ liệu local
+        dbCourses = JSON.parse(localStorage.getItem('db_courses')) || dbCourses;
+        dbChapters = JSON.parse(localStorage.getItem('db_chapters')) || dbChapters;
+        dbLessons = JSON.parse(localStorage.getItem('db_lessons')) || dbLessons;
+
+        currentCourse = dbCourses.find(c => c.id == id);
+        currentChapters = dbChapters.filter(c => c.course_id == id).sort((a,b) => a.order_index - b.order_index);
+        
+        currentChapters.forEach(c => {
+            currentLessonsMap[c.id] = dbLessons.filter(l => l.chapter_id == c.id).sort((a,b) => a.order_index - b.order_index);
+        });
+    }
+
+    // 3. Render chức năng
     function renderCourseIntro(course) {
         const introBox = document.getElementById('courseIntroBox');
         if (!introBox) return;
@@ -275,25 +322,38 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!accordion) return;
         accordion.innerHTML = '';
 
+        if (chapters.length === 0) {
+            accordion.innerHTML = `
+                <div style="text-align: center; padding: 40px; color: var(--text-secondary);">
+                    Chưa có chương học nào được tạo.
+                    ${isEditModeActive ? `<button class="btn btn-primary" onclick="createChapterInline()" style="width: auto; margin-top: 12px; display: block; margin-left: auto; margin-right: auto;"><i class="fa-solid fa-plus"></i> Tạo chương đầu tiên</button>` : ''}
+                </div>
+            `;
+            return;
+        }
+
         chapters.forEach((chapter, index) => {
             const item = document.createElement('div');
-            // First chapter is active by default
             item.className = `accordion-item ${index === 0 ? 'active' : ''}`;
+            item.setAttribute('data-id', chapter.id);
             
             const header = document.createElement('div');
             header.className = 'accordion-header';
+            
+            // Tên chương + Nút bánh răng kế bên
             header.innerHTML = `
-                <span>${chapter.title}</span>
+                <span style="display: flex; align-items: center; gap: 8px;">
+                    ${chapter.title}
+                    <button class="gear-btn chapter-gear-btn" data-chapter-id="${chapter.id}" style="display: ${isEditModeActive ? 'inline-flex' : 'none'};" title="Quản lý chương"><i class="fa-solid fa-gear"></i></button>
+                </span>
                 <i class="fa-solid fa-chevron-down chevron-icon"></i>
             `;
             item.appendChild(header);
 
             const content = document.createElement('div');
             content.className = 'accordion-content';
-            // Set max-height for the first active item so it animates open
             if (index === 0) {
-                // Approximate height for initial render, script will adjust
-                content.style.maxHeight = '600px'; 
+                content.style.maxHeight = '800px'; 
             }
 
             const list = document.createElement('ul');
@@ -304,8 +364,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 lessons.forEach(lesson => {
                     const li = document.createElement('li');
                     li.className = 'lesson-item';
+                    li.setAttribute('data-id', lesson.id);
 
-                    // Left Side (Icon + Lesson Name)
+                    // Left Side (Icon + Lesson Name + Gear Icon next to lesson)
                     let iconHTML = '';
                     if (lesson.is_preview) {
                         iconHTML = lesson.type === 'video' 
@@ -331,9 +392,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
 
                     li.innerHTML = `
-                        <div class="lesson-left">
+                        <div class="lesson-left" style="display: flex; align-items: center; gap: 8px; flex-grow: 1;">
                             ${iconHTML}
-                            <span>${lesson.title}</span>
+                            <span style="font-weight: 500;">${lesson.title}</span>
+                            <button class="gear-btn lesson-gear-btn" data-lesson-id="${lesson.id}" style="display: ${isEditModeActive ? 'inline-flex' : 'none'};" title="Sửa bài giảng"><i class="fa-solid fa-gear"></i></button>
                         </div>
                         <div class="lesson-right">
                             ${rightHTML}
@@ -342,7 +404,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     list.appendChild(li);
                 });
             } else {
-                list.innerHTML = `<li class="lesson-item">Đang cập nhật danh sách bài học...</li>`;
+                list.innerHTML = `<li class="lesson-item" style="color: var(--text-secondary); font-style: italic;">Chưa có bài học nào trong chương này.</li>`;
             }
 
             content.appendChild(list);
@@ -350,8 +412,9 @@ document.addEventListener('DOMContentLoaded', () => {
             accordion.appendChild(item);
         });
 
-        // Initialize Accordion Click Handlers
+        // Initialize click handlers
         setupAccordions();
+        setupInlineGearListeners();
     }
 
     function renderSidebar(course) {
@@ -365,7 +428,7 @@ document.addEventListener('DOMContentLoaded', () => {
             { icon: "fa-regular fa-clock", text: `Thời lượng: ${course.duration}` },
             { icon: "fa-solid fa-book-open", text: "Tài liệu đặc quyền: Có (PDF tải về)" },
             { icon: "fa-solid fa-circle-play", text: "Học thử: Có (Bài 1 miễn phí)" },
-            { icon: "fa-solid fa-shield-halved", text: "Cam kết đầu ra chất lượng" }
+            { icon: "fa-solid fa-shield-halved", text: "Cam kết chất lượng" }
         ];
 
         features.forEach(f => {
@@ -378,6 +441,9 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
             <div class="sidebar-price">${priceFormatted}<span>/ khóa</span></div>
             <button class="btn btn-primary w-100 course-register-btn" style="width: 100%;" data-title="${course.title}" data-price="${priceFormatted}">Đăng ký học ngay</button>
+            
+            ${isEditModeActive ? `<button class="btn btn-secondary w-100" onclick="createChapterInline()" style="margin-top: 10px; width: 100%;"><i class="fa-solid fa-plus"></i> Thêm chương mới</button>` : ''}
+            
             <ul class="sidebar-features">
                 ${featuresHTML}
             </ul>
@@ -387,7 +453,10 @@ document.addEventListener('DOMContentLoaded', () => {
     function setupAccordions() {
         const accordionHeaders = document.querySelectorAll('.accordion-header');
         accordionHeaders.forEach(header => {
-            header.addEventListener('click', () => {
+            header.addEventListener('click', (e) => {
+                // Tránh trigger đóng mở accordion khi click vào gear-btn
+                if (e.target.closest('.gear-btn')) return;
+
                 const item = header.closest('.accordion-item');
                 const content = item.querySelector('.accordion-content');
                 const isActive = item.classList.contains('active');
@@ -397,13 +466,380 @@ document.addEventListener('DOMContentLoaded', () => {
                     content.style.maxHeight = null;
                 } else {
                     item.classList.add('active');
-                    content.style.maxHeight = content.scrollHeight + 'px';
+                    content.style.maxHeight = content.scrollHeight + 150 + 'px'; // Thêm khoảng đệm cho action bar
                 }
             });
         });
     }
 
-    // 4. Modal Setup
+    // 4. INLINE GEAR LISTENERS & ACTION BARS
+    function setupInlineGearListeners() {
+        // Nút bánh răng chương
+        const chapterGears = document.querySelectorAll('.chapter-gear-btn');
+        chapterGears.forEach(gear => {
+            gear.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const chapterId = parseInt(gear.getAttribute('data-chapter-id'));
+                toggleChapterInlineActionBar(gear, chapterId);
+            });
+        });
+
+        // Nút bánh răng bài giảng (mở modal)
+        const lessonGears = document.querySelectorAll('.lesson-gear-btn');
+        lessonGears.forEach(gear => {
+            gear.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const lessonId = parseInt(gear.getAttribute('data-lesson-id'));
+                openQuickEditLessonModal(lessonId);
+            });
+        });
+    }
+
+    function toggleChapterInlineActionBar(gearElement, chapterId) {
+        const accordionItem = gearElement.closest('.accordion-item');
+        const existingBar = accordionItem.querySelector('.inline-action-bar');
+        
+        // Đóng các action bar khác đang mở
+        document.querySelectorAll('.inline-action-bar').forEach(b => b.remove());
+
+        if (existingBar) {
+            // Đã mở trước đó ➔ Đóng lại
+            return;
+        }
+
+        // Tạo thanh menu inline
+        const chapter = currentChapters.find(c => c.id == chapterId);
+        const actionBar = document.createElement('div');
+        actionBar.className = 'inline-action-bar';
+        
+        actionBar.innerHTML = `
+            <span class="inline-action-label">CHƯƠNG:</span>
+            <button class="inline-action-btn" id="inlineAddLesson"><i class="fa-solid fa-plus" style="color: var(--accent-color);"></i> Tạo bài học</button>
+            <button class="inline-action-btn" id="inlineRenameChapter"><i class="fa-solid fa-pen"></i> Sửa tên</button>
+            <button class="inline-action-btn" id="inlineSortChapter"><i class="fa-solid fa-arrow-up-down-left-right" style="color: #F59E0B;"></i> Sắp xếp</button>
+            <button class="inline-action-btn delete-btn" id="inlineDeleteChapter"><i class="fa-solid fa-trash" style="color: #EF4444;"></i> Xóa</button>
+        `;
+
+        // Insert vào dưới header của accordion
+        const header = accordionItem.querySelector('.accordion-header');
+        header.after(actionBar);
+        
+        // Mở rộng accordion content để chứa vừa bar
+        const content = accordionItem.querySelector('.accordion-content');
+        if (accordionItem.classList.contains('active')) {
+            content.style.maxHeight = content.scrollHeight + 100 + 'px';
+        }
+
+        // Gắn sự kiện các nút
+        document.getElementById('inlineAddLesson').onclick = () => openQuickCreateLessonModal(chapterId);
+        document.getElementById('inlineRenameChapter').onclick = () => renameChapterInline(chapterId);
+        document.getElementById('inlineSortChapter').onclick = () => sortChapterInline(chapterId);
+        document.getElementById('inlineDeleteChapter').onclick = () => deleteChapterInline(chapterId);
+    }
+
+    // 5. INLINE ACTIONS IMPLEMENTATION
+    window.createChapterInline = async () => {
+        const title = prompt("Nhập tên chương học mới:");
+        if (!title || !title.trim()) return;
+
+        const order_index = currentChapters.length > 0 
+            ? Math.max(...currentChapters.map(c => c.order_index)) + 1 
+            : 1;
+
+        const chapterData = { course_id: currentCourseId, title: title.trim(), order_index };
+
+        if (isOnline) {
+            try {
+                const { error } = await supabaseClient.from('chapters').insert([chapterData]);
+                if (error) throw error;
+            } catch (err) {
+                alert("Lỗi khi tạo chương online: " + err.message);
+                return;
+            }
+        } else {
+            // Offline
+            const newId = dbChapters.length > 0 ? Math.max(...dbChapters.map(c => c.id)) + 1 : 101;
+            dbChapters.push({ id: newId, ...chapterData });
+            localStorage.setItem('db_chapters', JSON.stringify(dbChapters));
+        }
+
+        alert("Đã tạo chương thành công!");
+        await loadCourseDetails(currentCourseId);
+    };
+
+    async function renameChapterInline(chapterId) {
+        const chapter = currentChapters.find(c => c.id == chapterId);
+        if (!chapter) return;
+
+        const newTitle = prompt("Sửa tên chương học:", chapter.title);
+        if (newTitle === null || !newTitle.trim() || newTitle.trim() === chapter.title) return;
+
+        if (isOnline) {
+            try {
+                const { error } = await supabaseClient.from('chapters').update({ title: newTitle.trim() }).eq('id', chapterId);
+                if (error) throw error;
+            } catch (err) {
+                alert("Lỗi khi sửa tên chương: " + err.message);
+                return;
+            }
+        } else {
+            const idx = dbChapters.findIndex(c => c.id == chapterId);
+            if (idx !== -1) {
+                dbChapters[idx].title = newTitle.trim();
+                localStorage.setItem('db_chapters', JSON.stringify(dbChapters));
+            }
+        }
+
+        await loadCourseDetails(currentCourseId);
+    }
+
+    async function sortChapterInline(chapterId) {
+        const chapter = currentChapters.find(c => c.id == chapterId);
+        if (!chapter) return;
+
+        const newOrder = prompt("Nhập số thứ tự hiển thị của chương (Ví dụ: 1, 2, 3...):", chapter.order_index);
+        if (newOrder === null || isNaN(newOrder) || parseInt(newOrder) === chapter.order_index) return;
+
+        if (isOnline) {
+            try {
+                const { error } = await supabaseClient.from('chapters').update({ order_index: parseInt(newOrder) }).eq('id', chapterId);
+                if (error) throw error;
+            } catch (err) {
+                alert("Lỗi khi sắp xếp chương: " + err.message);
+                return;
+            }
+        } else {
+            const idx = dbChapters.findIndex(c => c.id == chapterId);
+            if (idx !== -1) {
+                dbChapters[idx].order_index = parseInt(newOrder);
+                localStorage.setItem('db_chapters', JSON.stringify(dbChapters));
+            }
+        }
+
+        await loadCourseDetails(currentCourseId);
+    }
+
+    async function deleteChapterInline(chapterId) {
+        if (!confirm("Thầy chắc chắn muốn xóa chương này chứ? Tất cả bài giảng bên trong chương cũng sẽ bị xóa.")) {
+            return;
+        }
+
+        if (isOnline) {
+            try {
+                const { error } = await supabaseClient.from('chapters').delete().eq('id', chapterId);
+                if (error) throw error;
+            } catch (err) {
+                alert("Lỗi khi xóa chương online: " + err.message);
+                return;
+            }
+        } else {
+            // Xóa chương cục bộ
+            dbChapters = dbChapters.filter(c => c.id != chapterId);
+            // Xóa bài giảng thuộc chương
+            dbLessons = dbLessons.filter(l => l.chapter_id != chapterId);
+
+            localStorage.setItem('db_chapters', JSON.stringify(dbChapters));
+            localStorage.setItem('db_lessons', JSON.stringify(dbLessons));
+        }
+
+        await loadCourseDetails(currentCourseId);
+    }
+
+    // 6. QUICK EDIT / CREATE LESSON POPUP MODAL
+    const quickEditModal = document.getElementById('quickEditModal');
+    const quickEditModalClose = document.getElementById('quickEditModalClose');
+    const quickEditCancelBtn = document.getElementById('quickEditCancelBtn');
+    const quickEditModalTitle = document.getElementById('quickEditModalTitle');
+    const quickEditFields = document.getElementById('quickEditFields');
+    const quickEditForm = document.getElementById('quickEditForm');
+
+    function openQuickCreateLessonModal(chapterId) {
+        currentModalAction = 'create_lesson';
+        currentModalTargetId = chapterId;
+        quickEditModalTitle.textContent = "Thêm bài học mới";
+        
+        quickEditFields.innerHTML = `
+            <div class="form-group">
+                <label class="form-label">Tên bài giảng / tài liệu</label>
+                <input type="text" id="inline_l_title" class="form-control" placeholder="Ví dụ: Bài 1: Mệnh đề" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Loại bài học</label>
+                <select id="inline_l_type" class="form-control" required>
+                    <option value="video">Video bài giảng</option>
+                    <option value="pdf">File tài liệu PDF</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">URL (Link nhúng YouTube hoặc link PDF)</label>
+                <input type="text" id="inline_l_url" class="form-control" placeholder="https://...">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Thời lượng (Nếu có, ví dụ: 25:12)</label>
+                <input type="text" id="inline_l_duration" class="form-control">
+            </div>
+            <div class="form-group" style="display: flex; align-items: center; gap: 8px; margin-top: 10px;">
+                <input type="checkbox" id="inline_l_preview" style="width: 18px; height: 18px; cursor: pointer;" checked>
+                <label for="inline_l_preview" style="cursor: pointer; font-weight: 500; font-size: 0.9rem;">Cho học thử miễn phí</label>
+            </div>
+            <div class="form-group" style="margin-top: 16px;">
+                <label class="form-label">Thứ tự hiển thị (Order Index)</label>
+                <input type="number" id="inline_l_order" class="form-control" value="1" required>
+            </div>
+        `;
+
+        quickEditModal.classList.add('active');
+    }
+
+    function openQuickEditLessonModal(lessonId) {
+        currentModalAction = 'edit_lesson';
+        currentModalTargetId = lessonId;
+        quickEditModalTitle.textContent = "Chỉnh sửa bài học";
+
+        // Tìm thông tin bài giảng
+        let lesson = null;
+        if (isOnline) {
+            // Tìm trong map của chúng ta
+            for (let chId in currentLessonsMap) {
+                const found = currentLessonsMap[chId].find(l => l.id == lessonId);
+                if (found) { lesson = found; break; }
+            }
+        } else {
+            lesson = dbLessons.find(l => l.id == lessonId);
+        }
+
+        if (!lesson) return;
+
+        quickEditFields.innerHTML = `
+            <div class="form-group">
+                <label class="form-label">Tên bài giảng / tài liệu</label>
+                <input type="text" id="inline_l_title" class="form-control" value="${lesson.title}" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Loại bài học</label>
+                <select id="inline_l_type" class="form-control" required>
+                    <option value="video" ${lesson.type === 'video' ? 'selected' : ''}>Video bài giảng</option>
+                    <option value="pdf" ${lesson.type === 'pdf' ? 'selected' : ''}>File tài liệu PDF</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">URL (Link nhúng YouTube hoặc link PDF)</label>
+                <input type="text" id="inline_l_url" class="form-control" value="${lesson.url || ''}">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Thời lượng (Nếu có, ví dụ: 25:12)</label>
+                <input type="text" id="inline_l_duration" class="form-control" value="${lesson.duration || ''}">
+            </div>
+            <div class="form-group" style="display: flex; align-items: center; gap: 8px; margin-top: 10px;">
+                <input type="checkbox" id="inline_l_preview" style="width: 18px; height: 18px; cursor: pointer;" ${lesson.is_preview ? 'checked' : ''}>
+                <label for="inline_l_preview" style="cursor: pointer; font-weight: 500; font-size: 0.9rem;">Cho học thử miễn phí (Không cần tài khoản)</label>
+            </div>
+            <div class="form-group" style="margin-top: 16px;">
+                <label class="form-label">Thứ tự hiển thị (Order Index)</label>
+                <input type="number" id="inline_l_order" class="form-control" value="${lesson.order_index || 1}" required>
+            </div>
+            <div style="margin-top: 20px; border-top: 1px dashed var(--card-border); padding-top: 16px;">
+                <button type="button" class="btn btn-danger" onclick="deleteLessonInline(${lesson.id})" style="width: auto;"><i class="fa-solid fa-trash"></i> Xóa bài giảng này</button>
+            </div>
+        `;
+
+        quickEditModal.classList.add('active');
+    }
+
+    function closeQuickEditModal() {
+        quickEditModal.classList.remove('active');
+        quickEditForm.reset();
+        currentModalAction = '';
+        currentModalTargetId = null;
+    }
+
+    if (quickEditModalClose) quickEditModalClose.onclick = closeQuickEditModal;
+    if (quickEditCancelBtn) quickEditCancelBtn.onclick = closeQuickEditModal;
+
+    // Submit Modal Form
+    if (quickEditForm) {
+        quickEditForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const title = document.getElementById('inline_l_title').value.trim();
+            const type = document.getElementById('inline_l_type').value;
+            const url = document.getElementById('inline_l_url').value.trim();
+            const duration = document.getElementById('inline_l_duration').value.trim();
+            const is_preview = document.getElementById('inline_l_preview').checked;
+            const order_index = parseInt(document.getElementById('inline_l_order').value);
+
+            const lessonData = { title, type, url, duration, is_preview, order_index };
+
+            if (currentModalAction === 'create_lesson') {
+                const chapter_id = currentModalTargetId;
+                const newLesson = { chapter_id, ...lessonData };
+
+                if (isOnline) {
+                    try {
+                        const { error } = await supabaseClient.from('lessons').insert([newLesson]);
+                        if (error) throw error;
+                    } catch (err) {
+                        alert("Lỗi khi thêm bài học online: " + err.message);
+                        return;
+                    }
+                } else {
+                    const newId = dbLessons.length > 0 ? Math.max(...dbLessons.map(l => l.id)) + 1 : 1001;
+                    dbLessons.push({ id: newId, ...newLesson });
+                    localStorage.setItem('db_lessons', JSON.stringify(dbLessons));
+                }
+                alert("Đã thêm bài học thành công!");
+            } 
+            else if (currentModalAction === 'edit_lesson') {
+                const lessonId = currentModalTargetId;
+
+                if (isOnline) {
+                    try {
+                        const { error } = await supabaseClient.from('lessons').update(lessonData).eq('id', lessonId);
+                        if (error) throw error;
+                    } catch (err) {
+                        alert("Lỗi khi lưu bài học online: " + err.message);
+                        return;
+                    }
+                } else {
+                    const idx = dbLessons.findIndex(l => l.id == lessonId);
+                    if (idx !== -1) {
+                        dbLessons[idx] = { id: lessonId, chapter_id: dbLessons[idx].chapter_id, ...lessonData };
+                        localStorage.setItem('db_lessons', JSON.stringify(dbLessons));
+                    }
+                }
+                alert("Đã lưu thay đổi bài học!");
+            }
+
+            closeQuickEditModal();
+            await loadCourseDetails(currentCourseId);
+        });
+    }
+
+    // Xóa bài giảng trực tiếp
+    window.deleteLessonInline = async (lessonId) => {
+        if (!confirm("Thầy chắc chắn muốn xóa bài giảng này chứ? Hành động này không thể hoàn tác.")) {
+            return;
+        }
+
+        if (isOnline) {
+            try {
+                const { error } = await supabaseClient.from('lessons').delete().eq('id', lessonId);
+                if (error) throw error;
+            } catch (err) {
+                alert("Lỗi khi xóa bài học: " + err.message);
+                return;
+            }
+        } else {
+            dbLessons = dbLessons.filter(l => l.id != lessonId);
+            localStorage.setItem('db_lessons', JSON.stringify(dbLessons));
+        }
+
+        alert("Đã xóa bài giảng!");
+        closeQuickEditModal();
+        await loadCourseDetails(currentCourseId);
+    };
+
+    // 7. CHECKOUT MODAL SETUP
     function setupCheckoutModal() {
         const modal = document.getElementById('checkoutModal');
         const modalClose = document.querySelector('.modal-close');

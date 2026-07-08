@@ -1364,3 +1364,163 @@ footer {
         gap: 28px;
     }
 }
+
+/* Admin Inline Editor Styles */
+.admin-toolbar {
+    background: #0F172A;
+    color: #FFFFFF;
+    padding: 12px 24px;
+    position: sticky;
+    top: 0;
+    z-index: 1900;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid var(--accent-color);
+    box-shadow: 0 4px 12px rgba(15,23,42,0.15);
+    font-family: var(--font-main);
+    font-size: 0.9rem;
+}
+
+.admin-toolbar-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+}
+
+.admin-toolbar-left i {
+    color: #FBBF24;
+}
+
+.admin-toolbar-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.admin-toggle-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.admin-toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 22px;
+}
+
+.admin-toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.admin-toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #475569;
+    transition: .3s;
+    border-radius: 22px;
+}
+
+.admin-toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .3s;
+    border-radius: 50%;
+}
+
+.admin-toggle-switch input:checked + .admin-toggle-slider {
+    background-color: var(--accent-color);
+}
+
+.admin-toggle-switch input:checked + .admin-toggle-slider:before {
+    transform: translateX(22px);
+}
+
+.gear-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-secondary);
+    margin-left: 8px;
+    transition: var(--transition);
+    display: none; /* Bị ẩn theo mặc định, hiện khi bật chế độ sửa */
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    align-items: center;
+    justify-content: center;
+}
+
+.gear-btn:hover {
+    color: var(--accent-color);
+    background: #F1F5F9;
+}
+
+/* Hộp công cụ inline cho chương học */
+.inline-action-bar {
+    background: #F8FAFC;
+    border: 1px dashed var(--accent-color);
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin: 12px 24px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+}
+
+.inline-action-btn {
+    background: #FFFFFF;
+    color: var(--text-primary);
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: var(--transition);
+}
+
+.inline-action-btn:hover {
+    border-color: var(--accent-color);
+    color: var(--accent-color);
+    background: rgba(99, 102, 241, 0.05);
+}
+
+.inline-action-btn.delete-btn:hover {
+    border-color: #EF4444;
+    color: #EF4444;
+    background: rgba(239, 68, 68, 0.05);
+}
+
+.inline-action-btn.sort-btn:hover {
+    border-color: #F59E0B;
+    color: #F59E0B;
+    background: rgba(245, 158, 11, 0.05);
+}
+
+.inline-action-label {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    margin-right: 8px;
+}
+

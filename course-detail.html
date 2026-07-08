@@ -11,6 +11,24 @@
 </head>
 <body>
 
+    <!-- Admin Toolbar (ẩn mặc định, chỉ hiện khi đã đăng nhập admin) -->
+    <div class="admin-toolbar" id="adminToolbar" style="display: none;">
+        <div class="admin-toolbar-left">
+            <i class="fa-solid fa-screwdriver-wrench"></i>
+            <span>TOÁN SMART - CHẾ ĐỘ QUẢN TRỊ VIÊN</span>
+        </div>
+        <div class="admin-toolbar-right">
+            <div class="admin-toggle-wrapper">
+                <span style="font-weight: 600;">Chế độ sửa trực tiếp:</span>
+                <label class="admin-toggle-switch">
+                    <input type="checkbox" id="editModeToggle">
+                    <span class="admin-toggle-slider"></span>
+                </label>
+            </div>
+            <a href="admin.html" style="color: #818CF8; font-weight: 700; text-decoration: none; margin-left: 12px; display: inline-flex; align-items: center; gap: 6px;"><i class="fa-solid fa-gauge"></i> Về Dashboard</a>
+        </div>
+    </div>
+
     <!-- Header / Navbar -->
     <header>
         <div class="container nav-container">
@@ -187,6 +205,22 @@
             margin-bottom: 24px;
         }
     </style>
+
+    <!-- Quick Edit Modal (Dành cho chế độ sửa trực tiếp) -->
+    <div class="modal" id="quickEditModal">
+        <div class="modal-content">
+            <button class="modal-close" id="quickEditModalClose"><i class="fa-solid fa-xmark"></i></button>
+            <h3 class="modal-title" id="quickEditModalTitle">Chỉnh sửa</h3>
+            
+            <form id="quickEditForm">
+                <div id="quickEditFields"></div>
+                <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; border-top: 1px solid var(--card-border); padding-top: 20px;">
+                    <button type="button" class="btn btn-secondary" id="quickEditCancelBtn" style="padding: 10px 20px;">Hủy bỏ</button>
+                    <button type="submit" class="btn btn-primary" style="width: auto; padding: 10px 20px;">Lưu lại</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <!-- Supabase JS Client library CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
