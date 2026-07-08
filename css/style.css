@@ -1524,3 +1524,22 @@ footer {
     margin-right: 8px;
 }
 
+/* Đẩy Header và Layout xuống dưới khi hiện Admin Toolbar */
+body.admin-toolbar-visible header {
+    top: 48px !important;
+}
+body.admin-toolbar-visible .course-detail-layout {
+    padding-top: 168px !important;
+}
+
+/* Nút xem với vai trò học sinh (màu đỏ) */
+.btn-student-role {
+    background: #B91C1C !important;
+    color: #FFFFFF !important;
+    border: none !important;
+}
+.btn-student-role:hover {
+    background: #991B1B !important;
+    box-shadow: 0 4px 12px rgba(185, 28, 28, 0.2) !important;
+}
+

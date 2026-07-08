@@ -116,7 +116,7 @@ let currentChapters = [];
 let currentLessonsMap = {};
 
 // Cấu hình popup Modal sửa nhanh
-let currentModalAction = ''; // 'edit_lesson', 'create_lesson'
+let currentModalAction = ''; // 'edit_lesson', 'create_lesson', 'edit_course'
 let currentModalTargetId = null; 
 
 // Lưu trữ các thực thể Sortable để dọn dẹp khi bật tắt
@@ -158,6 +158,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if (isAdminLoggedIn && adminToolbar) {
             adminToolbar.style.display = 'flex';
+            document.body.classList.add('admin-toolbar-visible');
             
             // Lấy lại trạng thái edit mode nếu có lưu trước đó
             const savedEditMode = localStorage.getItem('isEditModeActive') === 'true';
@@ -174,9 +175,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             isEditModeActive = e.target.checked;
             localStorage.setItem('isEditModeActive', isEditModeActive);
             
-            // Vẽ lại toàn bộ Syllabus để cập nhật hoặc ẩn biểu tượng kéo thả drag-handle
+            // Vẽ lại toàn bộ trang để cập nhật giao diện
             renderSyllabus(currentChapters, currentLessonsMap);
             renderSidebar(currentCourse);
+            renderCourseIntro(currentCourse);
 
             // Ẩn tất cả các thanh action bar đang mở
             if (!isEditModeActive) {
@@ -292,11 +294,27 @@ document.addEventListener('DOMContentLoaded', async () => {
         const introBox = document.getElementById('courseIntroBox');
         if (!introBox) return;
 
+        // Nút bánh răng để chỉnh sửa thông tin khóa học (chỉ hiện khi bật edit mode)
+        const courseGearHTML = isEditModeActive
+            ? `<button class="gear-btn course-gear-btn" data-course-id="${course.id}" style="display: inline-flex;" title="Sửa thông tin khóa học"><i class="fa-solid fa-gear" style="font-size: 1.4rem;"></i></button>`
+            : '';
+
         introBox.innerHTML = `
             <span class="course-tag">${course.tag_label || getTagLabel(course.tag)}</span>
-            <h1>${course.title}</h1>
+            <h1 style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 16px;">
+                ${course.title}
+                ${courseGearHTML}
+            </h1>
             <p class="course-desc-large">${course.description}</p>
         `;
+
+        // Gắn sự kiện click cho bánh răng khóa học
+        const courseGear = introBox.querySelector('.course-gear-btn');
+        if (courseGear) {
+            courseGear.addEventListener('click', () => {
+                openQuickEditCourseModal(course.id);
+            });
+        }
     }
 
     function getTagLabel(tag) {
@@ -322,6 +340,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         const accordion = document.getElementById('syllabusAccordion');
         if (!accordion) return;
         accordion.innerHTML = '';
+
+        // Hiển thị hoặc ẩn nút thêm chương mới ở phần tiêu đề syllabus
+        const syllabusAddChapterBtn = document.getElementById('syllabusAddChapterBtn');
+        if (syllabusAddChapterBtn) {
+            syllabusAddChapterBtn.style.display = isEditModeActive ? 'inline-flex' : 'none';
+            syllabusAddChapterBtn.onclick = createChapterInline;
+        }
 
         if (chapters.length === 0) {
             accordion.innerHTML = `
@@ -437,7 +462,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const sidebar = document.getElementById('courseSidebar');
         if (!sidebar) return;
 
-        const priceFormatted = new Intl.NumberFormat('vi-VN').format(course.price) + ' đ';
+        const priceFormatted = new Intl.NumberFormat('vi-VN').format(course.price || 0) + ' đ';
         
         let featuresHTML = '';
         const features = course.features || [
@@ -451,19 +476,47 @@ document.addEventListener('DOMContentLoaded', async () => {
             featuresHTML += `<li><i class="${f.icon}"></i> <span>${f.text}</span></li>`;
         });
 
+        // Tùy chỉnh Nút sidebar ở vai trò học sinh hoặc admin
+        let actionButtonHTML = '';
+        let addChapterButtonHTML = '';
+
+        if (isEditModeActive) {
+            // Admin mode: đổi nút đăng ký thành Xem với vai trò học sinh (màu đỏ)
+            actionButtonHTML = `<button class="btn btn-primary w-100 btn-student-role" style="width: 100%;" id="viewAsStudentBtn"><i class="fa-solid fa-eye" style="margin-right: 6px;"></i> Xem với vai trò học sinh</button>`;
+            // Thêm nút Thêm chương mới ở dưới như trong ảnh mẫu
+            addChapterButtonHTML = `<button class="btn btn-secondary w-100" id="sidebarAddChapterBtn" style="margin-top: 10px; width: 100%; font-weight: 600;"><i class="fa-solid fa-plus"></i> Thêm chương mới</button>`;
+        } else {
+            // Student mode: nút đăng ký màu tím mặc định
+            actionButtonHTML = `<button class="btn btn-primary w-100 course-register-btn" style="width: 100%;" data-title="${course.title}" data-price="${priceFormatted}">Đăng ký học ngay</button>`;
+        }
+
         sidebar.innerHTML = `
             <div class="sidebar-img-placeholder">
                 <img src="${course.image_url}" alt="${course.title}">
             </div>
             <div class="sidebar-price">${priceFormatted}<span>/ khóa</span></div>
-            <button class="btn btn-primary w-100 course-register-btn" style="width: 100%;" data-title="${course.title}" data-price="${priceFormatted}">Đăng ký học ngay</button>
-            
-            ${isEditModeActive ? `<button class="btn btn-secondary w-100" onclick="createChapterInline()" style="margin-top: 10px; width: 100%;"><i class="fa-solid fa-plus"></i> Thêm chương mới</button>` : ''}
-            
+            ${actionButtonHTML}
+            ${addChapterButtonHTML}
             <ul class="sidebar-features">
                 ${featuresHTML}
             </ul>
         `;
+
+        // Click xem với vai trò học sinh ➔ Tắt Toggle sửa trực tiếp
+        const viewAsStudentBtn = sidebar.querySelector('#viewAsStudentBtn');
+        if (viewAsStudentBtn && editModeToggle) {
+            viewAsStudentBtn.addEventListener('click', () => {
+                editModeToggle.checked = false;
+                const event = new Event('change');
+                editModeToggle.dispatchEvent(event);
+            });
+        }
+
+        // Click thêm chương mới ở sidebar
+        const sidebarAddChapterBtn = sidebar.querySelector('#sidebarAddChapterBtn');
+        if (sidebarAddChapterBtn) {
+            sidebarAddChapterBtn.onclick = createChapterInline;
+        }
     }
 
     // 4. KÉO THẢ SẮP XẾP BẰNG SORTABLEJS
@@ -481,7 +534,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             try {
                 const chapterSortable = new Sortable(accordion, {
                     animation: 150,
-                    handle: '.chapter-drag-handle', // Chỉ cho kéo bằng tay nắm
+                    handle: '.chapter-drag-handle',
                     onEnd: async () => {
                         const items = accordion.querySelectorAll('.accordion-item');
                         const updates = [];
@@ -504,7 +557,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             try {
                 const lessonSortable = new Sortable(listEl, {
                     animation: 150,
-                    handle: '.drag-handle', // Chỉ cho kéo bằng tay nắm
+                    handle: '.drag-handle',
                     onEnd: async () => {
                         const items = listEl.querySelectorAll('.lesson-item');
                         const updates = [];
@@ -525,7 +578,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     async function saveNewChapterOrder(updates) {
         if (isOnline) {
             try {
-                // Chạy cập nhật hàng loạt song song lên Supabase
                 const promises = updates.map(u => 
                     supabaseClient.from('chapters').update({ order_index: u.order_index }).eq('id', u.id)
                 );
@@ -543,14 +595,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             localStorage.setItem('db_chapters', JSON.stringify(dbChapters));
         }
 
-        // Reload data cục bộ mà không load lại trang
         loadOfflineData(currentCourseId);
     }
 
     async function saveNewLessonOrder(updates) {
         if (isOnline) {
             try {
-                // Chạy cập nhật hàng loạt song song lên Supabase
                 const promises = updates.map(u => 
                     supabaseClient.from('lessons').update({ order_index: u.order_index }).eq('id', u.id)
                 );
@@ -568,7 +618,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             localStorage.setItem('db_lessons', JSON.stringify(dbLessons));
         }
 
-        // Reload data cục bộ mà không load lại trang
         loadOfflineData(currentCourseId);
     }
 
@@ -848,6 +897,41 @@ document.addEventListener('DOMContentLoaded', async () => {
         quickEditModal.classList.add('active');
     }
 
+    // Mở nhanh modal chỉnh sửa khóa học
+    function openQuickEditCourseModal(courseId) {
+        currentModalAction = 'edit_course';
+        currentModalTargetId = courseId;
+        quickEditModalTitle.textContent = "Chỉnh sửa thông tin khóa học";
+
+        const course = currentCourse;
+        if (!course) return;
+
+        quickEditFields.innerHTML = `
+            <div class="form-group">
+                <label class="form-label">Tên khóa học</label>
+                <input type="text" id="inline_c_title" class="form-control" value="${course.title}" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Học phí (VND)</label>
+                <input type="number" id="inline_c_price" class="form-control" value="${course.price}" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Thời lượng hiển thị</label>
+                <input type="text" id="inline_c_duration" class="form-control" value="${course.duration || ''}" placeholder="Ví dụ: 6 tháng (72 buổi)" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Đường dẫn ảnh bìa (Image URL)</label>
+                <input type="text" id="inline_c_image" class="form-control" value="${course.image_url || ''}" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Mô tả khóa học</label>
+                <textarea id="inline_c_desc" class="form-control" style="height: 100px;" required>${course.description || ''}</textarea>
+            </div>
+        `;
+
+        quickEditModal.classList.add('active');
+    }
+
     function closeQuickEditModal() {
         quickEditModal.classList.remove('active');
         quickEditForm.reset();
@@ -863,53 +947,84 @@ document.addEventListener('DOMContentLoaded', async () => {
         quickEditForm.addEventListener('submit', async (e) => {
             e.preventDefault();
 
-            const title = document.getElementById('inline_l_title').value.trim();
-            const type = document.getElementById('inline_l_type').value;
-            const url = document.getElementById('inline_l_url').value.trim();
-            const duration = document.getElementById('inline_l_duration').value.trim();
-            const is_preview = document.getElementById('inline_l_preview').checked;
-            const order_index = parseInt(document.getElementById('inline_l_order').value);
+            if (currentModalAction === 'edit_course') {
+                // SỬA KHÓA HỌC
+                const courseId = currentModalTargetId;
+                const title = document.getElementById('inline_c_title').value.trim();
+                const price = parseInt(document.getElementById('inline_c_price').value);
+                const duration = document.getElementById('inline_c_duration').value.trim();
+                const image_url = document.getElementById('inline_c_image').value.trim();
+                const description = document.getElementById('inline_c_desc').value.trim();
 
-            const lessonData = { title, type, url, duration, is_preview, order_index };
-
-            if (currentModalAction === 'create_lesson') {
-                const chapter_id = currentModalTargetId;
-                const newLesson = { chapter_id, ...lessonData };
+                const courseUpdateData = { title, price, duration, image_url, description };
 
                 if (isOnline) {
                     try {
-                        const { error } = await supabaseClient.from('lessons').insert([newLesson]);
+                        const { error } = await supabaseClient.from('courses').update(courseUpdateData).eq('id', courseId);
                         if (error) throw error;
                     } catch (err) {
-                        alert("Lỗi khi thêm bài học online: " + err.message);
+                        alert("Lỗi khi lưu thông tin khóa học online: " + err.message);
                         return;
                     }
                 } else {
-                    const newId = dbLessons.length > 0 ? Math.max(...dbLessons.map(l => l.id)) + 1 : 1001;
-                    dbLessons.push({ id: newId, ...newLesson });
-                    localStorage.setItem('db_lessons', JSON.stringify(dbLessons));
-                }
-                alert("Đã thêm bài học thành công!");
-            } 
-            else if (currentModalAction === 'edit_lesson') {
-                const lessonId = currentModalTargetId;
-
-                if (isOnline) {
-                    try {
-                        const { error } = await supabaseClient.from('lessons').update(lessonData).eq('id', lessonId);
-                        if (error) throw error;
-                    } catch (err) {
-                        alert("Lỗi khi lưu bài học online: " + err.message);
-                        return;
-                    }
-                } else {
-                    const idx = dbLessons.findIndex(l => l.id == lessonId);
+                    const idx = dbCourses.findIndex(c => c.id == courseId);
                     if (idx !== -1) {
-                        dbLessons[idx] = { id: lessonId, chapter_id: dbLessons[idx].chapter_id, ...lessonData };
+                        dbCourses[idx] = { ...dbCourses[idx], ...courseUpdateData };
+                        localStorage.setItem('db_courses', JSON.stringify(dbCourses));
+                    }
+                }
+                alert("Đã cập nhật thông tin khóa học thành công!");
+            } 
+            else {
+                // THÊM/SỬA BÀI HỌC
+                const title = document.getElementById('inline_l_title').value.trim();
+                const type = document.getElementById('inline_l_type').value;
+                const url = document.getElementById('inline_l_url').value.trim();
+                const duration = document.getElementById('inline_l_duration').value.trim();
+                const is_preview = document.getElementById('inline_l_preview').checked;
+                const order_index = parseInt(document.getElementById('inline_l_order').value);
+
+                const lessonData = { title, type, url, duration, is_preview, order_index };
+
+                if (currentModalAction === 'create_lesson') {
+                    const chapter_id = currentModalTargetId;
+                    const newLesson = { chapter_id, ...lessonData };
+
+                    if (isOnline) {
+                        try {
+                            const { error } = await supabaseClient.from('lessons').insert([newLesson]);
+                            if (error) throw error;
+                        } catch (err) {
+                            alert("Lỗi khi thêm bài học online: " + err.message);
+                            return;
+                        }
+                    } else {
+                        const newId = dbLessons.length > 0 ? Math.max(...dbLessons.map(l => l.id)) + 1 : 1001;
+                        dbLessons.push({ id: newId, ...newLesson });
                         localStorage.setItem('db_lessons', JSON.stringify(dbLessons));
                     }
+                    alert("Đã thêm bài học thành công!");
+                } 
+                else if (currentModalAction === 'edit_lesson') {
+                    const lessonId = currentModalTargetId;
+
+                    if (isOnline) {
+                        try {
+                            const { error } = await supabaseClient.from('lessons').update(lessonData).eq('id', lessonId);
+                            if (error) throw error;
+                        } catch (err) {
+                            alert("Lỗi khi lưu bài học online: " + err.message);
+                            return;
+                        }
+                    } else {
+                        const idx = dbLessons.findIndex(l => l.id == lessonId);
+                        if (idx !== -1) {
+                            dbLessons[idx] = { id: lessonId, chapter_id: dbLessons[idx].chapter_id, ...lessonData };
+                            localStorage.setItem('db_lessons', JSON.stringify(dbLessons));
+                        }
+                    }
+                    alert("Đã lưu thay đổi bài học!");
                 }
-                alert("Đã lưu thay đổi bài học!");
             }
 
             closeQuickEditModal();
