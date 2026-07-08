@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản trị Website - Toán Smart</title>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Outfit -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap">
+    
+    <style>
+        :root {
+            --bg-color: #F8FAFC;
+            --primary-color: #0F172A;
+            --accent-color: #4F46E5;
+            --accent-hover: #4338CA;
+            --text-primary: #1E293B;
+            --text-secondary: #64748B;
+            --border-color: #E2E8F0;
+            --card-bg: #FFFFFF;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            font-family: 'Outfit', sans-serif;
+            line-height: 1.6;
+        }
+
+        /* Login Screen */
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .login-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            padding: 40px;
+            border-radius: 24px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
+        }
+
+        .login-card h2 {
+            font-size: 1.8rem;
+            margin-bottom: 8px;
+            text-align: center;
+            color: var(--primary-color);
+        }
+
+        .login-card p {
+            color: var(--text-secondary);
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 0.9rem;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            font-family: inherit;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 10px rgba(99, 102, 241, 0.1);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 24px;
+            font-family: inherit;
+            font-size: 0.95rem;
+            font-weight: 600;
+            border-radius: 12px;
+            cursor: pointer;
+            border: none;
+            transition: all 0.3s;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: var(--accent-color);
+            color: #FFFFFF;
+            width: 100%;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-hover);
+        }
+
+        .btn-secondary {
+            background: #F1F5F9;
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: #E2E8F0;
+        }
+
+        .btn-danger {
+            background: #EF4444;
+            color: #FFFFFF;
+        }
+
+        .btn-danger:hover {
+            background: #DC2626;
+        }
+
+        /* Dashboard Layout */
+        .dashboard-header {
+            background: #FFFFFF;
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+            height: 70px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .brand {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        .brand span {
+            color: var(--accent-color);
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-size: 0.9rem;
+        }
+
+        .user-email {
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .logout-btn {
+            background: none;
+            border: none;
+            color: #EF4444;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: 600;
+        }
+
+        /* Dashboard Body */
+        .dashboard-main {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 24px;
+        }
+
+        .dashboard-tabs {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 30px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 12px;
+        }
+
+        .tab-btn {
+            padding: 10px 20px;
+            border-radius: 10px;
+            border: 1px solid transparent;
+            background: none;
+            font-family: inherit;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .tab-btn.active {
+            background: var(--accent-color);
+            color: #FFFFFF;
+        }
+
+        .tab-btn:not(.active):hover {
+            background: #F1F5F9;
+            color: var(--text-primary);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        /* Tables */
+        .table-responsive {
+            background: #FFFFFF;
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.01);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.95rem;
+        }
+
+        th {
+            background: #F8FAFC;
+            padding: 16px 20px;
+            font-weight: 600;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-secondary);
+        }
+
+        td {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: middle;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .actions-cell {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-icon-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: #FFFFFF;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.3s;
+        }
+
+        .action-icon-btn:hover {
+            border-color: var(--accent-color);
+            color: var(--accent-color);
+        }
+
+        .action-icon-btn.delete-btn:hover {
+            border-color: #EF4444;
+            color: #EF4444;
+        }
+
+        /* Modal CRUD */
+        .admin-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s;
+            padding: 24px;
+        }
+
+        .admin-modal.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .admin-modal-content {
+            background: #FFFFFF;
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            width: 100%;
+            max-width: 500px;
+            padding: 30px;
+            position: relative;
+            transform: scale(0.95);
+            transition: all 0.3s;
+        }
+
+        .admin-modal.active .admin-modal-content {
+            transform: scale(1);
+        }
+
+        .admin-modal-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            font-size: 1.3rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
+
+        .admin-modal-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 24px;
+            color: var(--primary-color);
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 24px;
+            border-top: 1px solid var(--border-color);
+            padding-top: 20px;
+        }
+
+        .alert-error {
+            background: #FEE2E2;
+            border: 1px solid #FCA5A5;
+            color: #B91C1C;
+            padding: 12px 16px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 1. LOGIN SCREEN -->
+    <div class="login-container" id="loginScreen">
+        <div class="login-card">
+            <h2>Toán Smart</h2>
+            <p>Trang quản trị hệ thống bài giảng</p>
+            
+            <div class="alert-error" id="loginError">Tên đăng nhập hoặc mật khẩu không đúng.</div>
+            
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="loginEmail" class="form-label">Email quản trị</label>
+                    <input type="email" id="loginEmail" class="form-control" placeholder="admin@toansmart.edu.vn" required>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword" class="form-label">Mật khẩu</label>
+                    <input type="password" id="loginPassword" class="form-control" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="btn btn-primary" id="loginBtn">Đăng nhập hệ thống</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 2. DASHBOARD SCREEN -->
+    <div id="dashboardScreen" style="display: none;">
+        
+        <!-- Header -->
+        <header class="dashboard-header">
+            <div class="header-container">
+                <a href="index.html" class="brand">
+                    <i class="fa-solid fa-calculator"></i> Toán <span>Smart</span>
+                </a>
+                <div class="user-menu">
+                    <span class="user-email" id="userEmail">admin@toansmart.edu.vn</span>
+                    <button class="logout-btn" id="logoutBtn"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Body Main -->
+        <main class="dashboard-main">
+            
+            <!-- Tab Links -->
+            <div class="dashboard-tabs">
+                <button class="tab-btn active" data-tab="courses">Khóa học</button>
+                <button class="tab-btn" data-tab="chapters">Chương học</button>
+                <button class="tab-btn" data-tab="lessons">Bài giảng</button>
+            </div>
+
+            <!-- Tab Content 1: Courses -->
+            <div class="tab-pane" id="coursesPane">
+                <div class="section-header">
+                    <h3>Danh sách khóa học</h3>
+                    <button class="btn btn-primary btn-add" data-type="course" style="width: auto;"><i class="fa-solid fa-plus" style="margin-right: 6px;"></i> Thêm khóa học</button>
+                </div>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Tên khóa học</th>
+                                <th>Phân loại</th>
+                                <th>Học phí</th>
+                                <th>Thời lượng</th>
+                                <th>Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody id="coursesTableBody">
+                            <!-- JS dynamically loads rows -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tab Content 2: Chapters -->
+            <div class="tab-pane" id="chaptersPane" style="display: none;">
+                <div class="section-header">
+                    <h3>Danh sách Chương học</h3>
+                    <button class="btn btn-primary btn-add" data-type="chapter" style="width: auto;"><i class="fa-solid fa-plus" style="margin-right: 6px;"></i> Thêm chương mới</button>
+                </div>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Khóa học</th>
+                                <th>Tên chương</th>
+                                <th>Thứ tự</th>
+                                <th>Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody id="chaptersTableBody">
+                            <!-- JS dynamically loads rows -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tab Content 3: Lessons -->
+            <div class="tab-pane" id="lessonsPane" style="display: none;">
+                <div class="section-header">
+                    <h3>Danh sách Bài giảng & Tài liệu</h3>
+                    <button class="btn btn-primary btn-add" data-type="lesson" style="width: auto;"><i class="fa-solid fa-plus" style="margin-right: 6px;"></i> Thêm bài học mới</button>
+                </div>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Chương học</th>
+                                <th>Tên bài</th>
+                                <th>Loại</th>
+                                <th>Học thử</th>
+                                <th>Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody id="lessonsTableBody">
+                            <!-- JS dynamically loads rows -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- 3. CRUD FORM DIALOG MODAL -->
+    <div class="admin-modal" id="crudModal">
+        <div class="admin-modal-content">
+            <button class="admin-modal-close" id="modalCloseBtn"><i class="fa-solid fa-xmark"></i></button>
+            <h3 class="admin-modal-title" id="modalTitle">Thêm mới dữ liệu</h3>
+            
+            <form id="crudForm">
+                <!-- Inputs placeholder that Javascript renders dynamically based on what was added/edited -->
+                <div id="formFieldsContainer"></div>
+                
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="modalCancelBtn">Hủy bỏ</button>
+                    <button type="submit" class="btn btn-primary" style="width: auto;">Lưu lại</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Supabase JS SDK CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Config file -->
+    <script src="js/config.js"></script>
+    <!-- Admin Page Dashboard Script -->
+    <script src="js/admin.js"></script>
+</body>
+</html>

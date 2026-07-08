@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Toán Smart - Thầy Tùng Dương | Ôn Thi Toán Lớp 9 - 12</title>
+    <meta name="description" content="Chương trình luyện thi Toán chất lượng cao ôn thi vào lớp 10, ôn thi tốt nghiệp THPT và ôn thi Đánh giá năng lực Đại học. Giảng dạy bởi Thầy Tùng Dương.">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Custom CSS stylesheet -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- Header / Navbar -->
+    <header>
+        <div class="container nav-container">
+            <a href="#" class="logo">
+                <i class="fa-solid fa-calculator"></i> Toán <span>Smart</span>
+            </a>
+            <button class="menu-toggle" aria-label="Toggle menu">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+            <ul class="nav-menu">
+                <li><a href="#hero" class="nav-link active">Trang chủ</a></li>
+                <li><a href="#courses" class="nav-link">Khóa học</a></li>
+                <li><a href="#about" class="nav-link">Giới thiệu</a></li>
+                <li><a href="#resources" class="nav-link">Tài liệu</a></li>
+                <li><a href="#contact" class="btn btn-primary" style="padding: 8px 20px;">Tư vấn ngay</a></li>
+            </ul>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero" id="hero">
+        <div class="container hero-grid">
+            <div class="hero-content">
+                <h1>Bứt Phá Điểm Số<br><span>Toán Học</span> Kỳ Thi Lớn</h1>
+                <p>Khóa học ôn thi Toán chuyên sâu vào lớp 10, thi tốt nghiệp THPT Quốc Gia và Đánh giá năng lực (HSA/APT). Giúp học sinh nắm vững bản chất, rèn luyện tư duy giải nhanh để tự tin đỗ nguyện vọng 1.</p>
+                <div class="hero-btns">
+                    <a href="#courses" class="btn btn-primary">Khám phá khóa học</a>
+                    <a href="#contact" class="btn btn-secondary">Đăng ký tư vấn miễn phí</a>
+                </div>
+            </div>
+            <div class="hero-visual">
+                <div class="hero-img-wrapper">
+                    <!-- Teacher portrait photo provided by user -->
+                    <img src="assets/images/teacher-avatar.jpg" alt="Thầy Tùng Dương - Toán Smart" class="hero-image" style="object-position: center 20%;">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Course Catalog Section -->
+    <section class="courses" id="courses">
+        <div class="container">
+            <h2>Chương Trình Học Mục Tiêu</h2>
+            <div class="courses-filter">
+                <button class="filter-btn active" data-filter="all">Tất cả khóa học</button>
+                <button class="filter-btn" data-filter="grade10">Luyện thi vào lớp 10</button>
+                <button class="filter-btn" data-filter="thpt">Luyện thi tốt nghiệp THPT</button>
+                <button class="filter-btn" data-filter="dgnl">Đánh giá năng lực (HSA/APT)</button>
+            </div>
+            
+            <div class="courses-grid">
+                <!-- Course 1 -->
+                <div class="course-card" data-category="grade10">
+                    <div class="course-image-wrapper">
+                        <span class="course-tag">Lớp 9 lên 10</span>
+                        <img src="assets/images/course-10.png" alt="Khóa Toán vào 10" class="course-img">
+                    </div>
+                    <div class="course-info">
+                        <h3 class="course-title">Luyện Thi Vào Lớp 10 Toán Mục Tiêu 9+</h3>
+                        <p class="course-desc">Bứt phá điểm số hình học học kỳ 2, đại số chuyên đề, luyện giải đề thi thử sát với cấu trúc sở GD&ĐT các năm gần đây.</p>
+                        <div class="course-meta">
+                            <div class="meta-item">
+                                <i class="fa-regular fa-clock"></i>
+                                <span>6 tháng (72 buổi)</span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fa-solid fa-user-group"></i>
+                                <span>Sĩ số giới hạn</span>
+                            </div>
+                        </div>
+                        <div class="course-footer">
+                            <div class="course-price">1.500.000 đ<span>/ khóa</span></div>
+                            <a href="course-grade10.html" class="btn btn-primary" style="padding: 10px 20px; font-size: 0.9rem;">Xem khóa học</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Course 2 -->
+                <div class="course-card" data-category="thpt">
+                    <div class="course-image-wrapper">
+                        <span class="course-tag">Lớp 12 ôn thi THPT</span>
+                        <img src="assets/images/course-thpt.png" alt="Khóa ôn thi THPT" class="course-img">
+                    </div>
+                    <div class="course-info">
+                        <h3 class="course-title">Luyện Thi Tốt Nghiệp THPT Chuyên Sâu</h3>
+                        <p class="course-desc">Hệ thống toàn bộ kiến thức giải tích 12, hình học không gian, học các kỹ năng bấm máy tính Casio giải nhanh trắc nghiệm 30s.</p>
+                        <div class="course-meta">
+                            <div class="meta-item">
+                                <i class="fa-regular fa-clock"></i>
+                                <span>8 tháng (96 buổi)</span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fa-solid fa-user-group"></i>
+                                <span>Tương tác trực tiếp</span>
+                            </div>
+                        </div>
+                        <div class="course-footer">
+                            <div class="course-price">2.000.000 đ<span>/ khóa</span></div>
+                            <a href="course-thpt.html" class="btn btn-primary" style="padding: 10px 20px; font-size: 0.9rem;">Xem khóa học</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Course 3 -->
+                <div class="course-card" data-category="dgnl">
+                    <div class="course-image-wrapper">
+                        <span class="course-tag">Luyện ĐGNL HSA/APT</span>
+                        <img src="assets/images/course-dgnl.png" alt="Khóa học ĐGNL" class="course-img">
+                    </div>
+                    <div class="course-info">
+                        <h3 class="course-title">Luyện Tư Duy Định Lượng HSA/APT (ĐGNL)</h3>
+                        <p class="course-desc">Phát triển tư duy phân tích số liệu khoa học, logic toán học cực nhanh bám sát cấu trúc đề của ĐHQG Hà Nội & ĐHQG TP.HCM.</p>
+                        <div class="course-meta">
+                            <div class="meta-item">
+                                <i class="fa-regular fa-clock"></i>
+                                <span>4 tháng (48 buổi)</span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fa-solid fa-user-group"></i>
+                                <span>Tài liệu đặc quyền</span>
+                            </div>
+                        </div>
+                        <div class="course-footer">
+                            <div class="course-price">1.800.000 đ<span>/ khóa</span></div>
+                            <a href="course-dgnl.html" class="btn btn-primary" style="padding: 10px 20px; font-size: 0.9rem;">Xem khóa học</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Teacher Bio Section -->
+    <section class="about" id="about">
+        <div class="container about-grid">
+            <div class="about-img-wrapper">
+                <img src="assets/images/teacher-avatar.jpg" alt="Thầy Tùng Dương - Toán Smart" class="about-img">
+            </div>
+            <div class="about-content">
+                <span class="about-tag">Người đồng hành</span>
+                <h2>Thầy Tùng Dương</h2>
+                <p class="about-intro">Thầy Tùng Dương, cựu học sinh THPT chuyên Vĩnh Phúc, Tốt nghiệp ĐH Sư phạm Hà Nội ngành Toán Tiếng Anh, Thạc sĩ Toán học ĐH Sư phạm Hà Nội, nhiều năm kinh nghiệm ôn thi vào 10, ôn thi tốt nghiệp THPT, ĐGNL.</p>
+                <div class="about-details">
+                    <p>"Toán học không đơn thuần là những công thức khô khan, mà là nghệ thuật rèn luyện tư duy logic. Tại Toán Smart, thầy không chỉ truyền thụ kiến thức thi cử bám sát thực tế, mà còn giúp các em xây dựng nền tảng tư duy toán học rộng mở để tự tin vượt qua mọi dạng bài mới."</p>
+                </div>
+                <div class="teacher-features">
+                    <div class="feature-box">
+                        <i class="fa-solid fa-brain"></i>
+                        <h4>Tư duy mở rộng</h4>
+                        <p>Dạy phương pháp giải bản chất thay vì học vẹt công thức toán.</p>
+                    </div>
+                    <div class="feature-box">
+                        <i class="fa-solid fa-graduation-cap"></i>
+                        <h4>Bám sát đề thi</h4>
+                        <p>Cập nhật liên tục xu hướng ra đề thi vào 10, tốt nghiệp THPT mới nhất.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Blog & Free Resources Section -->
+    <section class="resources" id="resources">
+        <div class="container">
+            <h2>Góc Tài Liệu & Blog Chia Sẻ</h2>
+            <div class="resources-search">
+                <input type="text" class="search-input" placeholder="Tìm kiếm đề thi, tài liệu ôn tập...">
+                <i class="fa-solid fa-magnifying-glass search-icon"></i>
+            </div>
+
+            <div class="resources-grid">
+                <!-- Document 1 -->
+                <div class="resource-card">
+                    <span class="resource-type"><i class="fa-regular fa-file-pdf"></i> Đề thi thử</span>
+                    <h3 class="resource-title">Bộ 50 Đề Thi Thử Toán Vào 10 Tuyển Chọn (Có Giải Chi Tiết)</h3>
+                    <p class="resource-excerpt">Tuyển chọn các dạng bài toán thực tế, đồ thị hàm số và hình học có xác suất ra đề cao nhất năm nay.</p>
+                    <div class="resource-meta">
+                        <span class="resource-date">Đăng: 05/07/2026</span>
+                        <a href="assets/docs/de-thi-thu-toan-vao-10.pdf" download class="resource-download-btn">Tải về miễn phí <i class="fa-solid fa-download"></i></a>
+                    </div>
+                </div>
+
+                <!-- Document 2 -->
+                <div class="resource-card">
+                    <span class="resource-type"><i class="fa-regular fa-file-pdf"></i> Sổ tay</span>
+                    <h3 class="resource-title">Sổ Tay Công Thức Giải Nhanh Trắc Nghiệm Toán 12</h3>
+                    <p class="resource-excerpt">Tổng hợp đầy đủ công thức giải nhanh phần mũ, logarit, tích phân và hình tọa độ Oxyz giúp tiết kiệm 70% thời gian làm bài.</p>
+                    <div class="resource-meta">
+                        <span class="resource-date">Đăng: 02/07/2026</span>
+                        <a href="assets/docs/so-tay-toan-12.pdf" download class="resource-download-btn">Tải về miễn phí <i class="fa-solid fa-download"></i></a>
+                    </div>
+                </div>
+
+                <!-- Document 3 -->
+                <div class="resource-card">
+                    <span class="resource-type"><i class="fa-regular fa-pen-to-square"></i> Mẹo ôn thi</span>
+                    <h3 class="resource-title">Phương Pháp Đạt Điểm Cao Tư Duy Định Lượng HSA</h3>
+                    <p class="resource-excerpt">Hướng dẫn cách đọc đề bài logic, bóc tách số liệu nhanh chóng để chọn phương án chính xác trong kỳ thi HSA.</p>
+                    <div class="resource-meta">
+                        <span class="resource-date">Đăng: 28/06/2026</span>
+                        <a href="#contact" class="resource-download-btn">Xem chi tiết <i class="fa-solid fa-arrow-right"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Register Form Section -->
+    <section class="contact" id="contact">
+        <div class="container contact-grid">
+            <div class="contact-info-panel">
+                <span class="about-tag">Đăng ký ngay</span>
+                <h2>Nhận Tư Vấn Lộ Trình Học Chi Tiết</h2>
+                <p>Hãy gửi lại thông tin để thầy tư vấn trực tiếp và gửi tặng bộ tài liệu ôn thi đắc lực nhất phù hợp với học lực hiện tại của em.</p>
+                <div class="contact-details">
+                    <div class="contact-item">
+                        <div class="contact-icon">
+                            <i class="fa-solid fa-phone"></i>
+                        </div>
+                        <div class="contact-text">
+                            <h4>Hotline tư vấn</h4>
+                            <p>0912.345.678 (Hỗ trợ 24/7)</p>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <div class="contact-icon">
+                            <i class="fa-solid fa-envelope"></i>
+                        </div>
+                        <div class="contact-text">
+                            <h4>Email liên hệ</h4>
+                            <p>lienhe@toansmart.edu.vn</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="contact-form-panel">
+                <h3>Điền Thông Tin Đăng Ký</h3>
+                <form id="mathContactForm">
+                    <div class="form-group">
+                        <label for="fullName" class="form-label">Họ và tên học sinh / phụ huynh</label>
+                        <input type="text" id="fullName" class="form-control" placeholder="Nhập họ và tên..." required>
+                    </div>
+                    <div class="form-group">
+                        <label for="phoneNumber" class="form-label">Số điện thoại liên hệ (Zalo)</label>
+                        <input type="tel" id="phoneNumber" class="form-control" placeholder="Nhập số điện thoại..." required>
+                    </div>
+                    <div class="form-group">
+                        <label for="studentGrade" class="form-label">Học sinh đang học lớp nào?</label>
+                        <select id="studentGrade" class="form-control" required>
+                            <option value="" disabled selected>Chọn lớp học của em...</option>
+                            <option value="9">Học sinh Lớp 9 (Ôn thi vào 10)</option>
+                            <option value="10">Học sinh Lớp 10</option>
+                            <option value="11">Học sinh Lớp 11</option>
+                            <option value="12">Học sinh Lớp 12 (Ôn tốt nghiệp/ĐGNL)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="targetCourse" class="form-label">Khóa học quan tâm</label>
+                        <select id="targetCourse" class="form-control" required>
+                            <option value="" disabled selected>Chọn khóa học...</option>
+                            <option value="grade10">Khóa Luyện Thi Vào Lớp 10 Mục Tiêu 9+</option>
+                            <option value="thpt">Khóa Luyện Thi Tốt Nghiệp THPT Chuyên Sâu</option>
+                            <option value="dgnl">Khóa Tư Duy Định Lượng HSA/APT (ĐGNL)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="messageNote" class="form-label">Lời nhắn hoặc tình hình học lực hiện tại (Không bắt buộc)</label>
+                        <textarea id="messageNote" class="form-control" placeholder="Mô tả học lực của học sinh..."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100" style="width: 100%; font-size: 1.1rem;">Nhận Tư Vấn Ngay & Tải Tài Liệu</button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container footer-grid">
+            <div class="footer-brand">
+                <a href="#" class="logo">
+                    <i class="fa-solid fa-calculator"></i> Toán <span>Smart</span>
+                </a>
+                <p>Nơi học Toán từ bản chất, nâng tầm tư duy logic và đồng hành cùng sự bứt phá học thuật của thế hệ trẻ Việt Nam.</p>
+                <div class="social-links">
+                    <a href="#" class="social-btn"><i class="fa-brands fa-facebook-f"></i></a>
+                    <a href="#" class="social-btn"><i class="fa-brands fa-youtube"></i></a>
+                    <a href="#" class="social-btn"><i class="fa-brands fa-tiktok"></i></a>
+                </div>
+            </div>
+            <div class="footer-links">
+                <h4>Khóa Học</h4>
+                <ul>
+                    <li><a href="#courses">Khóa Ôn Thi Vào 10</a></li>
+                    <li><a href="#courses">Khóa Luyện Thi Tốt Nghiệp THPT</a></li>
+                    <li><a href="#courses">Luyện Tư Duy Định Lượng HSA</a></li>
+                </ul>
+            </div>
+            <div class="footer-links">
+                <h4>Điều khoản & Tài nguyên</h4>
+                <ul>
+                    <li><a href="#resources">Tài liệu miễn phí</a></li>
+                    <li><a href="#about">Về chúng tôi</a></li>
+                    <li><a href="#contact">Hỗ trợ học viên</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="copyright">
+            <p>&copy; 2026 Toán Smart. All rights reserved. Thiết kế và phát triển bởi Antigravity AI.</p>
+        </div>
+    </footer>
+
+    <!-- Main JavaScript File -->
+    <script src="js/main.js"></script>
+</body>
+</html>

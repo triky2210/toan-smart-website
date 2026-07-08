@@ -1,0 +1,7 @@
+.system_generated/
+.agents/
+*.log
+tmp/
+.git/
+.DS_Store
+Thumbs.db

@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Toán Smart - Chi Tiết Khóa Học</title>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Custom CSS stylesheet -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- Header / Navbar -->
+    <header>
+        <div class="container nav-container">
+            <a href="index.html" class="logo">
+                <i class="fa-solid fa-calculator"></i> Toán <span>Smart</span>
+            </a>
+            <button class="menu-toggle" aria-label="Toggle menu">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+            <ul class="nav-menu">
+                <li><a href="index.html#hero" class="nav-link">Trang chủ</a></li>
+                <li><a href="index.html#courses" class="nav-link active">Khóa học</a></li>
+                <li><a href="index.html#about" class="nav-link">Giới thiệu</a></li>
+                <li><a href="index.html#resources" class="nav-link">Tài liệu</a></li>
+                <li><a href="#contact" class="btn btn-primary" style="padding: 8px 20px;">Tư vấn ngay</a></li>
+            </ul>
+        </div>
+    </header>
+
+    <!-- Main Course Detail Content -->
+    <main class="container">
+        
+        <!-- Loading State -->
+        <div id="loadingIndicator">
+            <i class="fa-solid fa-spinner fa-spin"></i> Đang tải thông tin khóa học...
+        </div>
+
+        <!-- Error State -->
+        <div id="errorIndicator" style="display: none;">
+            <i class="fa-solid fa-circle-exclamation"></i>
+            <p>Không tìm thấy khóa học yêu cầu hoặc đã xảy ra lỗi kết nối.</p>
+            <a href="index.html" class="btn btn-primary" style="margin-top: 16px;">Quay lại trang chủ</a>
+        </div>
+
+        <!-- Main Layout (Hidden during loading) -->
+        <div class="course-detail-layout" id="courseDetailLayout" style="display: none;">
+            
+            <!-- Left Main Content Column -->
+            <div class="course-detail-main">
+                
+                <!-- Course Intro Header -->
+                <div class="course-intro-box" id="courseIntroBox">
+                    <!-- Javascript will render title, tags, description -->
+                </div>
+
+                <!-- Target Audience -->
+                <div class="course-target-audience">
+                    <h3>Khóa học này dành cho ai?</h3>
+                    <ul id="targetAudienceList">
+                        <!-- Javascript will render target list items -->
+                    </ul>
+                </div>
+
+                <!-- Course Syllabus -->
+                <div class="syllabus-section">
+                    <h3>Nội Dung Khóa Học</h3>
+                    <p style="margin-bottom: 24px;">Khóa học gồm các chương học bài bản từ cơ bản đến nâng cao. Nhấp vào tên chương để xem chi tiết bài học.</p>
+                    
+                    <div class="syllabus-accordion" id="syllabusAccordion">
+                        <!-- Javascript will render dynamic chapters and lesson items -->
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Right Registration Sticky Sidebar -->
+            <div class="course-detail-sidebar" id="courseSidebar">
+                <!-- Javascript will render sidebar details dynamically -->
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Checkout Modal Popup -->
+    <div class="modal" id="checkoutModal">
+        <div class="modal-content">
+            <button class="modal-close"><i class="fa-solid fa-xmark"></i></button>
+            <h3 class="modal-title">Đăng Ký Đóng Học Phí</h3>
+            <p>Em đã chọn khóa học: <strong id="modalCourseTitle" style="color: var(--accent-color);">Tên khóa học</strong></p>
+            <p>Học phí cần thanh toán: <strong id="modalCoursePrice" style="color: var(--accent-color);">0đ</strong></p>
+            
+            <div class="checkout-details">
+                <div class="bank-info">
+                    <div class="bank-info-row">
+                        <span class="bank-label">Ngân hàng:</span>
+                        <span class="bank-value">Techcombank (TCB)</span>
+                    </div>
+                    <div class="bank-info-row">
+                        <span class="bank-label">Số tài khoản:</span>
+                        <span class="bank-value">1903 5623 6740 15</span>
+                    </div>
+                    <div class="bank-info-row">
+                        <span class="bank-label">Chủ tài khoản:</span>
+                        <span class="bank-value">NGUYEN TUNG DUONG</span>
+                    </div>
+                    <div class="bank-info-row">
+                        <span class="bank-label">Nội dung CK:</span>
+                        <span class="bank-value" style="color: var(--accent-color);">Học phí [Tên khóa học]</span>
+                    </div>
+                </div>
+
+                <p style="font-size: 0.9rem; text-align: center; color: var(--text-secondary);">Quét mã QR dưới đây bằng ứng dụng Ngân hàng để thanh toán tự động nhanh nhất:</p>
+                <div class="qr-code-wrapper">
+                    <img id="modalQrImg" src="" alt="Mã chuyển khoản ngân hàng VietQR">
+                    <p>TOÁN SMART ACADEMY</p>
+                </div>
+                
+                <p style="font-size: 0.8rem; text-align: center; color: var(--text-secondary); margin-top: 16px;">* Sau khi thanh toán thành công, vui lòng nhắn tin hotline Zalo: <strong>0912.345.678</strong> hoặc chụp lại màn hình giao dịch để được cấp tài khoản học và nhận tài liệu kích hoạt khóa học ngay lập tức.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container footer-grid">
+            <div class="footer-brand">
+                <a href="index.html" class="logo">
+                    <i class="fa-solid fa-calculator"></i> Toán <span>Smart</span>
+                </a>
+                <p>Nơi học Toán từ bản chất, nâng tầm tư duy logic và đồng hành cùng sự bứt phá học thuật của thế hệ trẻ Việt Nam.</p>
+                <div class="social-links">
+                    <a href="#" class="social-btn"><i class="fa-brands fa-facebook-f"></i></a>
+                    <a href="#" class="social-btn"><i class="fa-brands fa-youtube"></i></a>
+                    <a href="#" class="social-btn"><i class="fa-brands fa-tiktok"></i></a>
+                </div>
+            </div>
+            <div class="footer-links">
+                <h4>Khóa Học</h4>
+                <ul>
+                    <li><a href="course-detail.html?id=1">Khóa Ôn Thi Vào 10</a></li>
+                    <li><a href="course-detail.html?id=2">Khóa Luyện Thi Tốt Nghiệp THPT</a></li>
+                    <li><a href="course-detail.html?id=3">Luyện Tư Duy Định Lượng HSA</a></li>
+                </ul>
+            </div>
+            <div class="footer-links">
+                <h4>Điều khoản & Tài nguyên</h4>
+                <ul>
+                    <li><a href="index.html#resources">Tài liệu miễn phí</a></li>
+                    <li><a href="index.html#about">Về chúng tôi</a></li>
+                    <li><a href="index.html#contact">Hỗ trợ học viên</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="copyright">
+            <p>&copy; 2026 Toán Smart. All rights reserved. Thiết kế và phát triển bởi Antigravity AI.</p>
+        </div>
+    </footer>
+
+    <!-- Style overrides for dynamic loader states -->
+    <style>
+        #loadingIndicator {
+            text-align: center;
+            padding: 120px 0;
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+        #errorIndicator {
+            text-align: center;
+            padding: 100px 24px;
+            color: var(--text-secondary);
+        }
+        #errorIndicator i {
+            font-size: 3rem;
+            color: #EF4444;
+            margin-bottom: 20px;
+            display: block;
+        }
+        #errorIndicator p {
+            font-size: 1.1rem;
+            margin-bottom: 24px;
+        }
+    </style>
+
+    <!-- Supabase JS Client library CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Supabase configuration -->
+    <script src="js/config.js"></script>
+    <!-- Course details page dynamic renderer script -->
+    <script src="js/course-detail.js"></script>
+</body>
+</html>
