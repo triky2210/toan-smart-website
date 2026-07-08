@@ -686,7 +686,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // 6. INLINE ACTIONS IMPLEMENTATION
-    window.createChapterInline = async () => {
+    async function createChapterInline() {
         const title = prompt("Nhập tên chương học mới:");
         if (!title || !title.trim()) return;
 
@@ -713,7 +713,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         alert("Đã tạo chương thành công!");
         await loadCourseDetails(currentCourseId);
-    };
+    }
+    window.createChapterInline = createChapterInline;
 
     async function renameChapterInline(chapterId) {
         const chapter = currentChapters.find(c => c.id == chapterId);
@@ -1033,7 +1034,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // Xóa bài giảng trực tiếp
-    window.deleteLessonInline = async (lessonId) => {
+    async function deleteLessonInline(lessonId) {
         if (!confirm("Thầy chắc chắn muốn xóa bài giảng này chứ? Hành động này không thể hoàn tác.")) {
             return;
         }
@@ -1054,7 +1055,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         alert("Đã xóa bài giảng!");
         closeQuickEditModal();
         await loadCourseDetails(currentCourseId);
-    };
+    }
+    window.deleteLessonInline = deleteLessonInline;
 
     // 6.5. SETUP ACCORDIONS LOGIC
     function setupAccordions() {
