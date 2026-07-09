@@ -2129,4 +2129,16 @@ body.admin-toolbar-visible .course-detail-layout {
     }
 }
 
+/* Hover style cho học liệu dạng cây thụt lề */
+.material-sub-item:hover {
+    background: rgba(99, 102, 241, 0.06);
+}
+.material-sub-item:hover span {
+    color: var(--accent-color) !important;
+}
+.material-sub-item.locked:hover {
+    background: rgba(239, 68, 68, 0.04);
+}
+
+
 

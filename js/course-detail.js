@@ -601,39 +601,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                         ? `<i class="fa-solid fa-grip-vertical drag-handle" style="color: #94A3B8; cursor: grab; margin-right: 8px;" title="Kéo thả bài"></i>`
                         : '';
 
-                    // Danh sách icon học liệu con (Hiển thị ở cả chế độ học sinh và chế độ sửa)
-                    let iconsHTML = '';
                     const materials = materialsMap[lesson.id] || [];
-                    materials.forEach(material => {
-                        let iconClass = 'fa-solid fa-circle-play'; // video
-                        if (material.type === 'pdf') iconClass = 'fa-regular fa-file-pdf';
-                        else if (material.type === 'text') iconClass = 'fa-solid fa-file-lines';
-                        else if (material.type === 'quiz') iconClass = 'fa-solid fa-square-poll-horizontal';
-
-                        const isLocked = !material.is_preview && !isUserLoggedIn;
-
-                        iconsHTML += `
-                            <button class="material-icon-btn ${isLocked ? 'locked' : ''}" 
-                                    data-tooltip="${material.title}" 
-                                    data-material-id="${material.id}" 
-                                    data-lesson-id="${lesson.id}"
-                                    data-preview="${material.is_preview}"
-                                    style="border: none;">
-                                <i class="${iconClass}"></i>
-                                ${isLocked ? '<i class="fa-solid fa-lock fa-lock-overlay"></i>' : ''}
-                            </button>
-                        `;
-                    });
-
-                    if (materials.length === 0) {
-                        iconsHTML = `<span style="color: var(--text-secondary); font-style: italic; font-size: 0.8rem;">Không có học liệu</span>`;
-                    }
 
                     // Nút thao tác Admin (chỉ hiện khi bật chế độ sửa)
                     let actionsHTML = '';
                     if (isEditModeActive) {
                         actionsHTML = `
-                            <div class="lesson-item-actions" style="margin-left: 12px;">
+                            <div class="lesson-item-actions" style="margin-left: 12px; display: flex; gap: 8px;">
                                 <button class="pencil-btn" data-lesson-id="${lesson.id}" style="display: inline-flex;" title="Sửa tên bài"><i class="fa-solid fa-pencil"></i></button>
                                 <button class="gear-btn lesson-gear-btn" data-lesson-id="${lesson.id}" style="display: inline-flex;" title="Quản lý học liệu của bài"><i class="fa-solid fa-gear"></i></button>
                             </div>
@@ -641,15 +615,43 @@ document.addEventListener('DOMContentLoaded', async () => {
                     }
 
                     li.innerHTML = `
-                        <div class="lesson-left" style="display: flex; align-items: center; gap: 8px; flex-grow: 1; cursor: ${isEditModeActive ? 'default' : 'pointer'};" data-lesson-id="${lesson.id}">
-                            ${lessonDragHTML}
-                            <span class="lesson-title-text" style="font-weight: 600; color: var(--text-primary);">${lesson.title}</span>
-                        </div>
-                        <div class="lesson-right" style="display: flex; align-items: center; gap: 8px;">
-                            <div class="materials-icons-list">
-                                ${iconsHTML}
+                        <div class="lesson-row" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid rgba(15, 23, 42, 0.03); cursor: pointer;" data-lesson-id="${lesson.id}">
+                            <div class="lesson-left" style="display: flex; align-items: center; gap: 8px; flex-grow: 1;">
+                                ${lessonDragHTML}
+                                <i class="fa-solid fa-chevron-right lesson-chevron" style="font-size: 0.75rem; color: #94A3B8; transition: transform 0.2s;"></i>
+                                <span class="lesson-title-text" style="font-weight: 600; color: var(--text-primary);">${lesson.title}</span>
                             </div>
-                            ${actionsHTML}
+                            <div class="lesson-right" style="display: flex; align-items: center; gap: 12px;">
+                                <div class="materials-count-badge" style="font-size: 0.75rem; background: rgba(99, 102, 241, 0.06); color: var(--accent-color); padding: 2px 8px; border-radius: 12px; font-weight: 600;">
+                                    ${materials.length} học liệu
+                                </div>
+                                ${actionsHTML}
+                            </div>
+                        </div>
+                        <div class="materials-sub-list-wrapper" style="max-height: 0; overflow: hidden; transition: max-height 0.25s ease-out; background: #F8FAFC;">
+                            <ul class="materials-sub-list" style="list-style: none; padding: 8px 16px 12px 36px; display: flex; flex-direction: column; gap: 6px; margin: 0;">
+                                ${materials.map(m => {
+                                    let iconClass = 'fa-solid fa-circle-play'; // video
+                                    if (m.type === 'pdf') iconClass = 'fa-regular fa-file-pdf';
+                                    else if (m.type === 'text') iconClass = 'fa-solid fa-file-lines';
+                                    else if (m.type === 'quiz') iconClass = 'fa-solid fa-square-poll-horizontal';
+
+                                    const isLocked = !m.is_preview && !isUserLoggedIn;
+
+                                    return `
+                                        <li class="material-sub-item ${isLocked ? 'locked' : ''}" 
+                                            data-material-id="${m.id}" 
+                                            data-lesson-id="${lesson.id}"
+                                            data-preview="${m.is_preview}"
+                                            style="display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; cursor: pointer; transition: background 0.2s; background: #FFFFFF; border: 1px solid rgba(15, 23, 42, 0.03);">
+                                            <i class="${iconClass}" style="color: ${m.type === 'video' ? '#0EA5E9' : m.type === 'pdf' ? '#EF4444' : '#10B981'}; width: 14px; text-align: center;"></i>
+                                            <span style="font-weight: 500; color: var(--text-secondary); flex-grow: 1;">${m.title}</span>
+                                            ${isLocked ? '<i class="fa-solid fa-lock" style="font-size: 0.75rem; color: #EF4444;"></i>' : '<i class="fa-solid fa-angle-right" style="font-size: 0.75rem; color: var(--text-secondary); opacity: 0.5;"></i>'}
+                                        </li>
+                                    `;
+                                }).join('')}
+                                ${materials.length === 0 ? `<li style="font-size: 0.8rem; color: var(--text-secondary); font-style: italic; padding: 6px 12px;">Bài học này chưa có học liệu.</li>` : ''}
+                            </ul>
                         </div>
                     `;
                     list.appendChild(li);
@@ -663,50 +665,53 @@ document.addEventListener('DOMContentLoaded', async () => {
             accordion.appendChild(item);
         });
 
-        // Xử lý sự kiện click icon học liệu của học sinh
-        const materialBtns = accordion.querySelectorAll('.material-icon-btn');
-        materialBtns.forEach(btn => {
-            btn.addEventListener('click', (e) => {
+        // Xử lý click đóng mở Lesson Row (Nested Accordion)
+        const lessonRows = accordion.querySelectorAll('.lesson-row');
+        lessonRows.forEach(row => {
+            row.addEventListener('click', (e) => {
+                // Tránh đóng mở khi click vào các nút sửa của admin
+                if (e.target.closest('.lesson-item-actions')) return;
+
+                const li = row.closest('.lesson-item');
+                const wrapper = li.querySelector('.materials-sub-list-wrapper');
+                const chevron = row.querySelector('.lesson-chevron');
+                const isExpanded = li.classList.contains('expanded');
+
+                if (isExpanded) {
+                    li.classList.remove('expanded');
+                    wrapper.style.maxHeight = null;
+                    if (chevron) chevron.style.transform = 'rotate(0deg)';
+                } else {
+                    li.classList.add('expanded');
+                    wrapper.style.maxHeight = wrapper.scrollHeight + 'px';
+                    if (chevron) chevron.style.transform = 'rotate(90deg)';
+
+                    // Cập nhật chiều cao của accordion chương cha để chứa vừa phần mở rộng
+                    const chContent = li.closest('.accordion-content');
+                    if (chContent && chContent.style.maxHeight) {
+                        chContent.style.maxHeight = (chContent.scrollHeight + wrapper.scrollHeight) + 'px';
+                    }
+                }
+            });
+        });
+
+        // Xử lý sự kiện click vào từng học liệu con của bài học
+        const subItems = accordion.querySelectorAll('.material-sub-item');
+        subItems.forEach(item => {
+            item.addEventListener('click', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
 
-                const isPreview = btn.getAttribute('data-preview') === 'true';
-                const materialId = btn.getAttribute('data-material-id');
-                const lessonId = btn.getAttribute('data-lesson-id');
+                const isPreview = item.getAttribute('data-preview') === 'true';
+                const materialId = item.getAttribute('data-material-id');
+                const lessonId = item.getAttribute('data-lesson-id');
 
                 if (!isPreview && !isUserLoggedIn) {
                     alert("Vui lòng đăng ký tài khoản và đăng nhập để xem nội dung học liệu này!");
                     sessionStorage.setItem('redirectAfterLogin', `${window.location.origin}/study.html?id=${currentCourseId}&lesson_id=${lessonId}&material_id=${materialId}`);
                     window.location.href = 'login.html';
                 } else {
-                    // Mở trang học
                     window.location.href = `study.html?id=${currentCourseId}&lesson_id=${lessonId}&material_id=${materialId}`;
-                }
-            });
-        });
-
-        // Xử lý sự kiện click vào phần chữ tên Bài học (lesson-left) để tự động vào học liệu con đầu tiên
-        const lessonLefts = accordion.querySelectorAll('.lesson-left');
-        lessonLefts.forEach(left => {
-            left.addEventListener('click', (e) => {
-                if (isEditModeActive) return; // Không click điều hướng khi đang trong chế độ chỉnh sửa
-
-                const lessonId = left.getAttribute('data-lesson-id');
-                const materials = materialsMap[lessonId] || [];
-
-                if (materials.length > 0) {
-                    const firstMaterial = materials[0];
-                    const isLocked = !firstMaterial.is_preview && !isUserLoggedIn;
-
-                    if (isLocked) {
-                        alert("Vui lòng đăng ký tài khoản và đăng nhập để xem nội dung bài học này!");
-                        sessionStorage.setItem('redirectAfterLogin', `${window.location.origin}/study.html?id=${currentCourseId}&lesson_id=${lessonId}&material_id=${firstMaterial.id}`);
-                        window.location.href = 'login.html';
-                    } else {
-                        window.location.href = `study.html?id=${currentCourseId}&lesson_id=${lessonId}&material_id=${firstMaterial.id}`;
-                    }
-                } else {
-                    alert("Bài học này hiện chưa được đăng tải nội dung học liệu nào.");
                 }
             });
         });
