@@ -52,15 +52,27 @@ document.addEventListener('DOMContentLoaded', async () => {
                     window.location.href = 'login.html';
                 } catch (err) {
                     console.error("Lỗi cập nhật mật khẩu:", err);
-                    alert("Cập nhật mật khẩu thất bại: " + err.message);
+                    let displayMsg = err.message;
+                    if (err.message && (
+                        err.message.toLowerCase().includes("different") || 
+                        err.message.toLowerCase().includes("same as") ||
+                        err.message.toLowerCase().includes("old password")
+                    )) {
+                        displayMsg = "Mật khẩu mới không được trùng với mật khẩu cũ!";
+                    }
+                    alert("Cập nhật mật khẩu thất bại: " + displayMsg);
                 }
             } else {
                 // Offline fallback mode
                 // Mô phỏng đặt lại mật khẩu cho tài khoản demo
                 let users = JSON.parse(localStorage.getItem('demo_users')) || [];
                 if (users.length > 0) {
-                    // Đổi mật khẩu cho user cuối cùng hoặc admin demo
-                    users[users.length - 1].password = password;
+                    const lastUser = users[users.length - 1];
+                    if (lastUser.password === password) {
+                        alert("Cập nhật mật khẩu thất bại: Mật khẩu mới không được trùng với mật khẩu cũ!");
+                        return;
+                    }
+                    lastUser.password = password;
                     localStorage.setItem('demo_users', JSON.stringify(users));
                 }
                 alert("Demo Offline: Mô phỏng đặt lại mật khẩu mới thành công!");
