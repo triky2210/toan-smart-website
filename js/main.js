@@ -266,7 +266,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         isAdmin: false
                     };
                     
-                    if (session.user.email === 'admin@toansmart.edu.vn') {
+                    if (session.user.email === 'admin@toansmart.edu.vn' || session.user.email === 'trungtamtoansmart@gmail.com') {
                         user.isAdmin = true;
                     }
                 }

@@ -228,7 +228,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         email: session.user.email
                     };
 
-                    if (session.user.email === 'admin@toansmart.edu.vn') {
+                    if (session.user.email === 'admin@toansmart.edu.vn' || session.user.email === 'trungtamtoansmart@gmail.com') {
                         isAdminLoggedIn = true;
                     } else {
                         isStudentLoggedIn = true;

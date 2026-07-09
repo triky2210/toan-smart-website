@@ -48,7 +48,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         name: session.user.user_metadata?.full_name || session.user.email.split('@')[0],
                         email: session.user.email
                     };
-                    if (session.user.email === 'admin@toansmart.edu.vn') {
+                    if (session.user.email === 'admin@toansmart.edu.vn' || session.user.email === 'trungtamtoansmart@gmail.com') {
                         isAdminLoggedIn = true;
                     }
                 }
