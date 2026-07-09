@@ -17,15 +17,10 @@
     <link rel="stylesheet" href="css/style.css">
     
     <style>
-        .lesson-detail-container {
-            max-width: 800px;
-            margin: 40px auto;
-            padding: 0 20px;
-        }
         .lesson-breadcrumb {
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             color: var(--text-secondary);
-            margin-bottom: 12px;
+            margin-bottom: 16px;
             display: flex;
             align-items: center;
             gap: 6px;
@@ -40,10 +35,10 @@
             border-radius: 16px;
             border: 1px solid var(--card-border);
             padding: 30px;
-            box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.04);
+            box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.03);
         }
         .lesson-page-title {
-            font-size: 1.8rem;
+            font-size: 1.6rem;
             font-weight: 700;
             color: var(--text-primary);
             margin-bottom: 24px;
@@ -79,13 +74,13 @@
             gap: 16px;
         }
         .material-card-icon {
-            width: 44px;
-            height: 44px;
+            width: 40px;
+            height: 40px;
             border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.25rem;
+            font-size: 1.15rem;
         }
         .material-card-icon.video {
             background: rgba(14, 165, 233, 0.08);
@@ -104,7 +99,7 @@
             color: #F59E0B;
         }
         .material-card-title {
-            font-size: 1.05rem;
+            font-size: 1rem;
             font-weight: 600;
             color: var(--text-primary);
             transition: color 0.2s;
@@ -152,36 +147,44 @@
         </div>
     </header>
 
-    <!-- Main Container -->
-    <div class="lesson-detail-container">
-        <!-- Breadcrumb -->
-        <div class="lesson-breadcrumb" id="lessonBreadcrumb">
-            <a href="index.html">Trang chủ</a> <i class="fa-solid fa-angle-right"></i>
-            <a href="#" id="breadcrumbCourseLink">Khóa học</a> <i class="fa-solid fa-angle-right"></i>
-            <span id="breadcrumbLessonTitle">Bài học</span>
-        </div>
+    <!-- Study Interface Layout -->
+    <div class="study-container">
+        <!-- Cột 1: Sidebar cây phân cấp mục lục -->
+        <aside class="study-sidebar" id="studySidebar">
+            <div style="padding: 0 8px; margin-bottom: 20px;">
+                <a href="course-detail.html?id=1" id="backToCourseBtn" style="color: var(--accent-color); font-weight: 700; text-decoration: none; font-size: 0.85rem; display: flex; align-items: center; gap: 6px;">
+                    <i class="fa-solid fa-arrow-left"></i> Quay lại Khóa học
+                </a>
+            </div>
+            <div id="studyTreeContainer">
+                <div style="text-align: center; padding: 20px; color: var(--text-secondary); font-size: 0.85rem;">Đang tải mục lục...</div>
+            </div>
+        </aside>
 
-        <!-- Main Card -->
-        <div class="lesson-main-card">
-            <!-- Title -->
-            <h1 class="lesson-page-title" id="lessonPageTitle">Đang tải tên bài học...</h1>
-            
-            <!-- Materials List -->
-            <div class="materials-grid" id="materialsGrid">
-                <div style="text-align: center; padding: 40px; color: var(--text-secondary);">
-                    <i class="fa-solid fa-spinner fa-spin" style="font-size: 1.5rem; margin-bottom: 12px; display: block; color: var(--accent-color);"></i>
-                    Đang tìm kiếm học liệu...
+        <!-- Cột 2: Khu vực hiển thị chính -->
+        <main class="study-main">
+            <!-- Breadcrumb -->
+            <div class="lesson-breadcrumb" id="lessonBreadcrumb">
+                <a href="index.html">Trang chủ</a> <i class="fa-solid fa-angle-right" style="font-size: 0.75rem;"></i>
+                <a href="#" id="breadcrumbCourseLink">Khóa học</a> <i class="fa-solid fa-angle-right" style="font-size: 0.75rem;"></i>
+                <span id="breadcrumbLessonTitle">Bài học</span>
+            </div>
+
+            <!-- Lesson Card -->
+            <div class="lesson-main-card">
+                <!-- Title -->
+                <h1 class="lesson-page-title" id="lessonPageTitle" style="margin-top: 0;">Đang tải tên bài học...</h1>
+                
+                <!-- Materials List -->
+                <div class="materials-grid" id="materialsGrid">
+                    <div style="text-align: center; padding: 40px; color: var(--text-secondary);">
+                        <i class="fa-solid fa-spinner fa-spin" style="font-size: 1.5rem; margin-bottom: 12px; display: block; color: var(--accent-color);"></i>
+                        Đang chuẩn bị danh sách học liệu...
+                    </div>
                 </div>
             </div>
-        </div>
+        </main>
     </div>
-
-    <!-- Footer -->
-    <footer style="margin-top: 100px; padding: 40px 0; background: #0F172A; color: #94A3B8;">
-        <div class="container" style="text-align: center; font-size: 0.9rem;">
-            <p>&copy; 2026 Toán Smart. Tất cả quyền được bảo lưu. Thiết kế bởi Thầy Tùng Dương.</p>
-        </div>
-    </footer>
 
     <!-- Supabase JS Client library CDN -->
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>

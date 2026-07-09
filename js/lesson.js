@@ -1,4 +1,4 @@
-// Toán Smart Website - Lesson Dashboard Controller (Lists Lesson Materials)
+// Toán Smart Website - Lesson Dashboard Controller (Lists Lesson Materials with Sidebar)
 
 document.addEventListener('DOMContentLoaded', async () => {
     const isOnline = (typeof supabaseClient !== 'undefined' && supabaseClient !== null);
@@ -18,19 +18,27 @@ document.addEventListener('DOMContentLoaded', async () => {
     const breadcrumbLessonTitle = document.getElementById('breadcrumbLessonTitle');
     const lessonPageTitle = document.getElementById('lessonPageTitle');
     const materialsGrid = document.getElementById('materialsGrid');
+    const treeContainer = document.getElementById('studyTreeContainer');
+    const backToCourseBtn = document.getElementById('backToCourseBtn');
 
     // Data buffers
     let currentCourse = null;
     let currentLesson = null;
     let currentChapter = null;
-    let materials = [];
+    let chapters = [];
+    let lessonsMap = {};
+    let materialsMap = {};
+    let materials = []; // Học liệu của bài học hiện tại
 
     // Trạng thái đăng nhập
     let isUserLoggedIn = false;
     let isAdminLoggedIn = false;
     let loggedInUser = null;
 
-    // 1. Cấu hình breadcrumb
+    // 1. Cấu hình nút quay lại
+    if (backToCourseBtn) {
+        backToCourseBtn.href = `course-detail.html?id=${courseId}`;
+    }
     if (breadcrumbCourseLink) {
         breadcrumbCourseLink.href = `course-detail.html?id=${courseId}`;
     }
@@ -141,7 +149,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // 3. Tải dữ liệu bài học & học liệu
+    // 3. Tải toàn bộ dữ liệu lộ trình của khóa học để dựng mục lục
     await loadLessonData();
 
     async function loadLessonData() {
@@ -151,22 +159,39 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const { data: cData } = await supabaseClient.from('courses').select('*').eq('id', courseId).single();
                 currentCourse = cData;
 
-                // Tải bài học
-                const { data: lData } = await supabaseClient.from('lessons').select('*').eq('id', lessonId).single();
-                currentLesson = lData;
+                // Tải toàn bộ chương của khóa học
+                const { data: chData } = await supabaseClient.from('chapters').select('*').eq('course_id', courseId).order('order_index', { ascending: true });
+                chapters = chData || [];
+
+                const chIds = chapters.map(ch => ch.id);
+                if (chIds.length > 0) {
+                    // Tải toàn bộ bài giảng của khóa học
+                    const { data: lData } = await supabaseClient.from('lessons').select('*').in('chapter_id', chIds).order('order_index', { ascending: true });
+                    
+                    const lIds = [];
+                    lData.forEach(lesson => {
+                        if (!lessonsMap[lesson.chapter_id]) lessonsMap[lesson.chapter_id] = [];
+                        lessonsMap[lesson.chapter_id].push(lesson);
+                        lIds.push(lesson.id);
+                        
+                        if (lesson.id === lessonId) {
+                            currentLesson = lesson;
+                        }
+                    });
+
+                    // Tải toàn bộ học liệu của khóa học
+                    if (lIds.length > 0) {
+                        const { data: mData } = await supabaseClient.from('materials').select('*').in('lesson_id', lIds).order('order_index', { ascending: true });
+                        mData.forEach(m => {
+                            if (!materialsMap[m.lesson_id]) materialsMap[m.lesson_id] = [];
+                            materialsMap[m.lesson_id].push(m);
+                        });
+                    }
+                }
 
                 if (currentLesson) {
-                    // Tải chương của bài học
-                    const { data: chData } = await supabaseClient.from('chapters').select('*').eq('id', currentLesson.chapter_id).single();
-                    currentChapter = chData;
-
-                    // Tải học liệu con
-                    const { data: mData } = await supabaseClient
-                        .from('materials')
-                        .select('*')
-                        .eq('lesson_id', lessonId)
-                        .order('order_index', { ascending: true });
-                    materials = mData || [];
+                    currentChapter = chapters.find(ch => ch.id === currentLesson.chapter_id);
+                    materials = materialsMap[lessonId] || [];
                 }
             } catch (err) {
                 console.error("Lỗi Supabase, tải offline:", err);
@@ -177,6 +202,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         // Render dữ liệu
+        renderSidebarTree();
         renderPageContent();
     }
 
@@ -187,14 +213,108 @@ document.addEventListener('DOMContentLoaded', async () => {
         const dbMaterials = JSON.parse(localStorage.getItem('db_materials')) || [];
 
         currentCourse = dbCourses.find(c => c.id == courseId);
-        currentLesson = dbLessons.find(l => l.id == lessonId);
+        chapters = dbChapters.filter(ch => ch.course_id == courseId).sort((a,b) => a.order_index - b.order_index);
 
+        chapters.forEach(ch => {
+            lessonsMap[ch.id] = dbLessons.filter(l => l.chapter_id == ch.id).sort((a,b) => a.order_index - b.order_index);
+            lessonsMap[ch.id].forEach(l => {
+                materialsMap[l.id] = dbMaterials.filter(m => m.lesson_id == l.id).sort((a,b) => a.order_index - b.order_index);
+            });
+        });
+
+        currentLesson = dbLessons.find(l => l.id == lessonId);
         if (currentLesson) {
-            currentChapter = dbChapters.find(ch => ch.id == currentLesson.chapter_id);
-            materials = dbMaterials.filter(m => m.lesson_id == lessonId).sort((a,b) => a.order_index - b.order_index);
+            currentChapter = chapters.find(ch => ch.id == currentLesson.chapter_id);
+            materials = materialsMap[lessonId] || [];
         }
     }
 
+    // 4. Render Sidebar mục lục cây phân cấp
+    function renderSidebarTree() {
+        if (!treeContainer) return;
+        treeContainer.innerHTML = '';
+
+        if (chapters.length === 0) {
+            treeContainer.innerHTML = `<div style="text-align: center; padding: 20px; color: var(--text-secondary);">Chưa có chương học nào.</div>`;
+            return;
+        }
+
+        chapters.forEach(ch => {
+            const chDiv = document.createElement('div');
+            chDiv.className = 'study-chapter';
+            
+            const chTitle = document.createElement('div');
+            chTitle.className = 'study-chapter-title';
+            chTitle.textContent = ch.title;
+            chDiv.appendChild(chTitle);
+
+            const lessonsList = document.createElement('ul');
+            lessonsList.className = 'study-lessons-list';
+
+            const lessons = lessonsMap[ch.id] || [];
+            lessons.forEach(l => {
+                const lLi = document.createElement('li');
+                
+                // Bài hiện tại sẽ có class active để đánh dấu highlight
+                const isCurrentLesson = (l.id === lessonId);
+
+                const lTitle = document.createElement('div');
+                lTitle.className = `study-lesson-title ${isCurrentLesson ? 'active' : ''}`;
+                lTitle.style.cursor = 'pointer';
+                lTitle.textContent = l.title;
+                
+                // Click vào bài giảng trên sidebar chuyển hướng nhanh sang bài học đó
+                lTitle.onclick = () => {
+                    window.location.href = `lesson.html?id=${courseId}&lesson_id=${l.id}`;
+                };
+
+                lLi.appendChild(lTitle);
+
+                const materialsList = document.createElement('ul');
+                materialsList.className = 'study-materials-list';
+
+                const lMaterials = materialsMap[l.id] || [];
+                lMaterials.forEach(m => {
+                    const mLi = document.createElement('li');
+                    mLi.className = 'study-material-item';
+
+                    const isLocked = !m.is_preview && !isUserLoggedIn;
+                    if (isLocked) mLi.classList.add('locked');
+
+                    let iconHTML = '🎥';
+                    if (m.type === 'pdf') iconHTML = '📄';
+                    else if (m.type === 'text') iconHTML = '✍️';
+                    else if (m.type === 'quiz') iconHTML = '📝';
+
+                    const link = document.createElement('a');
+                    link.href = '#';
+                    link.innerHTML = `<span>${iconHTML}</span> <span style="flex-grow: 1;">${m.title}</span> ${isLocked ? '<i class="fa-solid fa-lock" style="font-size: 0.755rem; color: #EF4444;"></i>' : ''}`;
+                    
+                    link.onclick = (e) => {
+                        e.preventDefault();
+                        if (isLocked) {
+                            alert("Vui lòng đăng ký tài khoản và đăng nhập để xem nội dung học liệu này!");
+                            sessionStorage.setItem('redirectAfterLogin', `${window.location.origin}/study.html?id=${courseId}&lesson_id=${l.id}&material_id=${m.id}`);
+                            window.location.href = 'login.html';
+                        } else {
+                            window.location.href = `study.html?id=${courseId}&lesson_id=${l.id}&material_id=${m.id}`;
+                        }
+                    };
+
+                    mLi.appendChild(link);
+                    materialsList.appendChild(mLi);
+                });
+
+                lLi.appendChild(materialsList);
+                lessonsList.appendChild(lLi);
+            });
+
+            chDiv.appendChild(lessonsList);
+            treeContainer.appendChild(chDiv);
+        });
+    }
+
+    // 5. Render nội dung thẻ học liệu chính ở cột phải
     function renderPageContent() {
         if (!currentLesson) {
             lessonPageTitle.textContent = "Không tìm thấy bài học";
@@ -202,18 +322,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
-        // Render Breadcrumb & Title
-        if (breadcrumbCourseLink && currentCourse) {
-            breadcrumbCourseLink.textContent = currentCourse.title;
-        }
-        if (breadcrumbLessonTitle) {
-            breadcrumbLessonTitle.textContent = currentLesson.title;
+        // Cập nhật Breadcrumb
+        if (breadcrumbLessonTitle && currentChapter) {
+            breadcrumbLessonTitle.innerHTML = `${currentChapter.title} <i class="fa-solid fa-angle-right" style="font-size: 0.75rem; margin: 0 4px; color: var(--text-secondary);"></i> ${currentLesson.title}`;
         }
         if (lessonPageTitle) {
             lessonPageTitle.textContent = currentLesson.title;
         }
 
-        // Render Materials list
+        // Render danh sách học liệu con
         materialsGrid.innerHTML = '';
         if (materials.length === 0) {
             materialsGrid.innerHTML = `<div style="text-align: center; padding: 40px; color: var(--text-secondary); font-style: italic;">Bài học này hiện chưa được thầy tải lên học liệu nào.</div>`;
