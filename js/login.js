@@ -9,6 +9,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const loginForm = document.getElementById('loginForm');
     const registerForm = document.getElementById('registerForm');
     
+    // Forgot Password Elements
+    const forgotPasswordLink = document.getElementById('forgotPasswordLink');
+    const backToLoginLink = document.getElementById('backToLoginLink');
+    const forgotForm = document.getElementById('forgotForm');
+    const loginTabs = document.querySelector('.login-tabs');
+    
     // Tab switching
     if (tabLoginBtn && tabRegisterBtn && loginForm && registerForm) {
         tabLoginBtn.addEventListener('click', () => {
@@ -16,6 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
             tabRegisterBtn.classList.remove('active');
             loginForm.style.display = 'block';
             registerForm.style.display = 'none';
+            if (forgotForm) forgotForm.style.display = 'none';
         });
         
         tabRegisterBtn.addEventListener('click', () => {
@@ -23,6 +30,25 @@ document.addEventListener('DOMContentLoaded', () => {
             tabLoginBtn.classList.remove('active');
             registerForm.style.display = 'block';
             loginForm.style.display = 'none';
+            if (forgotForm) forgotForm.style.display = 'none';
+        });
+    }
+
+    // Toggle forgot password form
+    if (forgotPasswordLink && backToLoginLink && forgotForm && loginForm && loginTabs) {
+        forgotPasswordLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            loginForm.style.display = 'none';
+            registerForm.style.display = 'none';
+            loginTabs.style.display = 'none';
+            forgotForm.style.display = 'block';
+        });
+
+        backToLoginLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            forgotForm.style.display = 'none';
+            loginTabs.style.display = 'flex';
+            tabLoginBtn.click();
         });
     }
     
@@ -141,6 +167,41 @@ document.addEventListener('DOMContentLoaded', () => {
                     handleRedirect();
                 } else {
                     alert("Sai email hoặc mật khẩu! (Gợi ý Admin offline: admin@toansmart.edu.vn / admin)");
+                }
+            }
+        });
+    }
+
+    // FORGOT PASSWORD PROCESS
+    if (forgotForm) {
+        forgotForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('forgotEmail').value.trim();
+
+            if (isOnline) {
+                try {
+                    const redirectToUrl = window.location.origin + '/reset-password.html';
+                    const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+                        redirectTo: redirectToUrl
+                    });
+
+                    if (error) throw error;
+
+                    alert("Đã gửi yêu cầu thành công! Vui lòng kiểm tra hộp thư email của bạn để nhận liên kết đặt lại mật khẩu mới.");
+                    backToLoginLink.click();
+                } catch (err) {
+                    console.error("Lỗi gửi yêu cầu khôi phục mật khẩu:", err);
+                    alert("Không thể gửi yêu cầu: " + err.message);
+                }
+            } else {
+                // Offline fallback
+                let users = JSON.parse(localStorage.getItem('demo_users')) || [];
+                const found = users.some(u => u.email === email) || email === 'admin@toansmart.edu.vn';
+                if (found) {
+                    alert("Demo Offline: Mô phỏng gửi email thành công! Thầy/bạn vui lòng mở trang reset-password.html trực tiếp để tiến hành đặt lại mật khẩu mới.");
+                    window.location.href = 'reset-password.html';
+                } else {
+                    alert("Email này chưa được đăng ký trong hệ thống demo!");
                 }
             }
         });

@@ -41,6 +41,9 @@
                 <div class="login-form-group">
                     <label for="loginPassword">Mật khẩu</label>
                     <input type="password" id="loginPassword" class="login-input" placeholder="••••••••" required autocomplete="current-password">
+                    <div style="text-align: right; margin-top: 8px;">
+                        <a href="#" id="forgotPasswordLink" style="font-size: 0.85rem; color: var(--accent-color); text-decoration: none;">Quên mật khẩu?</a>
+                    </div>
                 </div>
                 <button type="submit" class="login-submit-btn">Đăng nhập ngay</button>
             </form>
@@ -65,6 +68,20 @@
                     <input type="password" id="registerConfirmPassword" class="login-input" placeholder="Nhập lại mật khẩu" required autocomplete="new-password">
                 </div>
                 <button type="submit" class="login-submit-btn">Đăng ký tài khoản</button>
+            </form>
+
+            <!-- FORM QUÊN MẬT KHẨU -->
+            <form id="forgotForm" style="display: none;">
+                <h3 class="login-card-title">Khôi Phục Mật Khẩu</h3>
+                <p style="font-size: 0.9rem; color: var(--text-secondary); text-align: center; margin-bottom: 20px; line-height: 1.5;">Vui lòng nhập Email tài khoản học viên. Hệ thống sẽ gửi một liên kết đặt lại mật khẩu mới qua Email.</p>
+                <div class="login-form-group">
+                    <label for="forgotEmail">Email học viên</label>
+                    <input type="email" id="forgotEmail" class="login-input" placeholder="mail@example.com" required autocomplete="email">
+                </div>
+                <button type="submit" class="login-submit-btn">Gửi yêu cầu khôi phục</button>
+                <div style="text-align: center; margin-top: 16px;">
+                    <a href="#" id="backToLoginLink" style="font-size: 0.9rem; color: var(--accent-color); text-decoration: none; font-weight: 600;"><i class="fa-solid fa-arrow-left" style="margin-right: 4px;"></i> Quay lại Đăng nhập</a>
+                </div>
             </form>
             
             <div class="login-footer">
