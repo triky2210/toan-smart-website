@@ -60,7 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                     if (error) throw error;
                     
-                    alert("Đăng ký thành công! Vui lòng kiểm tra email của thầy/bạn để kích hoạt tài khoản nếu Supabase yêu cầu xác minh.");
+                    alert("Đăng ký thành công! Vui lòng kiểm tra email của bạn để kích hoạt tài khoản.");
                     
                     // Switch to login tab
                     tabLoginBtn.click();
