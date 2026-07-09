@@ -247,66 +247,97 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    // 4. Vẽ Sidebar mục lục chỉ hiển thị Chương hiện tại đang xem
+    // 4. Vẽ Sidebar mục lục chỉ hiển thị danh sách học liệu của Bài học hiện tại
     function renderSidebarTree(activeChapter, activeLessonId) {
         if (!treeContainer) return;
         treeContainer.innerHTML = '';
 
-        if (!activeChapter) {
-            treeContainer.innerHTML = `<div style="text-align: center; padding: 20px; color: var(--text-secondary);">Chưa có chương học nào được tạo.</div>`;
+        if (!activeLessonId) {
+            treeContainer.innerHTML = `<div style="text-align: center; padding: 20px; color: var(--text-secondary);">Chưa chọn bài học.</div>`;
             return;
         }
 
-        const chDiv = document.createElement('div');
-        chDiv.className = 'study-chapter';
-        
-        const chTitle = document.createElement('div');
-        chTitle.className = 'study-chapter-title active';
-        chTitle.style.fontWeight = '700';
-        chTitle.style.color = 'var(--text-primary)';
-        chTitle.style.borderLeft = '3px solid var(--accent-color)';
-        chTitle.style.paddingLeft = '8px';
-        chTitle.style.cursor = 'pointer';
-        chTitle.textContent = activeChapter.title;
-        
-        // Click vào tiêu đề Chương dẫn về trang Lộ trình khóa học chính (nơi chứa tất cả các bài)
-        chTitle.onclick = () => {
-            window.location.href = `course-detail.html?id=${courseId}`;
-        };
-        chDiv.appendChild(chTitle);
+        // Tạo tiêu đề Sidebar "Bài học cùng chủ đề"
+        const sideHeader = document.createElement('div');
+        sideHeader.className = 'study-chapter-title active';
+        sideHeader.style.fontWeight = '700';
+        sideHeader.style.color = 'var(--text-primary)';
+        sideHeader.style.borderLeft = '3px solid var(--accent-color)';
+        sideHeader.style.paddingLeft = '8px';
+        sideHeader.style.marginBottom = '16px';
+        sideHeader.style.fontSize = '0.95rem';
+        sideHeader.textContent = "Bài học cùng chủ đề";
+        treeContainer.appendChild(sideHeader);
 
-        const lessonsList = document.createElement('ul');
-        lessonsList.className = 'study-lessons-list';
-        lessonsList.style.paddingLeft = '8px';
-        lessonsList.style.marginTop = '12px';
+        const materialsList = document.createElement('ul');
+        materialsList.className = 'study-materials-list';
+        materialsList.style.padding = '0';
+        materialsList.style.margin = '0';
+        materialsList.style.display = 'flex';
+        materialsList.style.flexDirection = 'column';
+        materialsList.style.gap = '8px';
 
-        const lessons = lessonsMap[activeChapter.id] || [];
-        lessons.forEach(l => {
-            const lLi = document.createElement('li');
-            lLi.style.listStyle = 'none';
-            lLi.style.marginBottom = '8px';
+        const lMaterials = materialsMap[activeLessonId] || [];
+        lMaterials.forEach(m => {
+            const mLi = document.createElement('li');
+            const isActiveMaterial = (m.id == currentMaterialId);
             
-            const isCurrentLesson = (l.id == activeLessonId);
+            mLi.className = `study-material-item ${isActiveMaterial ? 'active' : ''}`;
+            mLi.style.listStyle = 'none';
+            mLi.style.borderRadius = '8px';
+            mLi.style.border = '1px solid ' + (isActiveMaterial ? 'rgba(99, 102, 241, 0.15)' : 'rgba(15, 23, 42, 0.03)');
+            mLi.style.background = isActiveMaterial ? 'rgba(99, 102, 241, 0.05)' : '#FFFFFF';
+            mLi.style.transition = 'all 0.2s';
 
-            const lTitle = document.createElement('div');
-            lTitle.className = `study-lesson-title ${isCurrentLesson ? 'active' : ''}`;
-            lTitle.style.cursor = 'pointer';
-            lTitle.style.padding = '8px 12px';
-            lTitle.style.borderRadius = '6px';
-            lTitle.style.fontWeight = isCurrentLesson ? '600' : '400';
-            lTitle.style.fontSize = '0.9rem';
-            lTitle.textContent = l.title;
+            const isLocked = !m.is_preview && !isUserLoggedIn;
+            if (isLocked) mLi.classList.add('locked');
+
+            let iconHTML = '<i class="fa-solid fa-circle-play" style="color: #0EA5E9;"></i>';
+            if (m.type === 'pdf') iconHTML = '<i class="fa-regular fa-file-pdf" style="color: #EF4444;"></i>';
+            else if (m.type === 'text') iconHTML = '<i class="fa-solid fa-file-lines" style="color: #10B981;"></i>';
+            else if (m.type === 'quiz') iconHTML = '<i class="fa-solid fa-square-poll-horizontal" style="color: #F59E0B;"></i>';
+
+            const link = document.createElement('a');
+            link.href = '#';
+            link.style.display = 'flex';
+            link.style.alignItems = 'center';
+            link.style.gap = '10px';
+            link.style.padding = '10px 12px';
+            link.style.textDecoration = 'none';
+            link.style.fontSize = '0.85rem';
+            link.style.fontWeight = isActiveMaterial ? '600' : '500';
+            link.style.color = isActiveMaterial ? 'var(--accent-color)' : 'var(--text-secondary)';
+
+            link.innerHTML = `
+                <span style="font-size: 1rem; width: 20px; text-align: center; display: flex; align-items: center; justify-content: center;">${iconHTML}</span> 
+                <span style="flex-grow: 1;">${m.title}</span> 
+                ${isLocked ? '<i class="fa-solid fa-lock" style="font-size: 0.75rem; color: #EF4444;"></i>' : '<i class="fa-solid fa-angle-right" style="font-size: 0.75rem; opacity: 0.5;"></i>'}
+            `;
             
-            lTitle.onclick = () => {
-                window.location.href = `lesson.html?id=${courseId}&lesson_id=${l.id}`;
+            link.onclick = (e) => {
+                e.preventDefault();
+                if (isLocked) {
+                    alert("Vui lòng đăng ký tài khoản và đăng nhập để xem nội dung học liệu này!");
+                    sessionStorage.setItem('redirectAfterLogin', `${window.location.origin}/study.html?id=${courseId}&lesson_id=${activeLessonId}&material_id=${m.id}`);
+                    window.location.href = 'login.html';
+                } else {
+                    currentMaterialId = m.id;
+                    currentLessonId = activeLessonId;
+                    activeMaterialIndex = flatMaterials.findIndex(item => item.id == m.id);
+                    
+                    // Cập nhật URL không tải lại trang
+                    const newUrl = `${window.location.pathname}?id=${courseId}&lesson_id=${activeLessonId}&material_id=${m.id}`;
+                    window.history.pushState({ path: newUrl }, '', newUrl);
+
+                    loadActiveMaterial();
+                }
             };
 
-            lLi.appendChild(lTitle);
-            lessonsList.appendChild(lLi);
+            mLi.appendChild(link);
+            materialsList.appendChild(mLi);
         });
 
-        chDiv.appendChild(lessonsList);
-        treeContainer.appendChild(chDiv);
+        treeContainer.appendChild(materialsList);
     }
 
     // 5. Tải và hiển thị nội dung Học liệu chính đang active
@@ -335,19 +366,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
 
-        // Render Breadcrumb (Chương > Bài > Học liệu)
+        // Render Breadcrumb (Chương > Bài)
         const breadcrumb = document.getElementById('studyBreadcrumb');
         if (breadcrumb && studyChapter && studyLesson) {
             breadcrumb.innerHTML = `
-                <a href="index.html">Trang chủ</a> <i class="fa-solid fa-angle-right" style="font-size: 0.75rem; margin: 0 4px; color: var(--text-secondary);"></i>
-                <a href="course-detail.html?id=${courseId}">${currentCourse?.title || 'Khóa học'}</a> <i class="fa-solid fa-angle-right" style="font-size: 0.75rem; margin: 0 4px; color: var(--text-secondary);"></i>
                 <span style="color: var(--text-secondary); font-weight: 500;">${studyChapter.title}</span> <i class="fa-solid fa-angle-right" style="font-size: 0.75rem; margin: 0 4px; color: var(--text-secondary);"></i>
-                <a href="lesson.html?id=${courseId}&lesson_id=${studyLesson.id}">${studyLesson.title}</a> <i class="fa-solid fa-angle-right" style="font-size: 0.75rem; margin: 0 4px; color: var(--text-secondary);"></i>
-                <span style="color: var(--text-primary); font-weight: 600;">${material.title}</span>
+                <a href="lesson.html?id=${courseId}&lesson_id=${studyLesson.id}" style="color: var(--accent-color); font-weight: 600; text-decoration: none;">${studyLesson.title}</a>
             `;
         }
 
-        // Vẽ lại Sidebar mục lục chỉ hiển thị chương đang học
+        // Vẽ lại Sidebar mục lục chỉ hiển thị danh sách học liệu của bài hiện tại
         if (studyChapter && studyLesson) {
             renderSidebarTree(studyChapter, studyLesson.id);
         }

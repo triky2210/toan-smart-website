@@ -297,8 +297,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         // Cập nhật Breadcrumb
-        if (breadcrumbLessonTitle && currentChapter) {
-            breadcrumbLessonTitle.innerHTML = `${currentChapter.title} <i class="fa-solid fa-angle-right" style="font-size: 0.75rem; margin: 0 4px; color: var(--text-secondary);"></i> ${currentLesson.title}`;
+        const breadcrumb = document.getElementById('lessonBreadcrumb');
+        if (breadcrumb && currentChapter) {
+            breadcrumb.innerHTML = `<span style="font-weight: 500; color: var(--text-secondary);">${currentChapter.title}</span>`;
         }
         if (lessonPageTitle) {
             lessonPageTitle.textContent = currentLesson.title;
