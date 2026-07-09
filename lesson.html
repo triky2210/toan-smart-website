@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bài Học - Toán Smart</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- CSS Link -->
+    <link rel="stylesheet" href="css/style.css">
+    
+    <style>
+        .lesson-detail-container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+        .lesson-breadcrumb {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .lesson-breadcrumb a {
+            color: var(--accent-color);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .lesson-main-card {
+            background: #FFFFFF;
+            border-radius: 16px;
+            border: 1px solid var(--card-border);
+            padding: 30px;
+            box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.04);
+        }
+        .lesson-page-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid #F1F5F9;
+        }
+        .materials-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .material-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 24px;
+            background: #FFFFFF;
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            box-shadow: 0 2px 4px rgba(15, 23, 42, 0.01);
+        }
+        .material-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--accent-color);
+            box-shadow: 0 8px 16px rgba(99, 102, 241, 0.08);
+        }
+        .material-card-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .material-card-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+        .material-card-icon.video {
+            background: rgba(14, 165, 233, 0.08);
+            color: #0EA5E9;
+        }
+        .material-card-icon.pdf {
+            background: rgba(239, 68, 68, 0.08);
+            color: #EF4444;
+        }
+        .material-card-icon.text {
+            background: rgba(16, 185, 129, 0.08);
+            color: #10B981;
+        }
+        .material-card-icon.quiz {
+            background: rgba(245, 158, 11, 0.08);
+            color: #F59E0B;
+        }
+        .material-card-title {
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            transition: color 0.2s;
+        }
+        .material-card:hover .material-card-title {
+            color: var(--accent-color);
+        }
+        .material-card-right {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .material-card.locked {
+            opacity: 0.85;
+            background: #FAFAFC;
+        }
+        .material-card.locked:hover {
+            border-color: #EF4444;
+            box-shadow: 0 8px 16px rgba(239, 68, 68, 0.06);
+        }
+        .material-card.locked:hover .material-card-title {
+            color: #EF4444;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header / Navbar (Đồng bộ) -->
+    <header style="box-shadow: 0 2px 10px rgba(15, 23, 42, 0.05);">
+        <div class="container nav-container">
+            <a href="index.html" class="logo">
+                <i class="fa-solid fa-calculator"></i> Toán <span>Smart</span>
+            </a>
+            <button class="menu-toggle" aria-label="Toggle menu">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+            <ul class="nav-menu">
+                <li><a href="index.html#hero" class="nav-link">Trang chủ</a></li>
+                <li><a href="index.html#courses" class="nav-link">Khóa học</a></li>
+                <li><a href="index.html#about" class="nav-link">Giới thiệu</a></li>
+                <li><a href="index.html#resources" class="nav-link">Tài liệu</a></li>
+                <li id="headerAuthContainer"><a href="login.html" class="btn btn-primary" style="padding: 8px 20px;">Đăng nhập</a></li>
+            </ul>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="lesson-detail-container">
+        <!-- Breadcrumb -->
+        <div class="lesson-breadcrumb" id="lessonBreadcrumb">
+            <a href="index.html">Trang chủ</a> <i class="fa-solid fa-angle-right"></i>
+            <a href="#" id="breadcrumbCourseLink">Khóa học</a> <i class="fa-solid fa-angle-right"></i>
+            <span id="breadcrumbLessonTitle">Bài học</span>
+        </div>
+
+        <!-- Main Card -->
+        <div class="lesson-main-card">
+            <!-- Title -->
+            <h1 class="lesson-page-title" id="lessonPageTitle">Đang tải tên bài học...</h1>
+            
+            <!-- Materials List -->
+            <div class="materials-grid" id="materialsGrid">
+                <div style="text-align: center; padding: 40px; color: var(--text-secondary);">
+                    <i class="fa-solid fa-spinner fa-spin" style="font-size: 1.5rem; margin-bottom: 12px; display: block; color: var(--accent-color);"></i>
+                    Đang tìm kiếm học liệu...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer style="margin-top: 100px; padding: 40px 0; background: #0F172A; color: #94A3B8;">
+        <div class="container" style="text-align: center; font-size: 0.9rem;">
+            <p>&copy; 2026 Toán Smart. Tất cả quyền được bảo lưu. Thiết kế bởi Thầy Tùng Dương.</p>
+        </div>
+    </footer>
+
+    <!-- Supabase JS Client library CDN -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <!-- Configuration -->
+    <script src="js/config.js"></script>
+    <!-- Controller -->
+    <script src="js/lesson.js"></script>
+</body>
+</html>
