@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Góc Học Tập - Toán Smart</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- CSS Link -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Header / Navbar (Đồng bộ) -->
+    <header style="box-shadow: 0 2px 10px rgba(15, 23, 42, 0.05);">
+        <div class="container nav-container">
+            <a href="index.html" class="logo">
+                <i class="fa-solid fa-calculator"></i> Toán <span>Smart</span>
+            </a>
+            <button class="menu-toggle" aria-label="Toggle menu">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+            <ul class="nav-menu">
+                <li><a href="index.html#hero" class="nav-link">Trang chủ</a></li>
+                <li><a href="index.html#courses" class="nav-link">Khóa học</a></li>
+                <li><a href="index.html#about" class="nav-link">Giới thiệu</a></li>
+                <li><a href="index.html#resources" class="nav-link">Tài liệu</a></li>
+                <li id="headerAuthContainer"><a href="login.html" class="btn btn-primary" style="padding: 8px 20px;">Đăng nhập</a></li>
+            </ul>
+        </div>
+    </header>
+
+    <!-- Study Interface Container -->
+    <div class="study-container">
+        <!-- Cột 1: Sidebar cây phân cấp điều hướng -->
+        <aside class="study-sidebar" id="studySidebar">
+            <div style="padding: 0 8px; margin-bottom: 20px;">
+                <a href="course-detail.html?id=1" id="backToCourseBtn" style="color: var(--accent-color); font-weight: 700; text-decoration: none; font-size: 0.85rem; display: flex; align-items: center; gap: 6px;">
+                    <i class="fa-solid fa-arrow-left"></i> Quay lại Khóa học
+                </a>
+            </div>
+            <div id="studyTreeContainer">
+                <!-- Động: Điền danh sách Chương > Bài > Học liệu bằng JS -->
+                <div style="text-align: center; padding: 20px; color: var(--text-secondary); font-size: 0.85rem;">Đang tải danh sách bài học...</div>
+            </div>
+        </aside>
+
+        <!-- Cột 2: Khu vực xem nội dung chính -->
+        <main class="study-main">
+            <div class="study-viewer-card">
+                <!-- Tiêu đề học liệu -->
+                <h2 class="study-content-title" id="studyContentTitle">Đang tải học liệu...</h2>
+                
+                <!-- Vùng chứa nội dung động (Trình phát video, Khung xem PDF hoặc Bài viết) -->
+                <div class="study-content-body" id="studyContentViewer">
+                    <div style="text-align: center; padding: 100px 0; color: var(--text-secondary);">
+                        <i class="fa-solid fa-spinner fa-spin" style="font-size: 2rem; margin-bottom: 12px; display: block; color: var(--accent-color);"></i>
+                        Đang chuẩn bị bài học cho bạn...
+                    </div>
+                </div>
+
+                <!-- Thanh nút bấm chuyển bài Trước / Sau -->
+                <div class="study-nav-bar">
+                    <button class="btn btn-secondary" id="prevMaterialBtn" style="width: auto; padding: 10px 20px;"><i class="fa-solid fa-chevron-left" style="margin-right: 6px;"></i> Bài trước</button>
+                    <button class="btn btn-primary" id="nextMaterialBtn" style="width: auto; padding: 10px 20px;">Bài tiếp theo <i class="fa-solid fa-chevron-right" style="margin-left: 6px;"></i></button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Supabase JS Client library CDN -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <!-- Configuration -->
+    <script src="js/config.js"></script>
+    <!-- Study Page Action Script -->
+    <script src="js/study.js"></script>
+</body>
+</html>
