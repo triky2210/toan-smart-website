@@ -601,60 +601,55 @@ document.addEventListener('DOMContentLoaded', async () => {
                         ? `<i class="fa-solid fa-grip-vertical drag-handle" style="color: #94A3B8; cursor: grab; margin-right: 8px;" title="Kéo thả bài"></i>`
                         : '';
 
-                    // Nút thao tác Admin hoặc Danh sách icon học liệu của học sinh
-                    let rightAreaHTML = '';
+                    // Danh sách icon học liệu con (Hiển thị ở cả chế độ học sinh và chế độ sửa)
+                    let iconsHTML = '';
                     const materials = materialsMap[lesson.id] || [];
+                    materials.forEach(material => {
+                        let iconClass = 'fa-solid fa-circle-play'; // video
+                        if (material.type === 'pdf') iconClass = 'fa-regular fa-file-pdf';
+                        else if (material.type === 'text') iconClass = 'fa-solid fa-file-lines';
+                        else if (material.type === 'quiz') iconClass = 'fa-solid fa-square-poll-horizontal';
 
+                        const isLocked = !material.is_preview && !isUserLoggedIn;
+
+                        iconsHTML += `
+                            <button class="material-icon-btn ${isLocked ? 'locked' : ''}" 
+                                    data-tooltip="${material.title}" 
+                                    data-material-id="${material.id}" 
+                                    data-lesson-id="${lesson.id}"
+                                    data-preview="${material.is_preview}"
+                                    style="border: none;">
+                                <i class="${iconClass}"></i>
+                                ${isLocked ? '<i class="fa-solid fa-lock fa-lock-overlay"></i>' : ''}
+                            </button>
+                        `;
+                    });
+
+                    if (materials.length === 0) {
+                        iconsHTML = `<span style="color: var(--text-secondary); font-style: italic; font-size: 0.8rem;">Không có học liệu</span>`;
+                    }
+
+                    // Nút thao tác Admin (chỉ hiện khi bật chế độ sửa)
+                    let actionsHTML = '';
                     if (isEditModeActive) {
-                        // Cửa sổ Admin: Phân tách nút Sửa thuộc tính bài (pencil) và Sửa học liệu (gear)
-                        rightAreaHTML = `
-                            <div class="lesson-item-actions">
+                        actionsHTML = `
+                            <div class="lesson-item-actions" style="margin-left: 12px;">
                                 <button class="pencil-btn" data-lesson-id="${lesson.id}" style="display: inline-flex;" title="Sửa tên bài"><i class="fa-solid fa-pencil"></i></button>
                                 <button class="gear-btn lesson-gear-btn" data-lesson-id="${lesson.id}" style="display: inline-flex;" title="Quản lý học liệu của bài"><i class="fa-solid fa-gear"></i></button>
-                            </div>
-                        `;
-                    } else {
-                        // Cửa sổ Học viên: Các icon học liệu nhỏ gọn căn phải
-                        let iconsHTML = '';
-                        materials.forEach(material => {
-                            let iconClass = 'fa-solid fa-circle-play'; // video
-                            if (material.type === 'pdf') iconClass = 'fa-regular fa-file-pdf';
-                            else if (material.type === 'text') iconClass = 'fa-solid fa-file-lines';
-                            else if (material.type === 'quiz') iconClass = 'fa-solid fa-square-poll-horizontal';
-
-                            const isLocked = !material.is_preview && !isUserLoggedIn;
-
-                            iconsHTML += `
-                                <button class="material-icon-btn ${isLocked ? 'locked' : ''}" 
-                                        data-tooltip="${material.title}" 
-                                        data-material-id="${material.id}" 
-                                        data-lesson-id="${lesson.id}"
-                                        data-preview="${material.is_preview}"
-                                        style="border: none;">
-                                    <i class="${iconClass}"></i>
-                                    ${isLocked ? '<i class="fa-solid fa-lock fa-lock-overlay"></i>' : ''}
-                                </button>
-                            `;
-                        });
-
-                        if (materials.length === 0) {
-                            iconsHTML = `<span style="color: var(--text-secondary); font-style: italic; font-size: 0.8rem;">Không có học liệu</span>`;
-                        }
-
-                        rightAreaHTML = `
-                            <div class="materials-icons-list">
-                                ${iconsHTML}
                             </div>
                         `;
                     }
 
                     li.innerHTML = `
-                        <div class="lesson-left" style="display: flex; align-items: center; gap: 8px; flex-grow: 1;">
+                        <div class="lesson-left" style="display: flex; align-items: center; gap: 8px; flex-grow: 1; cursor: ${isEditModeActive ? 'default' : 'pointer'};" data-lesson-id="${lesson.id}">
                             ${lessonDragHTML}
-                            <span style="font-weight: 600; color: var(--text-primary);">${lesson.title}</span>
+                            <span class="lesson-title-text" style="font-weight: 600; color: var(--text-primary);">${lesson.title}</span>
                         </div>
-                        <div class="lesson-right">
-                            ${rightAreaHTML}
+                        <div class="lesson-right" style="display: flex; align-items: center; gap: 8px;">
+                            <div class="materials-icons-list">
+                                ${iconsHTML}
+                            </div>
+                            ${actionsHTML}
                         </div>
                     `;
                     list.appendChild(li);
@@ -686,6 +681,32 @@ document.addEventListener('DOMContentLoaded', async () => {
                 } else {
                     // Mở trang học
                     window.location.href = `study.html?id=${currentCourseId}&lesson_id=${lessonId}&material_id=${materialId}`;
+                }
+            });
+        });
+
+        // Xử lý sự kiện click vào phần chữ tên Bài học (lesson-left) để tự động vào học liệu con đầu tiên
+        const lessonLefts = accordion.querySelectorAll('.lesson-left');
+        lessonLefts.forEach(left => {
+            left.addEventListener('click', (e) => {
+                if (isEditModeActive) return; // Không click điều hướng khi đang trong chế độ chỉnh sửa
+
+                const lessonId = left.getAttribute('data-lesson-id');
+                const materials = materialsMap[lessonId] || [];
+
+                if (materials.length > 0) {
+                    const firstMaterial = materials[0];
+                    const isLocked = !firstMaterial.is_preview && !isUserLoggedIn;
+
+                    if (isLocked) {
+                        alert("Vui lòng đăng ký tài khoản và đăng nhập để xem nội dung bài học này!");
+                        sessionStorage.setItem('redirectAfterLogin', `${window.location.origin}/study.html?id=${currentCourseId}&lesson_id=${lessonId}&material_id=${firstMaterial.id}`);
+                        window.location.href = 'login.html';
+                    } else {
+                        window.location.href = `study.html?id=${currentCourseId}&lesson_id=${lessonId}&material_id=${firstMaterial.id}`;
+                    }
+                } else {
+                    alert("Bài học này hiện chưa được đăng tải nội dung học liệu nào.");
                 }
             });
         });
