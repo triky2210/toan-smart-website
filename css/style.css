@@ -1543,3 +1543,266 @@ body.admin-toolbar-visible .course-detail-layout {
     box-shadow: 0 4px 12px rgba(185, 28, 28, 0.2) !important;
 }
 
+/* ========================================== */
+/* LOGIN / REGISTER PAGE & USER DROPDOWN CSS */
+/* ========================================== */
+
+/* Dropdown Tài Khoản trên Header */
+.user-profile-menu {
+    position: relative;
+    display: inline-block;
+}
+
+.profile-trigger {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 50px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    transition: var(--transition);
+}
+
+.profile-trigger:hover {
+    border-color: var(--accent-color);
+    background: rgba(99, 102, 241, 0.05);
+}
+
+.profile-trigger i {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.profile-trigger .user-avatar {
+    width: 28px;
+    height: 28px;
+    background: var(--gradient-primary);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    font-weight: bold;
+}
+
+.profile-dropdown-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+    min-width: 200px;
+    z-index: 1010;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.2s ease-in-out;
+}
+
+.profile-dropdown-menu.active {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.profile-dropdown-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--card-border);
+}
+
+.profile-dropdown-header .user-name {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    display: block;
+}
+
+.profile-dropdown-header .user-email {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    display: block;
+    margin-top: 2px;
+}
+
+.profile-dropdown-list {
+    list-style: none;
+    padding: 6px;
+}
+
+.profile-dropdown-item a, 
+.profile-dropdown-item button {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    border: none;
+    background: transparent;
+    text-align: left;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: var(--transition);
+}
+
+.profile-dropdown-item a:hover, 
+.profile-dropdown-item button:hover {
+    background: rgba(99, 102, 241, 0.08);
+    color: var(--accent-color);
+}
+
+.profile-dropdown-item.logout-btn a:hover, 
+.profile-dropdown-item.logout-btn button:hover {
+    background: rgba(239, 68, 68, 0.08);
+    color: #EF4444;
+}
+
+/* Trang Đăng Nhập / Đăng Ký */
+.login-body {
+    background: linear-gradient(135deg, #EEF2F6 0%, #E3E8EE 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+}
+
+.login-wrapper {
+    width: 100%;
+    max-width: 450px;
+}
+
+.login-logo-container {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.login-logo-container .logo {
+    font-size: 2rem;
+    justify-content: center;
+}
+
+.login-card {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
+    padding: 40px;
+}
+
+.login-card-title {
+    text-align: center;
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 24px;
+}
+
+.login-tabs {
+    display: flex;
+    background: rgba(15, 23, 42, 0.05);
+    padding: 4px;
+    border-radius: 12px;
+    margin-bottom: 30px;
+}
+
+.login-tab-btn {
+    flex: 1;
+    border: none;
+    background: transparent;
+    padding: 10px 0;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    cursor: pointer;
+    border-radius: 8px;
+    transition: var(--transition);
+}
+
+.login-tab-btn.active {
+    background: white;
+    color: var(--accent-color);
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+}
+
+.login-form-group {
+    margin-bottom: 20px;
+}
+
+.login-form-group label {
+    display: block;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+}
+
+.login-input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid var(--card-border);
+    border-radius: 10px;
+    background: white;
+    font-size: 0.95rem;
+    color: var(--text-primary);
+    transition: var(--transition);
+}
+
+.login-input:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+}
+
+.login-submit-btn {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 10px;
+    background: var(--gradient-primary);
+    color: white;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    margin-top: 10px;
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.2);
+}
+
+.login-submit-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.3);
+}
+
+.login-submit-btn:active {
+    transform: translateY(0);
+}
+
+.login-footer {
+    text-align: center;
+    margin-top: 24px;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.login-footer a {
+    color: var(--accent-color);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.login-footer a:hover {
+    text-decoration: underline;
+}
+

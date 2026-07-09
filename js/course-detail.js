@@ -105,8 +105,11 @@ let dbLessons = JSON.parse(localStorage.getItem('db_lessons')) || [
     { id: 3005, chapter_id: 302, title: "Bài 5: Chuyên đề Tổ hợp, Xác suất & Thống kê trong đề ĐGNL TP.HCM", type: "video", url: "", duration: "", is_preview: false, order_index: 2 }
 ];
 
-// Trạng thái Admin & Edit mode
+// Trạng thái Admin, Student & Đăng nhập
+let isUserLoggedIn = false;
+let isStudentLoggedIn = false;
 let isAdminLoggedIn = false;
+let loggedInUser = null;
 let isEditModeActive = false;
 let currentCourseId = 1;
 
@@ -136,23 +139,44 @@ document.addEventListener('DOMContentLoaded', async () => {
     const adminToolbar = document.getElementById('adminToolbar');
     const editModeToggle = document.getElementById('editModeToggle');
 
-    // 1. Kiểm tra đăng nhập Admin
+    // 1. Kiểm tra đăng nhập
     await checkAdminAuth();
 
     async function checkAdminAuth() {
         if (isOnline) {
             try {
                 const { data: { session } } = await supabaseClient.auth.getSession();
-                if (session) {
-                    isAdminLoggedIn = true;
+                if (session && session.user) {
+                    isUserLoggedIn = true;
+                    loggedInUser = {
+                        name: session.user.user_metadata?.full_name || session.user.email.split('@')[0],
+                        email: session.user.email
+                    };
+
+                    if (session.user.email === 'admin@toansmart.edu.vn') {
+                        isAdminLoggedIn = true;
+                    } else {
+                        isStudentLoggedIn = true;
+                    }
                 }
             } catch (err) {
                 console.error("Lỗi Auth Supabase:", err);
             }
         } else {
             // Chế độ demo
-            if (localStorage.getItem('demo_admin_user')) {
+            const demoAdmin = localStorage.getItem('demo_admin_user');
+            const demoStudent = localStorage.getItem('demo_student_user');
+            
+            if (demoAdmin) {
                 isAdminLoggedIn = true;
+                isUserLoggedIn = true;
+                const data = JSON.parse(demoAdmin);
+                loggedInUser = { name: data.name, email: data.email };
+            } else if (demoStudent) {
+                isStudentLoggedIn = true;
+                isUserLoggedIn = true;
+                const data = JSON.parse(demoStudent);
+                loggedInUser = { name: data.name, email: data.email };
             }
         }
 
@@ -165,6 +189,85 @@ document.addEventListener('DOMContentLoaded', async () => {
             isEditModeActive = savedEditMode;
             if (editModeToggle) {
                 editModeToggle.checked = savedEditMode;
+            }
+        }
+
+        // Vẽ Header động
+        initHeaderAuth();
+    }
+
+    // Render thông tin tài khoản trên Header
+    function initHeaderAuth() {
+        const authContainer = document.getElementById('headerAuthContainer');
+        if (!authContainer) return;
+
+        if (isUserLoggedIn && loggedInUser) {
+            const avatarChar = loggedInUser.name.charAt(0).toUpperCase();
+            
+            authContainer.innerHTML = `
+                <div class="user-profile-menu">
+                    <div class="profile-trigger" id="profileTrigger">
+                        <div class="user-avatar">${avatarChar}</div>
+                        <span class="user-name-span" style="font-weight: 600;">${loggedInUser.name}</span>
+                        <i class="fa-solid fa-chevron-down" style="font-size: 0.7rem; margin-left: 4px;"></i>
+                    </div>
+                    <div class="profile-dropdown-menu" id="profileDropdown">
+                        <div class="profile-dropdown-header">
+                            <span class="user-name">${loggedInUser.name}</span>
+                            <span class="user-email">${loggedInUser.email}</span>
+                        </div>
+                        <ul class="profile-dropdown-list">
+                            ${isAdminLoggedIn ? `
+                                <li class="profile-dropdown-item"><a href="admin.html"><i class="fa-solid fa-gauge"></i> Trang Dashboard</a></li>
+                            ` : ''}
+                            <li class="profile-dropdown-item logout-btn"><button id="headerLogoutBtn" style="border: none; background: none; width: 100%; text-align: left; padding: 10px 12px; cursor: pointer;"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</button></li>
+                        </ul>
+                    </div>
+                </div>
+            `;
+
+            // Dropdown toggle
+            const trigger = document.getElementById('profileTrigger');
+            const dropdown = document.getElementById('profileDropdown');
+
+            if (trigger && dropdown) {
+                trigger.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    dropdown.classList.toggle('active');
+                });
+
+                document.addEventListener('click', (e) => {
+                    if (!trigger.contains(e.target) && !dropdown.contains(e.target)) {
+                        dropdown.classList.remove('active');
+                    }
+                });
+            }
+
+            // Logout event
+            const logoutBtn = document.getElementById('headerLogoutBtn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', async () => {
+                    if (isOnline) {
+                        await supabaseClient.auth.signOut();
+                    } else {
+                        localStorage.removeItem('demo_admin_user');
+                        localStorage.removeItem('demo_student_user');
+                    }
+                    alert("Đã đăng xuất tài khoản!");
+                    window.location.reload();
+                });
+            }
+        } else {
+            // Chưa đăng nhập: Vẽ nút Đăng nhập
+            authContainer.innerHTML = `
+                <a href="login.html" class="btn btn-primary" id="headerLoginBtn" style="padding: 8px 20px;"><i class="fa-solid fa-user-lock" style="margin-right: 6px;"></i> Đăng nhập</a>
+            `;
+            
+            const loginBtn = document.getElementById('headerLoginBtn');
+            if (loginBtn) {
+                loginBtn.addEventListener('click', () => {
+                    sessionStorage.setItem('redirectAfterLogin', window.location.href);
+                });
             }
         }
     }
@@ -405,27 +508,38 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                     // Left Side (Icon + Lesson Name + Gear Icon next to lesson)
                     let iconHTML = '';
-                    if (lesson.is_preview) {
+                    if (lesson.is_preview || isUserLoggedIn) {
                         iconHTML = lesson.type === 'video' 
                             ? `<i class="fa-solid fa-circle-play"></i>` 
                             : `<i class="fa-regular fa-file-pdf"></i>`;
                     } else {
-                        iconHTML = `<i class="fa-solid fa-lock"></i>`;
+                        iconHTML = `<i class="fa-solid fa-lock" style="color: var(--text-secondary);"></i>`;
                     }
 
-                    // Right Side (Trial btn or Locked status)
+                    // Right Side (Trial btn, Locked status or study btn)
                     let rightHTML = '';
                     if (lesson.is_preview) {
                         if (lesson.type === 'video') {
                             rightHTML = `
                                 <span class="lesson-duration">${lesson.duration || ''}</span>
-                                <a href="${lesson.url}" target="_blank" class="lesson-btn">Học thử</a>
+                                <a href="${lesson.url || '#'}" target="_blank" class="lesson-btn">Học thử</a>
                             `;
                         } else {
-                            rightHTML = `<a href="${lesson.url}" download class="lesson-btn">Tải PDF mẫu</a>`;
+                            rightHTML = `<a href="${lesson.url || '#'}" download class="lesson-btn">Tải PDF mẫu</a>`;
                         }
                     } else {
-                        rightHTML = `<span class="lesson-locked">Khóa học viên</span>`;
+                        if (isUserLoggedIn) {
+                            if (lesson.type === 'video') {
+                                rightHTML = `
+                                    <span class="lesson-duration">${lesson.duration || 'Video'}</span>
+                                    <a href="${lesson.url || '#'}" target="_blank" class="lesson-btn" style="background: var(--gradient-primary); border: none;">Vào học</a>
+                                `;
+                            } else {
+                                rightHTML = `<a href="${lesson.url || '#'}" download class="lesson-btn" style="background: var(--gradient-primary); border: none;">Tải tài liệu</a>`;
+                            }
+                        } else {
+                            rightHTML = `<button class="lesson-btn locked-lesson-btn" style="background: var(--text-secondary); border-color: var(--card-border); cursor: pointer;"><i class="fa-solid fa-lock" style="margin-right: 4px;"></i> Đăng nhập học</button>`;
+                        }
                     }
 
                     li.innerHTML = `
@@ -448,6 +562,19 @@ document.addEventListener('DOMContentLoaded', async () => {
             content.appendChild(list);
             item.appendChild(content);
             accordion.appendChild(item);
+        });
+
+        // Xử lý sự kiện click bài học bị khóa
+        const lockedBtns = accordion.querySelectorAll('.locked-lesson-btn');
+        lockedBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                alert("Vui lòng đăng ký tài khoản và đăng nhập để xem nội dung bài học này!");
+                sessionStorage.setItem('redirectAfterLogin', window.location.href);
+                window.location.href = 'login.html';
+            });
         });
 
         // Initialize click handlers
@@ -481,12 +608,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         let addChapterButtonHTML = '';
 
         if (isEditModeActive) {
-            // Admin mode: đổi nút đăng ký thành Xem với vai trò học sinh (màu đỏ)
             actionButtonHTML = `<button class="btn btn-primary w-100 btn-student-role" style="width: 100%;" id="viewAsStudentBtn"><i class="fa-solid fa-eye" style="margin-right: 6px;"></i> Xem với vai trò học sinh</button>`;
-            // Thêm nút Thêm chương mới ở dưới như trong ảnh mẫu
             addChapterButtonHTML = `<button class="btn btn-secondary w-100" id="sidebarAddChapterBtn" style="margin-top: 10px; width: 100%; font-weight: 600;"><i class="fa-solid fa-plus"></i> Thêm chương mới</button>`;
         } else {
-            // Student mode: nút đăng ký màu tím mặc định
             actionButtonHTML = `<button class="btn btn-primary w-100 course-register-btn" style="width: 100%;" data-title="${course.title}" data-price="${priceFormatted}">Đăng ký học ngay</button>`;
         }
 
@@ -949,7 +1073,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             e.preventDefault();
 
             if (currentModalAction === 'edit_course') {
-                // SỬA KHÓA HỌC
                 const courseId = currentModalTargetId;
                 const title = document.getElementById('inline_c_title').value.trim();
                 const price = parseInt(document.getElementById('inline_c_price').value);
@@ -977,7 +1100,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 alert("Đã cập nhật thông tin khóa học thành công!");
             } 
             else {
-                // THÊM/SỬA BÀI HỌC
                 const title = document.getElementById('inline_l_title').value.trim();
                 const type = document.getElementById('inline_l_type').value;
                 const url = document.getElementById('inline_l_url').value.trim();

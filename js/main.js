@@ -245,4 +245,117 @@ document.addEventListener('DOMContentLoaded', () => {
             }, 1200);
         });
     }
+
+    // 8. Tích hợp Đăng nhập & Đăng ký trên Header
+    initHeaderAuth();
+
+    async function initHeaderAuth() {
+        const authContainer = document.getElementById('headerAuthContainer');
+        if (!authContainer) return;
+
+        const isOnline = (typeof supabaseClient !== 'undefined' && supabaseClient !== null);
+        let user = null;
+
+        if (isOnline) {
+            try {
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                if (session && session.user) {
+                    user = {
+                        name: session.user.user_metadata?.full_name || session.user.email.split('@')[0],
+                        email: session.user.email,
+                        isAdmin: false
+                    };
+                    
+                    if (session.user.email === 'admin@toansmart.edu.vn') {
+                        user.isAdmin = true;
+                    }
+                }
+            } catch (err) {
+                console.error("Lỗi Auth Supabase ở Header:", err);
+            }
+        } else {
+            // Offline fallback
+            const demoAdmin = localStorage.getItem('demo_admin_user');
+            const demoStudent = localStorage.getItem('demo_student_user');
+            
+            if (demoAdmin) {
+                const data = JSON.parse(demoAdmin);
+                user = { name: data.name, email: data.email, isAdmin: true };
+            } else if (demoStudent) {
+                const data = JSON.parse(demoStudent);
+                user = { name: data.name, email: data.email, isAdmin: false };
+            }
+        }
+
+        if (user) {
+            // Đã đăng nhập: Vẽ Dropdown tài khoản
+            const avatarChar = user.name.charAt(0).toUpperCase();
+            
+            authContainer.innerHTML = `
+                <div class="user-profile-menu">
+                    <div class="profile-trigger" id="profileTrigger">
+                        <div class="user-avatar">${avatarChar}</div>
+                        <span class="user-name-span" style="font-weight: 600;">${user.name}</span>
+                        <i class="fa-solid fa-chevron-down" style="font-size: 0.7rem; margin-left: 4px;"></i>
+                    </div>
+                    <div class="profile-dropdown-menu" id="profileDropdown">
+                        <div class="profile-dropdown-header">
+                            <span class="user-name">${user.name}</span>
+                            <span class="user-email">${user.email}</span>
+                        </div>
+                        <ul class="profile-dropdown-list">
+                            ${user.isAdmin ? `
+                                <li class="profile-dropdown-item"><a href="admin.html"><i class="fa-solid fa-gauge"></i> Trang Dashboard</a></li>
+                            ` : ''}
+                            <li class="profile-dropdown-item logout-btn"><button id="headerLogoutBtn" style="border: none; background: none; width: 100%; text-align: left; padding: 10px 12px; cursor: pointer;"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</button></li>
+                        </ul>
+                    </div>
+                </div>
+            `;
+
+            // Xử lý đóng mở dropdown
+            const trigger = document.getElementById('profileTrigger');
+            const dropdown = document.getElementById('profileDropdown');
+
+            if (trigger && dropdown) {
+                trigger.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    dropdown.classList.toggle('active');
+                });
+
+                document.addEventListener('click', (e) => {
+                    if (!trigger.contains(e.target) && !dropdown.contains(e.target)) {
+                        dropdown.classList.remove('active');
+                    }
+                });
+            }
+
+            // Xử lý nút Đăng xuất
+            const logoutBtn = document.getElementById('headerLogoutBtn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', async () => {
+                    if (isOnline) {
+                        await supabaseClient.auth.signOut();
+                    } else {
+                        localStorage.removeItem('demo_admin_user');
+                        localStorage.removeItem('demo_student_user');
+                    }
+                    alert("Đã đăng xuất tài khoản!");
+                    window.location.reload();
+                });
+            }
+        } else {
+            // Chưa đăng nhập: Vẽ nút Đăng nhập
+            authContainer.innerHTML = `
+                <a href="login.html" class="btn btn-primary" id="headerLoginBtn" style="padding: 8px 20px;"><i class="fa-solid fa-user-lock" style="margin-right: 6px;"></i> Đăng nhập</a>
+            `;
+            
+            const loginBtn = document.getElementById('headerLoginBtn');
+            if (loginBtn) {
+                loginBtn.addEventListener('click', () => {
+                    sessionStorage.setItem('redirectAfterLogin', window.location.href);
+                });
+            }
+        }
+    }
 });
