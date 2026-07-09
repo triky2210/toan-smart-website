@@ -622,9 +622,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                                 <span class="lesson-title-text" style="font-weight: 600; color: var(--text-primary);">${lesson.title}</span>
                             </div>
                             <div class="lesson-right" style="display: flex; align-items: center; gap: 12px;">
-                                <div class="materials-count-badge" style="font-size: 0.75rem; background: rgba(99, 102, 241, 0.06); color: var(--accent-color); padding: 2px 8px; border-radius: 12px; font-weight: 600;">
-                                    ${materials.length} học liệu
-                                </div>
+                                ${isEditModeActive ? `
+                                    <div class="materials-count-badge" style="font-size: 0.75rem; background: rgba(99, 102, 241, 0.06); color: var(--accent-color); padding: 2px 8px; border-radius: 12px; font-weight: 600; white-space: nowrap;">
+                                        ${materials.length} học liệu
+                                    </div>
+                                ` : ''}
                                 ${actionsHTML}
                             </div>
                         </div>
