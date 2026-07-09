@@ -228,93 +228,67 @@ document.addEventListener('DOMContentLoaded', async () => {
             materials = materialsMap[lessonId] || [];
         }
     }
-
-    // 4. Render Sidebar mục lục cây phân cấp
+    // 4. Render Sidebar mục lục chỉ hiển thị Chương hiện tại đang xem
     function renderSidebarTree() {
         if (!treeContainer) return;
         treeContainer.innerHTML = '';
 
-        if (chapters.length === 0) {
+        if (!currentChapter) {
             treeContainer.innerHTML = `<div style="text-align: center; padding: 20px; color: var(--text-secondary);">Chưa có chương học nào.</div>`;
             return;
         }
 
-        chapters.forEach(ch => {
-            const chDiv = document.createElement('div');
-            chDiv.className = 'study-chapter';
+        const chDiv = document.createElement('div');
+        chDiv.className = 'study-chapter';
+        
+        const chTitle = document.createElement('div');
+        chTitle.className = 'study-chapter-title active';
+        chTitle.style.fontWeight = '700';
+        chTitle.style.color = 'var(--text-primary)';
+        chTitle.style.borderLeft = '3px solid var(--accent-color)';
+        chTitle.style.paddingLeft = '8px';
+        chTitle.style.cursor = 'pointer';
+        chTitle.textContent = currentChapter.title;
+        
+        // Click vào tiêu đề Chương dẫn về trang Lộ trình khóa học chính (nơi chứa tất cả các bài)
+        chTitle.onclick = () => {
+            window.location.href = `course-detail.html?id=${courseId}`;
+        };
+        chDiv.appendChild(chTitle);
+
+        const lessonsList = document.createElement('ul');
+        lessonsList.className = 'study-lessons-list';
+        lessonsList.style.paddingLeft = '8px';
+        lessonsList.style.marginTop = '12px';
+
+        const lessons = lessonsMap[currentChapter.id] || [];
+        lessons.forEach(l => {
+            const lLi = document.createElement('li');
+            lLi.style.listStyle = 'none';
+            lLi.style.marginBottom = '8px';
             
-            const chTitle = document.createElement('div');
-            chTitle.className = 'study-chapter-title';
-            chTitle.textContent = ch.title;
-            chDiv.appendChild(chTitle);
+            const isCurrentLesson = (l.id === lessonId);
 
-            const lessonsList = document.createElement('ul');
-            lessonsList.className = 'study-lessons-list';
+            const lTitle = document.createElement('div');
+            lTitle.className = `study-lesson-title ${isCurrentLesson ? 'active' : ''}`;
+            lTitle.style.cursor = 'pointer';
+            lTitle.style.padding = '8px 12px';
+            lTitle.style.borderRadius = '6px';
+            lTitle.style.fontWeight = isCurrentLesson ? '600' : '400';
+            lTitle.style.fontSize = '0.9rem';
+            lTitle.textContent = l.title;
+            
+            lTitle.onclick = () => {
+                window.location.href = `lesson.html?id=${courseId}&lesson_id=${l.id}`;
+            };
 
-            const lessons = lessonsMap[ch.id] || [];
-            lessons.forEach(l => {
-                const lLi = document.createElement('li');
-                
-                // Bài hiện tại sẽ có class active để đánh dấu highlight
-                const isCurrentLesson = (l.id === lessonId);
-
-                const lTitle = document.createElement('div');
-                lTitle.className = `study-lesson-title ${isCurrentLesson ? 'active' : ''}`;
-                lTitle.style.cursor = 'pointer';
-                lTitle.textContent = l.title;
-                
-                // Click vào bài giảng trên sidebar chuyển hướng nhanh sang bài học đó
-                lTitle.onclick = () => {
-                    window.location.href = `lesson.html?id=${courseId}&lesson_id=${l.id}`;
-                };
-
-                lLi.appendChild(lTitle);
-
-                const materialsList = document.createElement('ul');
-                materialsList.className = 'study-materials-list';
-
-                const lMaterials = materialsMap[l.id] || [];
-                lMaterials.forEach(m => {
-                    const mLi = document.createElement('li');
-                    mLi.className = 'study-material-item';
-
-                    const isLocked = !m.is_preview && !isUserLoggedIn;
-                    if (isLocked) mLi.classList.add('locked');
-
-                    let iconHTML = '🎥';
-                    if (m.type === 'pdf') iconHTML = '📄';
-                    else if (m.type === 'text') iconHTML = '✍️';
-                    else if (m.type === 'quiz') iconHTML = '📝';
-
-                    const link = document.createElement('a');
-                    link.href = '#';
-                    link.innerHTML = `<span>${iconHTML}</span> <span style="flex-grow: 1;">${m.title}</span> ${isLocked ? '<i class="fa-solid fa-lock" style="font-size: 0.755rem; color: #EF4444;"></i>' : ''}`;
-                    
-                    link.onclick = (e) => {
-                        e.preventDefault();
-                        if (isLocked) {
-                            alert("Vui lòng đăng ký tài khoản và đăng nhập để xem nội dung học liệu này!");
-                            sessionStorage.setItem('redirectAfterLogin', `${window.location.origin}/study.html?id=${courseId}&lesson_id=${l.id}&material_id=${m.id}`);
-                            window.location.href = 'login.html';
-                        } else {
-                            window.location.href = `study.html?id=${courseId}&lesson_id=${l.id}&material_id=${m.id}`;
-                        }
-                    };
-
-                    mLi.appendChild(link);
-                    materialsList.appendChild(mLi);
-                });
-
-                lLi.appendChild(materialsList);
-                lessonsList.appendChild(lLi);
-            });
-
-            chDiv.appendChild(lessonsList);
-            treeContainer.appendChild(chDiv);
+            lLi.appendChild(lTitle);
+            lessonsList.appendChild(lLi);
         });
-    }
 
-    // 5. Render nội dung thẻ học liệu chính ở cột phải
+        chDiv.appendChild(lessonsList);
+        treeContainer.appendChild(chDiv);
+    }    // 5. Render nội dung thẻ học liệu chính ở cột phải
     function renderPageContent() {
         if (!currentLesson) {
             lessonPageTitle.textContent = "Không tìm thấy bài học";
