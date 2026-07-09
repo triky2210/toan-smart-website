@@ -60,12 +60,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                     if (error) throw error;
                     
-                    alert("Đăng ký thành công! Vui lòng kiểm tra email của bạn để kích hoạt tài khoản.");
-                    
-                    // Switch to login tab
-                    tabLoginBtn.click();
-                    document.getElementById('loginEmail').value = email;
-                    registerForm.reset();
+                    if (data && data.session) {
+                        alert("Đăng ký tài khoản thành công và tự động đăng nhập!");
+                        const redirectUrl = sessionStorage.getItem('redirectAfterLogin') || 'index.html';
+                        sessionStorage.removeItem('redirectAfterLogin');
+                        window.location.href = redirectUrl;
+                    } else {
+                        alert("Đăng ký thành công! Vui lòng kiểm tra email của bạn để kích hoạt tài khoản.");
+                        // Switch to login tab
+                        tabLoginBtn.click();
+                        document.getElementById('loginEmail').value = email;
+                        registerForm.reset();
+                    }
                     
                 } catch (err) {
                     console.error("Lỗi đăng ký:", err);
