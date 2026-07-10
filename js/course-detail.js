@@ -603,6 +603,38 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                     const materials = materialsMap[lesson.id] || [];
 
+                    // Tạo danh sách icon học liệu nhỏ tương ứng trong bài học này
+                    let materialsIconsHTML = '';
+                    if (materials.length > 0) {
+                        materialsIconsHTML = `<div class="lesson-materials-icons" style="display: flex; align-items: center; gap: 10px; margin-right: 12px;">`;
+                        materials.forEach(m => {
+                            let iconClass = 'fa-solid fa-circle-play'; // video
+                            let iconColor = '#0EA5E9'; // sky blue
+                            
+                            if (m.type === 'pdf') {
+                                iconClass = 'fa-solid fa-file-pdf';
+                                iconColor = '#EF4444'; // red
+                            } else if (m.type === 'text') {
+                                iconClass = 'fa-solid fa-file-lines';
+                                iconColor = '#10B981'; // green
+                            } else if (m.type === 'quiz') {
+                                iconClass = 'fa-solid fa-square-poll-horizontal';
+                                iconColor = '#F59E0B'; // orange
+                            }
+                            
+                            materialsIconsHTML += `
+                                <i class="${iconClass}" 
+                                   title="${m.title}" 
+                                   style="color: ${iconColor}; font-size: 1rem; cursor: pointer; transition: transform 0.2s;"
+                                   onmouseover="this.style.transform='scale(1.2)'"
+                                   onmouseout="this.style.transform='scale(1)'"
+                                   onclick="event.stopPropagation(); window.location.href='study.html?id=${currentCourseId}&lesson_id=${lesson.id}&material_id=${m.id}'">
+                                </i>
+                            `;
+                        });
+                        materialsIconsHTML += `</div>`;
+                    }
+
                     // Nút thao tác Admin (chỉ hiện khi bật chế độ sửa)
                     let actionsHTML = '';
                     if (isEditModeActive) {
@@ -614,14 +646,23 @@ document.addEventListener('DOMContentLoaded', async () => {
                         `;
                     }
 
+                    // Kiểm tra xem bài học có học liệu nào được đánh dấu học thử miễn phí không
+                    const hasPreview = materials.some(m => m.is_preview);
+                    let previewBadgeHTML = '';
+                    if (hasPreview && !isEditModeActive) {
+                        previewBadgeHTML = `<span class="lesson-preview-badge" style="font-size: 0.7rem; background-color: var(--accent-color); color: white; padding: 2px 8px; border-radius: 12px; font-weight: 600;">Học thử</span>`;
+                    }
+
                     li.innerHTML = `
-                        <div class="lesson-row" style="display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; border-bottom: 1px solid rgba(15, 23, 42, 0.03); cursor: pointer;" data-lesson-id="${lesson.id}">
+                        <div class="lesson-row" style="display: flex; justify-content: space-between; align-items: center; padding: 5px 24px; cursor: pointer;" data-lesson-id="${lesson.id}">
                             <div class="lesson-left" style="display: flex; align-items: center; gap: 10px; flex-grow: 1;">
                                 ${lessonDragHTML}
                                 <i class="fa-solid fa-folder-open" style="color: #6366F1; font-size: 0.95rem;"></i>
                                 <span class="lesson-title-text" style="font-weight: 600; color: var(--text-primary);">${lesson.title}</span>
+                                ${previewBadgeHTML}
                             </div>
                             <div class="lesson-right" style="display: flex; align-items: center; gap: 12px;">
+                                ${materialsIconsHTML}
                                 ${isEditModeActive ? `
                                     <div class="materials-count-badge" style="font-size: 0.75rem; background: rgba(99, 102, 241, 0.06); color: var(--accent-color); padding: 2px 8px; border-radius: 12px; font-weight: 600; white-space: nowrap;">
                                         ${materials.length} học liệu
@@ -648,8 +689,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         const lessonRows = accordion.querySelectorAll('.lesson-row');
         lessonRows.forEach(row => {
             row.addEventListener('click', (e) => {
-                // Tránh điều hướng khi click vào các nút sửa của admin
-                if (e.target.closest('.lesson-item-actions')) return;
+                // Tránh điều hướng khi click vào các nút sửa của admin hoặc icon học liệu trực tiếp
+                if (e.target.closest('.lesson-item-actions') || e.target.closest('.lesson-materials-icons')) return;
 
                 const lessonId = row.getAttribute('data-lesson-id');
                 window.location.href = `lesson.html?id=${currentCourseId}&lesson_id=${lessonId}`;
@@ -1178,6 +1219,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         materials.forEach(m => {
             const div = document.createElement('div');
+            div.className = 'material-sortable-item';
+            div.setAttribute('data-id', m.id);
             div.style.display = 'flex';
             div.style.justify = 'space-between';
             div.style.alignItems = 'center';
@@ -1186,6 +1229,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             div.style.border = '1px solid var(--card-border)';
             div.style.borderRadius = '6px';
             div.style.cursor = 'pointer';
+            div.style.marginBottom = '4px';
 
             let typeIcon = '🎥';
             if (m.type === 'pdf') typeIcon = '📄';
@@ -1193,12 +1237,74 @@ document.addEventListener('DOMContentLoaded', async () => {
             else if (m.type === 'quiz') typeIcon = '📝';
 
             div.innerHTML = `
-                <span style="font-size: 0.85rem; font-weight: 500;">${typeIcon} ${m.title} ${m.is_preview ? '<b>(Thử)</b>' : ''}</span>
-                <i class="fa-solid fa-pen-to-square" style="color: var(--accent-color); font-size: 0.85rem;"></i>
+                <div style="display: flex; align-items: center; gap: 8px; flex-grow: 1;">
+                    <i class="fa-solid fa-grip-vertical material-drag-handle" style="color: #94A3B8; cursor: grab; padding: 4px;" title="Kéo thả sắp xếp"></i>
+                    <span style="font-size: 0.85rem; font-weight: 500;">${typeIcon} ${m.title} ${m.is_preview ? '<b>(Thử)</b>' : ''}</span>
+                </div>
+                <i class="fa-solid fa-pen-to-square" style="color: var(--accent-color); font-size: 0.85rem; padding: 4px;"></i>
             `;
-            div.onclick = () => showMaterialDetailsForm(m, lessonId);
+            
+            div.onclick = (e) => {
+                // Nếu click vào biểu tượng kéo thả thì không mở form sửa chi tiết
+                if (e.target.closest('.material-drag-handle')) return;
+                showMaterialDetailsForm(m, lessonId);
+            };
+            
             container.appendChild(div);
         });
+
+        // Khởi tạo SortableJS cho danh sách học liệu con
+        if (typeof Sortable !== 'undefined') {
+            Sortable.create(container, {
+                handle: '.material-drag-handle',
+                animation: 150,
+                onEnd: async function (evt) {
+                    const divList = container.querySelectorAll('.material-sortable-item');
+                    const newOrderIds = Array.from(divList).map(el => parseInt(el.getAttribute('data-id')));
+                    
+                    const lessonMaterials = currentMaterialsMap[lessonId] || [];
+                    
+                    // Cập nhật order_index mới dựa trên vị trí sau kéo thả
+                    newOrderIds.forEach((id, index) => {
+                        const material = lessonMaterials.find(item => item.id === id);
+                        if (material) {
+                            material.order_index = index + 1;
+                        }
+                    });
+                    
+                    // Sắp xếp lại mảng local theo order_index mới
+                    lessonMaterials.sort((a, b) => a.order_index - b.order_index);
+                    
+                    // Lưu dữ liệu sắp xếp mới
+                    const isOnline = (typeof supabaseClient !== 'undefined' && supabaseClient !== null);
+                    if (isOnline) {
+                        try {
+                            for (let i = 0; i < lessonMaterials.length; i++) {
+                                const m = lessonMaterials[i];
+                                await supabaseClient
+                                    .from('materials')
+                                    .update({ order_index: m.order_index })
+                                    .eq('id', m.id);
+                            }
+                        } catch (err) {
+                            console.error("Lỗi cập nhật thứ tự học liệu lên Supabase:", err);
+                        }
+                    } else {
+                        const dbMaterials = JSON.parse(localStorage.getItem('db_materials')) || [];
+                        lessonMaterials.forEach(m => {
+                            const dbM = dbMaterials.find(item => item.id === m.id);
+                            if (dbM) {
+                                dbM.order_index = m.order_index;
+                            }
+                        });
+                        localStorage.setItem('db_materials', JSON.stringify(dbMaterials));
+                    }
+                    
+                    // Vẽ lại giao diện lộ trình học bên ngoài để cập nhật vị trí icon tức thì
+                    renderSyllabus(currentChapters, currentLessonsMap, currentMaterialsMap);
+                }
+            });
+        }
     }
 
     function showMaterialDetailsForm(material, lessonId) {
