@@ -2139,6 +2139,16 @@ body.admin-toolbar-visible .course-detail-layout {
 .material-sub-item.locked:hover {
     background: rgba(239, 68, 68, 0.04);
 }
-
-
-
+/* Breadcrumb Links Custom Styles */
+.lesson-breadcrumb a {
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+.lesson-breadcrumb a:hover {
+    color: var(--accent-color);
+    text-decoration: underline;
+}
+.lesson-breadcrumb span {
+    color: var(--text-secondary);
+}

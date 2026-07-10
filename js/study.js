@@ -370,7 +370,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const breadcrumb = document.getElementById('studyBreadcrumb');
         if (breadcrumb && studyChapter && studyLesson) {
             breadcrumb.innerHTML = `
-                <span style="color: var(--text-secondary); font-weight: 500;">${studyChapter.title}</span> <i class="fa-solid fa-angle-right" style="font-size: 0.75rem; margin: 0 4px; color: var(--text-secondary);"></i>
+                <a href="course-detail.html?id=${courseId}">${studyChapter.title}</a> <i class="fa-solid fa-angle-right" style="font-size: 0.75rem; margin: 0 4px; color: var(--text-secondary);"></i>
                 <a href="lesson.html?id=${courseId}&lesson_id=${studyLesson.id}" style="color: var(--accent-color); font-weight: 600; text-decoration: none;">${studyLesson.title}</a>
             `;
         }

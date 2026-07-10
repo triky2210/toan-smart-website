@@ -299,7 +299,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Cập nhật Breadcrumb
         const breadcrumb = document.getElementById('lessonBreadcrumb');
         if (breadcrumb && currentChapter) {
-            breadcrumb.innerHTML = `<span style="font-weight: 500; color: var(--text-secondary);">${currentChapter.title}</span>`;
+            breadcrumb.innerHTML = `
+                <a href="course-detail.html?id=${courseId}">${currentChapter.title}</a>
+            `;
         }
         if (lessonPageTitle) {
             lessonPageTitle.textContent = currentLesson.title;
