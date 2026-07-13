@@ -35,6 +35,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     let isAdminLoggedIn = false;
     let loggedInUser = null;
 
+    // Teacher edit variables
+    let editingNameType = '';
+    let editingNameId = null;
+    let targetLessonId = null;
+    let targetMaterialId = null;
+
     // 1. Cấu hình nút quay lại
     if (backToCourseBtn) {
         backToCourseBtn.href = `course-detail.html?id=${courseId}`;
@@ -153,6 +159,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     await loadLessonData();
 
     async function loadLessonData() {
+        // Clear maps to prevent duplication on data reload
+        lessonsMap = {};
+        materialsMap = {};
         if (isOnline) {
             try {
                 // Tải khóa học
@@ -304,7 +313,22 @@ document.addEventListener('DOMContentLoaded', async () => {
             `;
         }
         if (lessonPageTitle) {
-            lessonPageTitle.textContent = currentLesson.title;
+            if (isAdminLoggedIn) {
+                lessonPageTitle.innerHTML = `
+                    <span class="lesson-title-text">${currentLesson.title}</span>
+                    <button id="lessonEditBtn" class="edit-btn" title="Chỉnh sửa tên bài học" style="background: none; border: none; color: var(--text-secondary); cursor: pointer; margin-left: 12px; font-size: 1.15rem; transition: color 0.2s; display: inline-flex !important; align-items: center;"><i class="fa-solid fa-pen"></i></button>
+                    <button id="lessonGearBtn" class="gear-btn" title="Quản lý bài học" style="background: none; border: none; color: var(--text-secondary); cursor: pointer; margin-left: 8px; font-size: 1.15rem; transition: color 0.2s; display: inline-flex !important; align-items: center;"><i class="fa-solid fa-gear"></i></button>
+                `;
+                
+                document.getElementById('lessonEditBtn').addEventListener('click', () => {
+                    openEditNameModal('lesson', currentLesson.id, currentLesson.title);
+                });
+                document.getElementById('lessonGearBtn').addEventListener('click', () => {
+                    openLessonGearModal(currentLesson);
+                });
+            } else {
+                lessonPageTitle.textContent = currentLesson.title;
+            }
         }
 
         // Render danh sách học liệu con
@@ -334,12 +358,21 @@ document.addEventListener('DOMContentLoaded', async () => {
                 iconTypeClass = 'quiz';
             }
 
+            let editButtonsHTML = '';
+            if (isAdminLoggedIn) {
+                editButtonsHTML = `
+                    <button class="material-edit-btn" title="Chỉnh sửa tên học liệu" style="background: none; border: none; color: var(--text-secondary); cursor: pointer; margin-left: 12px; font-size: 0.95rem; transition: color 0.2s; display: inline-flex; align-items: center;"><i class="fa-solid fa-pen"></i></button>
+                    <button class="material-gear-btn" title="Cấu hình học liệu" style="background: none; border: none; color: var(--text-secondary); cursor: pointer; margin-left: 8px; font-size: 0.95rem; transition: color 0.2s; display: inline-flex; align-items: center;"><i class="fa-solid fa-gear"></i></button>
+                `;
+            }
+
             card.innerHTML = `
-                <div class="material-card-left">
+                <div class="material-card-left" style="display: flex; align-items: center; flex-wrap: wrap; gap: 8px;">
                     <div class="material-card-icon ${iconTypeClass}">
                         <i class="${iconClass}"></i>
                     </div>
                     <span class="material-card-title">${m.title}</span>
+                    ${editButtonsHTML}
                 </div>
                 <div class="material-card-right">
                     ${isLocked 
@@ -360,7 +393,379 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             };
 
+            if (isAdminLoggedIn) {
+                const penBtn = card.querySelector('.material-edit-btn');
+                const gearBtn = card.querySelector('.material-gear-btn');
+                
+                if (penBtn) {
+                    penBtn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        openEditNameModal('material', m.id, m.title);
+                    });
+                }
+                if (gearBtn) {
+                    gearBtn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        openMaterialGearModal(m);
+                    });
+                }
+            }
+
             materialsGrid.appendChild(card);
+        });
+    }
+
+    // --- LOGIC QUẢN LÝ DÀNH CHO GIÁO VIÊN ---
+    
+    // 1. Mở Modal Đổi Tên
+    function openEditNameModal(type, id, currentTitle) {
+        editingNameType = type;
+        editingNameId = id;
+        document.getElementById('editNameInput').value = currentTitle;
+        document.getElementById('editNameModalTitle').textContent = type === 'lesson' ? 'Chỉnh sửa tiêu đề bài học' : 'Chỉnh sửa tiêu đề học liệu';
+        document.getElementById('editNameModal').classList.add('active');
+    }
+
+    // 2. Mở Modal Quản Lý Bài Học (Bánh răng)
+    function openLessonGearModal(lesson) {
+        targetLessonId = lesson.id;
+        document.getElementById('newMaterialTitle').value = '';
+        document.getElementById('newMaterialType').value = 'video';
+        
+        // Tự động tính thứ tự hiển thị tiếp theo
+        const nextOrder = materials.length > 0 ? Math.max(...materials.map(m => m.order_index)) + 1 : 1;
+        document.getElementById('newMaterialOrder').value = nextOrder;
+        
+        document.getElementById('newMaterialUrl').value = '';
+        document.getElementById('newMaterialFileInput').value = '';
+        document.getElementById('newMaterialPreview').checked = false;
+        
+        // Reset trường hiển thị
+        document.getElementById('newMaterialUrlGroup').style.display = 'block';
+        document.getElementById('newMaterialUploadGroup').style.display = 'none';
+        document.getElementById('newMaterialUrlLabel').textContent = 'Link YouTube (Nhúng)';
+        document.getElementById('newMaterialUrl').placeholder = 'https://www.youtube.com/embed/...';
+        
+        document.getElementById('lessonGearModalTitle').textContent = `Quản lý bài học: ${lesson.title}`;
+        document.getElementById('lessonGearModal').classList.add('active');
+    }
+
+    // 3. Mở Modal Quản Lý Học Liệu (Bánh răng)
+    function openMaterialGearModal(material) {
+        targetMaterialId = material.id;
+        document.getElementById('editMaterialOrder').value = material.order_index;
+        document.getElementById('editMaterialPreview').checked = material.is_preview;
+
+        // Reset hiển thị động theo loại
+        document.getElementById('videoMaterialFields').style.display = 'none';
+        document.getElementById('pdfMaterialFields').style.display = 'none';
+        document.getElementById('otherMaterialFields').style.display = 'none';
+
+        if (material.type === 'video') {
+            document.getElementById('videoMaterialFields').style.display = 'block';
+            document.getElementById('videoMaterialUrl').value = material.url || '';
+        } else if (material.type === 'pdf') {
+            document.getElementById('pdfMaterialFields').style.display = 'block';
+            document.getElementById('pdfMaterialUrl').value = material.url || '';
+            document.getElementById('pdfMaterialFileInput').value = '';
+        } else {
+            document.getElementById('otherMaterialFields').style.display = 'block';
+            document.getElementById('otherMaterialUrl').value = material.url || '';
+            document.getElementById('editMaterialContent').value = material.content || '';
+        }
+
+        document.getElementById('materialGearModalTitle').textContent = `Quản lý học liệu: ${material.title}`;
+        document.getElementById('materialGearModal').classList.add('active');
+    }
+
+    // Hiển thị động các trường khi chọn loại học liệu mới
+    const newMaterialTypeSelect = document.getElementById('newMaterialType');
+    if (newMaterialTypeSelect) {
+        newMaterialTypeSelect.addEventListener('change', (e) => {
+            const val = e.target.value;
+            const urlGroup = document.getElementById('newMaterialUrlGroup');
+            const uploadGroup = document.getElementById('newMaterialUploadGroup');
+            const urlLabel = document.getElementById('newMaterialUrlLabel');
+            const urlInput = document.getElementById('newMaterialUrl');
+
+            if (val === 'video') {
+                urlGroup.style.display = 'block';
+                uploadGroup.style.display = 'none';
+                urlLabel.textContent = 'Link YouTube (Nhúng)';
+                urlInput.placeholder = 'https://www.youtube.com/embed/...';
+            } else if (val === 'pdf') {
+                urlGroup.style.display = 'block';
+                uploadGroup.style.display = 'block';
+                urlLabel.textContent = 'Hoặc nhập Link URL tài liệu PDF';
+                urlInput.placeholder = 'assets/docs/... hoặc link online';
+            } else {
+                urlGroup.style.display = 'block';
+                uploadGroup.style.display = 'none';
+                urlLabel.textContent = 'Link URL học liệu';
+                urlInput.placeholder = 'Đường dẫn liên kết...';
+            }
+        });
+    }
+
+    // Hỗ trợ hàm đóng tất cả modals
+    window.closeModal = function(modalId) {
+        document.getElementById(modalId).classList.remove('active');
+    };
+
+    // 4. Xử lý lưu đổi tên (Lesson / Material)
+    const editNameForm = document.getElementById('editNameForm');
+    if (editNameForm) {
+        editNameForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const newTitle = document.getElementById('editNameInput').value.trim();
+            if (!newTitle) return;
+
+            if (editingNameType === 'lesson') {
+                if (isOnline) {
+                    try {
+                        const { error } = await supabaseClient.from('lessons').update({ title: newTitle }).eq('id', editingNameId);
+                        if (error) throw error;
+                    } catch (err) {
+                        alert("Lỗi cập nhật tên bài học: " + err.message);
+                        return;
+                    }
+                } else {
+                    const dbLessons = JSON.parse(localStorage.getItem('db_lessons')) || [];
+                    const idx = dbLessons.findIndex(l => l.id == editingNameId);
+                    if (idx !== -1) {
+                        dbLessons[idx].title = newTitle;
+                        localStorage.setItem('db_lessons', JSON.stringify(dbLessons));
+                    }
+                }
+            } else if (editingNameType === 'material') {
+                if (isOnline) {
+                    try {
+                        const { error } = await supabaseClient.from('materials').update({ title: newTitle }).eq('id', editingNameId);
+                        if (error) throw error;
+                    } catch (err) {
+                        alert("Lỗi cập nhật tên học liệu: " + err.message);
+                        return;
+                    }
+                } else {
+                    const dbMaterials = JSON.parse(localStorage.getItem('db_materials')) || [];
+                    const idx = dbMaterials.findIndex(m => m.id == editingNameId);
+                    if (idx !== -1) {
+                        dbMaterials[idx].title = newTitle;
+                        localStorage.setItem('db_materials', JSON.stringify(dbMaterials));
+                    }
+                }
+            }
+
+            alert("Đổi tên thành công!");
+            closeModal('editNameModal');
+            await loadLessonData(); // Tải lại dữ liệu trang
+        });
+    }
+
+    // Hàm phụ hỗ trợ tải file lên Supabase Storage (hoặc giả lập khi offline)
+    async function handlePdfUpload(fileInputEl, manualUrlEl) {
+        const file = fileInputEl.files[0];
+        let fileUrl = manualUrlEl ? manualUrlEl.value.trim() : '';
+
+        if (file) {
+            if (isOnline) {
+                try {
+                    const fileExt = file.name.split('.').pop();
+                    const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
+                    const filePath = `pdf/${fileName}`;
+                    
+                    const { data, error } = await supabaseClient.storage
+                        .from('materials')
+                        .upload(filePath, file);
+                        
+                    if (error) {
+                        // Thử tạo bucket nếu lỗi chưa có bucket
+                        console.error("Lỗi upload storage:", error.message);
+                        alert("Không thể tự động tải file lên Supabase Storage (Có thể chưa tạo bucket 'materials' công khai). Sẽ sử dụng đường dẫn file local giả lập.");
+                        fileUrl = `assets/docs/${file.name}`;
+                    } else {
+                        const { data: urlData } = supabaseClient.storage
+                            .from('materials')
+                            .getPublicUrl(filePath);
+                        fileUrl = urlData.publicUrl;
+                    }
+                } catch (err) {
+                    console.error("Lỗi upload:", err);
+                    fileUrl = `assets/docs/${file.name}`;
+                }
+            } else {
+                // Ngoại tuyến: Giả lập lưu vào assets/docs/
+                fileUrl = `assets/docs/${file.name}`;
+            }
+        }
+        return fileUrl;
+    }
+
+    // 5. Xử lý Thêm học liệu mới
+    const addMaterialForm = document.getElementById('addMaterialForm');
+    if (addMaterialForm) {
+        addMaterialForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const title = document.getElementById('newMaterialTitle').value.trim();
+            const type = document.getElementById('newMaterialType').value;
+            const order = parseInt(document.getElementById('newMaterialOrder').value) || 1;
+            const isPreview = document.getElementById('newMaterialPreview').checked;
+
+            // Xử lý upload file PDF hoặc lấy URL nhập tay
+            let url = '';
+            if (type === 'pdf') {
+                const fileInput = document.getElementById('newMaterialFileInput');
+                const urlInput = document.getElementById('newMaterialUrl');
+                url = await handlePdfUpload(fileInput, urlInput);
+            } else {
+                url = document.getElementById('newMaterialUrl').value.trim();
+            }
+
+            const materialData = {
+                lesson_id: targetLessonId,
+                title,
+                type,
+                url,
+                content: '',
+                is_preview: isPreview,
+                order_index: order
+            };
+
+            if (isOnline) {
+                try {
+                    const { error } = await supabaseClient.from('materials').insert([materialData]);
+                    if (error) throw error;
+                } catch (err) {
+                    alert("Lỗi thêm học liệu: " + err.message);
+                    return;
+                }
+            } else {
+                const dbMaterials = JSON.parse(localStorage.getItem('db_materials')) || [];
+                const newId = dbMaterials.length > 0 ? Math.max(...dbMaterials.map(m => m.id)) + 1 : 10001;
+                dbMaterials.push({ id: newId, ...materialData });
+                localStorage.setItem('db_materials', JSON.stringify(dbMaterials));
+            }
+
+            alert("Thêm học liệu thành công!");
+            closeModal('lessonGearModal');
+            await loadLessonData();
+        });
+    }
+
+    // 6. Xử lý Chỉnh sửa nội dung học liệu
+    const editMaterialForm = document.getElementById('editMaterialForm');
+    if (editMaterialForm) {
+        editMaterialForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const order = parseInt(document.getElementById('editMaterialOrder').value) || 1;
+            const isPreview = document.getElementById('editMaterialPreview').checked;
+
+            // Tìm học liệu hiện tại trong bộ nhớ đệm
+            let currentMat = materials.find(m => m.id == targetMaterialId);
+            if (!currentMat) return;
+
+            let url = '';
+            let content = '';
+
+            if (currentMat.type === 'video') {
+                url = document.getElementById('videoMaterialUrl').value.trim();
+            } else if (currentMat.type === 'pdf') {
+                const fileInput = document.getElementById('pdfMaterialFileInput');
+                const urlInput = document.getElementById('pdfMaterialUrl');
+                url = await handlePdfUpload(fileInput, urlInput);
+            } else {
+                url = document.getElementById('otherMaterialUrl').value.trim();
+                content = document.getElementById('editMaterialContent').value.trim();
+            }
+
+            const updatedData = {
+                order_index: order,
+                is_preview: isPreview,
+                url,
+                content
+            };
+
+            if (isOnline) {
+                try {
+                    const { error } = await supabaseClient.from('materials').update(updatedData).eq('id', targetMaterialId);
+                    if (error) throw error;
+                } catch (err) {
+                    alert("Lỗi cập nhật học liệu: " + err.message);
+                    return;
+                }
+            } else {
+                const dbMaterials = JSON.parse(localStorage.getItem('db_materials')) || [];
+                const idx = dbMaterials.findIndex(m => m.id == targetMaterialId);
+                if (idx !== -1) {
+                    dbMaterials[idx] = { ...dbMaterials[idx], ...updatedData };
+                    localStorage.setItem('db_materials', JSON.stringify(dbMaterials));
+                }
+            }
+
+            alert("Cập nhật học liệu thành công!");
+            closeModal('materialGearModal');
+            await loadLessonData();
+        });
+    }
+
+    // 7. Xử lý Xóa bài học
+    const deleteLessonBtn = document.getElementById('deleteLessonBtn');
+    if (deleteLessonBtn) {
+        deleteLessonBtn.addEventListener('click', async () => {
+            if (!confirm("Bạn có chắc chắn muốn xóa bài học này? Toàn bộ học liệu liên quan sẽ bị xóa!")) return;
+
+            if (isOnline) {
+                try {
+                    const { error } = await supabaseClient.from('lessons').delete().eq('id', targetLessonId);
+                    if (error) throw error;
+                } catch (err) {
+                    alert("Lỗi xóa bài học: " + err.message);
+                    return;
+                }
+            } else {
+                // Xóa bài học
+                let dbLessons = JSON.parse(localStorage.getItem('db_lessons')) || [];
+                dbLessons = dbLessons.filter(l => l.id != targetLessonId);
+                localStorage.setItem('db_lessons', JSON.stringify(dbLessons));
+
+                // Xóa học liệu con
+                let dbMaterials = JSON.parse(localStorage.getItem('db_materials')) || [];
+                dbMaterials = dbMaterials.filter(m => m.lesson_id != targetLessonId);
+                localStorage.setItem('db_materials', JSON.stringify(dbMaterials));
+            }
+
+            alert("Xóa bài học thành công!");
+            closeModal('lessonGearModal');
+            // Quay lại trang chi tiết khóa học vì bài này đã bị xóa
+            window.location.href = `course-detail.html?id=${courseId}`;
+        });
+    }
+
+    // 8. Xử lý Xóa học liệu
+    const deleteMaterialBtn = document.getElementById('deleteMaterialBtn');
+    if (deleteMaterialBtn) {
+        deleteMaterialBtn.addEventListener('click', async () => {
+            if (!confirm("Bạn có chắc chắn muốn xóa học liệu này?")) return;
+
+            if (isOnline) {
+                try {
+                    const { error } = await supabaseClient.from('materials').delete().eq('id', targetMaterialId);
+                    if (error) throw error;
+                } catch (err) {
+                    alert("Lỗi xóa học liệu: " + err.message);
+                    return;
+                }
+            } else {
+                let dbMaterials = JSON.parse(localStorage.getItem('db_materials')) || [];
+                dbMaterials = dbMaterials.filter(m => m.id != targetMaterialId);
+                localStorage.setItem('db_materials', JSON.stringify(dbMaterials));
+            }
+
+            alert("Xóa học liệu thành công!");
+            closeModal('materialGearModal');
+            await loadLessonData();
         });
     }
 });

@@ -30,6 +30,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     let isAdminLoggedIn = false;
     let loggedInUser = null;
 
+    // Teacher edit variables
+    let targetMaterialId = null;
+
     // 1. Cấu hình nút quay lại trang chi tiết khóa học
     if (backToCourseBtn) {
         backToCourseBtn.href = `course-detail.html?id=${courseId}`;
@@ -154,6 +157,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     await loadStudyData();
 
     async function loadStudyData() {
+        // Clear maps to prevent duplication on data reload
+        lessonsMap = {};
+        materialsMap = {};
+        
         if (isOnline) {
             try {
                 // Tải khóa học
@@ -257,7 +264,17 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
-        // Tạo tiêu đề Sidebar "Bài học cùng chủ đề"
+        // Tìm thông tin bài học hiện tại để làm tiêu đề và làm link quay lại bài học cha
+        let activeLesson = null;
+        for (let chId in lessonsMap) {
+            const foundL = lessonsMap[chId].find(l => l.id == activeLessonId);
+            if (foundL) {
+                activeLesson = foundL;
+                break;
+            }
+        }
+
+        // Tạo tiêu đề Sidebar hiển thị tên bài và kèm link quay về bài học cha
         const sideHeader = document.createElement('div');
         sideHeader.className = 'study-chapter-title active';
         sideHeader.style.fontWeight = '700';
@@ -266,7 +283,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         sideHeader.style.paddingLeft = '8px';
         sideHeader.style.marginBottom = '16px';
         sideHeader.style.fontSize = '0.95rem';
-        sideHeader.textContent = "Bài học cùng chủ đề";
+        
+        if (activeLesson) {
+            sideHeader.innerHTML = `
+                <a href="lesson.html?id=${courseId}&lesson_id=${activeLessonId}" title="Quay lại chi tiết bài học" style="text-decoration: none; color: inherit; display: inline-flex; align-items: center; gap: 8px; transition: color 0.2s;" onmouseover="this.style.color='var(--accent-color)'" onmouseout="this.style.color='inherit'">
+                    <i class="fa-solid fa-arrow-left-long" style="color: var(--accent-color); font-size: 0.9rem;"></i>
+                    <span>${activeLesson.title}</span>
+                </a>
+            `;
+        } else {
+            sideHeader.textContent = "Bài học cùng chủ đề";
+        }
+        
         treeContainer.appendChild(sideHeader);
 
         const materialsList = document.createElement('ul');
@@ -350,7 +378,24 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         const material = flatMaterials[activeMaterialIndex];
-        contentTitle.textContent = material.title;
+        
+        if (isAdminLoggedIn) {
+            contentTitle.innerHTML = `
+                <span>${material.title}</span>
+                <button id="materialTitleEditBtn" class="edit-btn" title="Chỉnh sửa tên học liệu" style="background: none; border: none; color: var(--text-secondary); cursor: pointer; margin-left: 12px; font-size: 1.15rem; transition: color 0.2s; display: inline-flex !important; align-items: center;"><i class="fa-solid fa-pen"></i></button>
+                <button id="materialTitleGearBtn" class="gear-btn" title="Cấu hình nội dung học liệu" style="background: none; border: none; color: var(--text-secondary); cursor: pointer; margin-left: 8px; font-size: 1.15rem; transition: color 0.2s; display: inline-flex !important; align-items: center;"><i class="fa-solid fa-gear"></i></button>
+            `;
+            
+            document.getElementById('materialTitleEditBtn').addEventListener('click', () => {
+                openEditNameModal(material);
+            });
+            document.getElementById('materialTitleGearBtn').addEventListener('click', () => {
+                openMaterialGearModal(material);
+            });
+        } else {
+            contentTitle.textContent = material.title;
+        }
+        
         contentViewer.innerHTML = '';
 
         // Tìm Lesson và Chapter tương ứng với học liệu hiện tại để dựng Breadcrumb & Sidebar
@@ -392,9 +437,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         } 
         else if (material.type === 'pdf') {
             contentViewer.innerHTML = `
-                <div style="display: flex; flex-direction: column; flex-grow: 1; height: 100%;">
-                    <div class="pdf-frame-wrapper" style="flex-grow: 1; min-height: 500px;">
-                        <iframe src="${material.url}"></iframe>
+                <div style="display: flex; flex-direction: column; flex-grow: 1; height: 100%; width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box;">
+                    <div class="pdf-frame-wrapper" style="flex-grow: 1; height: 80vh; min-height: 700px; width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box;">
+                        <iframe src="${material.url}" style="width: 100%; max-width: 100%; height: 100%; border: 0; min-width: 0; box-sizing: border-box;"></iframe>
                     </div>
                     <div style="text-align: center; margin-top: 20px;">
                         <a href="${material.url}" download class="btn btn-primary" style="width: auto; display: inline-flex; align-items: center; gap: 8px;"><i class="fa-solid fa-download"></i> Tải tài liệu này về máy (PDF)</a>
@@ -424,22 +469,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         updateNavButtons();
     }
 
-    // Chuyển link YouTube thường thành link nhúng Embed
+    // Chuyển link YouTube thường thành link nhúng Embed (hỗ trợ watch, share link youtu.be, shorts, live,...)
     function getYoutubeEmbedUrl(url) {
         if (!url) return "https://www.youtube.com/embed/zH0QG_uPez8";
         
-        let videoId = "";
         if (url.includes("embed/")) {
             return url;
         }
-        else if (url.includes("watch?v=")) {
-            const parts = url.split("v=");
-            if (parts.length > 1) videoId = parts[1].split("&")[0];
-        } 
-        else if (url.includes("youtu.be/")) {
-            const parts = url.split("youtu.be/");
-            if (parts.length > 1) videoId = parts[1].split("?")[0];
-        }
+        
+        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|shorts\/|live\/)([^#\&\?]*).*/;
+        const match = url.match(regExp);
+        const videoId = (match && match[2].length === 11) ? match[2] : null;
 
         if (videoId) {
             return `https://www.youtube.com/embed/${videoId}`;
@@ -507,4 +547,209 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
     };
+
+    // --- LOGIC QUẢN LÝ DÀNH CHO GIÁO VIÊN ---
+    
+    // 1. Mở Modal Đổi Tên
+    function openEditNameModal(material) {
+        targetMaterialId = material.id;
+        document.getElementById('editNameInput').value = material.title;
+        document.getElementById('editNameModalTitle').textContent = 'Chỉnh sửa tiêu đề học liệu';
+        document.getElementById('editNameModal').classList.add('active');
+    }
+
+    // 2. Mở Modal Quản Lý Học Liệu (Bánh răng)
+    function openMaterialGearModal(material) {
+        targetMaterialId = material.id;
+        document.getElementById('editMaterialOrder').value = material.order_index;
+        document.getElementById('editMaterialPreview').checked = material.is_preview;
+
+        // Reset hiển thị động theo loại
+        document.getElementById('videoMaterialFields').style.display = 'none';
+        document.getElementById('pdfMaterialFields').style.display = 'none';
+        document.getElementById('otherMaterialFields').style.display = 'none';
+
+        if (material.type === 'video') {
+            document.getElementById('videoMaterialFields').style.display = 'block';
+            document.getElementById('videoMaterialUrl').value = material.url || '';
+        } else if (material.type === 'pdf') {
+            document.getElementById('pdfMaterialFields').style.display = 'block';
+            document.getElementById('pdfMaterialUrl').value = material.url || '';
+            document.getElementById('pdfMaterialFileInput').value = '';
+        } else {
+            document.getElementById('otherMaterialFields').style.display = 'block';
+            document.getElementById('otherMaterialUrl').value = material.url || '';
+            document.getElementById('editMaterialContent').value = material.content || '';
+        }
+
+        document.getElementById('materialGearModalTitle').textContent = `Quản lý học liệu: ${material.title}`;
+        document.getElementById('materialGearModal').classList.add('active');
+    }
+
+    // Đóng modal
+    window.closeModal = function(modalId) {
+        document.getElementById(modalId).classList.remove('active');
+    };
+
+    // 3. Xử lý lưu đổi tên học liệu
+    const editNameForm = document.getElementById('editNameForm');
+    if (editNameForm) {
+        editNameForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const newTitle = document.getElementById('editNameInput').value.trim();
+            if (!newTitle) return;
+
+            if (isOnline) {
+                try {
+                    const { error } = await supabaseClient.from('materials').update({ title: newTitle }).eq('id', targetMaterialId);
+                    if (error) throw error;
+                } catch (err) {
+                    alert("Lỗi cập nhật tên học liệu: " + err.message);
+                    return;
+                }
+            } else {
+                const dbMaterials = JSON.parse(localStorage.getItem('db_materials')) || [];
+                const idx = dbMaterials.findIndex(m => m.id == targetMaterialId);
+                if (idx !== -1) {
+                    dbMaterials[idx].title = newTitle;
+                    localStorage.setItem('db_materials', JSON.stringify(dbMaterials));
+                }
+            }
+
+            alert("Đổi tên học liệu thành công!");
+            closeModal('editNameModal');
+            
+            // Cập nhật nóng bộ nhớ đệm
+            const cacheMaterialIndex = flatMaterials.findIndex(m => m.id == targetMaterialId);
+            if (cacheMaterialIndex !== -1) {
+                flatMaterials[cacheMaterialIndex].title = newTitle;
+            }
+            
+            // Tải lại dữ liệu trang
+            await loadStudyData();
+        });
+    }
+
+    // Hỗ trợ upload file PDF
+    async function handlePdfUpload(fileInputEl, manualUrlEl) {
+        const file = fileInputEl.files[0];
+        let fileUrl = manualUrlEl ? manualUrlEl.value.trim() : '';
+
+        if (file) {
+            if (isOnline) {
+                try {
+                    const fileExt = file.name.split('.').pop();
+                    const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
+                    const filePath = `pdf/${fileName}`;
+                    
+                    const { data, error } = await supabaseClient.storage
+                        .from('materials')
+                        .upload(filePath, file);
+                        
+                    if (error) {
+                        console.error("Lỗi upload storage:", error.message);
+                        alert("Không thể tự động tải file lên Supabase Storage (Có thể chưa tạo bucket 'materials' công khai). Sẽ sử dụng đường dẫn file local giả lập.");
+                        fileUrl = `assets/docs/${file.name}`;
+                    } else {
+                        const { data: urlData } = supabaseClient.storage
+                            .from('materials')
+                            .getPublicUrl(filePath);
+                        fileUrl = urlData.publicUrl;
+                    }
+                } catch (err) {
+                    console.error("Lỗi upload:", err);
+                    fileUrl = `assets/docs/${file.name}`;
+                }
+            } else {
+                fileUrl = `assets/docs/${file.name}`;
+            }
+        }
+        return fileUrl;
+    }
+
+    // 4. Xử lý Chỉnh sửa nội dung học liệu
+    const editMaterialForm = document.getElementById('editMaterialForm');
+    if (editMaterialForm) {
+        editMaterialForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const order = parseInt(document.getElementById('editMaterialOrder').value) || 1;
+            const isPreview = document.getElementById('editMaterialPreview').checked;
+
+            let currentMat = flatMaterials.find(m => m.id == targetMaterialId);
+            if (!currentMat) return;
+
+            let url = '';
+            let content = '';
+
+            if (currentMat.type === 'video') {
+                url = document.getElementById('videoMaterialUrl').value.trim();
+            } else if (currentMat.type === 'pdf') {
+                const fileInput = document.getElementById('pdfMaterialFileInput');
+                const urlInput = document.getElementById('pdfMaterialUrl');
+                url = await handlePdfUpload(fileInput, urlInput);
+            } else {
+                url = document.getElementById('otherMaterialUrl').value.trim();
+                content = document.getElementById('editMaterialContent').value.trim();
+            }
+
+            const updatedData = {
+                order_index: order,
+                is_preview: isPreview,
+                url,
+                content
+            };
+
+            if (isOnline) {
+                try {
+                    const { error } = await supabaseClient.from('materials').update(updatedData).eq('id', targetMaterialId);
+                    if (error) throw error;
+                } catch (err) {
+                    alert("Lỗi cập nhật học liệu: " + err.message);
+                    return;
+                }
+            } else {
+                const dbMaterials = JSON.parse(localStorage.getItem('db_materials')) || [];
+                const idx = dbMaterials.findIndex(m => m.id == targetMaterialId);
+                if (idx !== -1) {
+                    dbMaterials[idx] = { ...dbMaterials[idx], ...updatedData };
+                    localStorage.setItem('db_materials', JSON.stringify(dbMaterials));
+                }
+            }
+
+            alert("Cập nhật học liệu thành công!");
+            closeModal('materialGearModal');
+            await loadStudyData();
+        });
+    }
+
+    // 5. Xử lý Xóa học liệu
+    const deleteMaterialBtn = document.getElementById('deleteMaterialBtn');
+    if (deleteMaterialBtn) {
+        deleteMaterialBtn.addEventListener('click', async () => {
+            if (!confirm("Bạn có chắc chắn muốn xóa học liệu này?")) return;
+
+            if (isOnline) {
+                try {
+                    const { error } = await supabaseClient.from('materials').delete().eq('id', targetMaterialId);
+                    if (error) throw error;
+                } catch (err) {
+                    alert("Lỗi xóa học liệu: " + err.message);
+                    return;
+                }
+            } else {
+                let dbMaterials = JSON.parse(localStorage.getItem('db_materials')) || [];
+                dbMaterials = dbMaterials.filter(m => m.id != targetMaterialId);
+                localStorage.setItem('db_materials', JSON.stringify(dbMaterials));
+            }
+
+            alert("Xóa học liệu thành công!");
+            closeModal('materialGearModal');
+            
+            // Xóa khỏi danh sách phẳng để điều hướng hoặc load học liệu khác
+            flatMaterials = flatMaterials.filter(m => m.id != targetMaterialId);
+            
+            // Quay lại bài đầu tiên hoặc load lại trang
+            window.location.href = `lesson.html?id=${courseId}&lesson_id=${currentLessonId}`;
+        });
+    }
 });

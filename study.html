@@ -78,6 +78,90 @@
         </main>
     </div>
 
+    <!-- Modals for Teacher Management -->
+    <!-- 1. Edit Name Modal (for Material Title) -->
+    <div class="modal" id="editNameModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="document.getElementById('editNameModal').classList.remove('active')"><i class="fa-solid fa-xmark"></i></button>
+            <h3 class="modal-title" id="editNameModalTitle">Chỉnh sửa tiêu đề</h3>
+            <form id="editNameForm" style="margin-top: 20px;">
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <label class="form-label" style="font-weight: 600; display: block; margin-bottom: 8px;">Tiêu đề mới</label>
+                    <input type="text" class="form-control" id="editNameInput" required style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--card-border); font-family: inherit;">
+                </div>
+                <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px;">
+                    <button type="button" class="btn btn-secondary" onclick="document.getElementById('editNameModal').classList.remove('active')" style="padding: 10px 20px; border-radius: 8px; border: 1px solid var(--card-border); background: #f8fafc; cursor: pointer;">Hủy bỏ</button>
+                    <button type="submit" class="btn btn-primary" style="padding: 10px 20px; border-radius: 8px; background: var(--accent-color); color: #fff; border: none; cursor: pointer; font-weight: 600;">Lưu lại</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 2. Material Gear Modal (Manage Material Content / YouTube URL / PDF Upload / Delete Material) -->
+    <div class="modal" id="materialGearModal">
+        <div class="modal-content" style="max-width: 550px;">
+            <button class="modal-close" onclick="document.getElementById('materialGearModal').classList.remove('active')"><i class="fa-solid fa-xmark"></i></button>
+            <h3 class="modal-title" id="materialGearModalTitle">Quản lý học liệu</h3>
+            
+            <form id="editMaterialForm" style="margin-top: 20px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                    <div class="form-group">
+                        <label class="form-label" style="font-weight: 600; display: block; margin-bottom: 6px;">Thứ tự hiển thị</label>
+                        <input type="number" class="form-control" id="editMaterialOrder" min="1" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--card-border);">
+                    </div>
+                    <div class="form-group" style="display: flex; flex-direction: column; justify-content: flex-end; padding-bottom: 10px;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <input type="checkbox" id="editMaterialPreview" style="cursor: pointer;">
+                            <label for="editMaterialPreview" style="font-weight: 500; font-size: 0.9rem; cursor: pointer;">Học thử miễn phí</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Video Dynamic Fields -->
+                <div id="videoMaterialFields" style="display: none;">
+                    <div class="form-group" style="margin-bottom: 16px;">
+                        <label class="form-label" style="font-weight: 600; display: block; margin-bottom: 6px;">Đường dẫn Video YouTube (Link nhúng)</label>
+                        <input type="text" class="form-control" id="videoMaterialUrl" placeholder="https://www.youtube.com/embed/..." style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--card-border);">
+                        <small style="color: var(--text-secondary); display: block; margin-top: 4px;">Để lấy link nhúng, bạn vào video trên YouTube -> chọn Chia sẻ -> Nhúng -> Sao chép thuộc tính `src` (vd: https://www.youtube.com/embed/xyz)</small>
+                    </div>
+                </div>
+
+                <!-- PDF Dynamic Fields -->
+                <div id="pdfMaterialFields" style="display: none;">
+                    <div class="form-group" style="margin-bottom: 16px;">
+                        <label class="form-label" style="font-weight: 600; display: block; margin-bottom: 6px;">Tải lên file PDF mới</label>
+                        <input type="file" id="pdfMaterialFileInput" accept=".pdf" style="width: 100%; padding: 8px; border-radius: 8px; border: 1px dashed var(--accent-color); background: #fdfdfd; cursor: pointer;">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 16px;">
+                        <label class="form-label" style="font-weight: 600; display: block; margin-bottom: 6px;">Hoặc nhập Link URL tài liệu PDF</label>
+                        <input type="text" class="form-control" id="pdfMaterialUrl" placeholder="assets/docs/... hoặc link online" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--card-border);">
+                    </div>
+                </div>
+
+                <!-- Other types placeholder if needed -->
+                <div id="otherMaterialFields" style="display: none;">
+                    <div class="form-group" style="margin-bottom: 16px;">
+                        <label class="form-label" style="font-weight: 600; display: block; margin-bottom: 6px;">Link URL học liệu</label>
+                        <input type="text" class="form-control" id="otherMaterialUrl" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--card-border);">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 16px;">
+                        <label class="form-label" style="font-weight: 600; display: block; margin-bottom: 6px;">Nội dung chi tiết</label>
+                        <textarea class="form-control" id="editMaterialContent" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--card-border); height: 100px; resize: vertical;"></textarea>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 12px; margin-top: 24px; border-top: 1px solid #f1f5f9; padding-top: 20px;">
+                    <button type="button" id="deleteMaterialBtn" style="padding: 10px 20px; border-radius: 8px; background: #fee2e2; color: #ef4444; border: 1px solid #fca5a5; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 6px; transition: all 0.2s;">
+                        <i class="fa-solid fa-trash-can"></i> Xóa học liệu
+                    </button>
+                    <div style="flex-grow: 1;"></div>
+                    <button type="button" class="btn btn-secondary" onclick="document.getElementById('materialGearModal').classList.remove('active')" style="padding: 10px 20px; border-radius: 8px; border: 1px solid var(--card-border); background: #f8fafc; cursor: pointer;">Hủy</button>
+                    <button type="submit" class="btn btn-primary" style="padding: 10px 20px; border-radius: 8px; background: var(--accent-color); color: #fff; border: none; cursor: pointer; font-weight: 600;">Lưu thay đổi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Supabase JS Client library CDN -->
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <!-- Configuration -->
