@@ -162,6 +162,22 @@
         </div>
     </div>
 
+    <!-- Modal thông báo tải tài liệu trả phí -->
+    <div class="modal" id="paidDownloadModal">
+        <div class="modal-content" style="max-width: 420px; text-align: center; padding: 32px 24px;">
+            <button class="modal-close" onclick="document.getElementById('paidDownloadModal').classList.remove('active')"><i class="fa-solid fa-xmark"></i></button>
+            <div style="background: rgba(59, 130, 246, 0.1); width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
+                <i class="fa-solid fa-lock" style="font-size: 1.8rem; color: var(--accent-color);"></i>
+            </div>
+            <h3 class="modal-title" style="margin-bottom: 12px; font-size: 1.25rem; font-weight: 700;">Tài liệu trả phí</h3>
+            <p style="color: var(--text-secondary); line-height: 1.6; margin-bottom: 24px; font-size: 0.95rem;">Bạn hãy đăng ký khóa học để tải tài liệu ôn thi đắc lực này về máy nhé!</p>
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                <a href="index.html#contact" class="btn btn-primary" style="width: 100%; padding: 12px; border-radius: 8px; font-weight: 600; text-align: center; text-decoration: none; display: block; box-sizing: border-box;">Đăng ký khóa học ngay</a>
+                <button onclick="document.getElementById('paidDownloadModal').classList.remove('active')" class="btn btn-secondary" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--card-border); background: #f8fafc; cursor: pointer; font-weight: 600;">Để sau</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Supabase JS Client library CDN -->
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <!-- Configuration -->

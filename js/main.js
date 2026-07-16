@@ -248,6 +248,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 8. Tích hợp Đăng nhập & Đăng ký trên Header
     initHeaderAuth();
+    
+    // Nạp nội dung Trang chủ
+    initHomepage();
+
+    async function initHomepage() {
+        await loadHomepageContent();
+    }
 
     async function initHeaderAuth() {
         const authContainer = document.getElementById('headerAuthContainer');
@@ -268,19 +275,23 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                     if (session.user.email === 'admin@toansmart.edu.vn' || session.user.email === 'trungtamtoansmart@gmail.com') {
                         user.isAdmin = true;
+                        initHomepageAdminEditing();
                     }
                 }
             } catch (err) {
                 console.error("Lỗi Auth Supabase ở Header:", err);
             }
-        } else {
-            // Offline fallback
+        }
+
+        // Fallback to LocalStorage checks if user is still null (both for offline mode or offline demo login when online is enabled)
+        if (!user) {
             const demoAdmin = localStorage.getItem('demo_admin_user');
             const demoStudent = localStorage.getItem('demo_student_user');
             
             if (demoAdmin) {
                 const data = JSON.parse(demoAdmin);
                 user = { name: data.name, email: data.email, isAdmin: true };
+                initHomepageAdminEditing();
             } else if (demoStudent) {
                 const data = JSON.parse(demoStudent);
                 user = { name: data.name, email: data.email, isAdmin: false };
@@ -357,5 +368,301 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             }
         }
+    }
+
+    // --- QUẢN TRỊ NỘI DUNG TRANG CHỦ (INLINE EDITING) ---
+    
+    let homepageContent = null;
+
+    const DEFAULT_HOMEPAGE_CONTENT = {
+        hero_title: "Bứt Phá Điểm Số<br><span>Toán Học</span> Kỳ Thi Lớn",
+        hero_desc: "Khóa học ôn thi Toán chuyên sâu vào lớp 10, thi tốt nghiệp THPT Quốc Gia và Đánh giá năng lực (HSA/APT). Giúp học sinh nắm vững bản chất, rèn luyện tư duy giải nhanh để tự tin đỗ nguyện vọng 1.",
+        hero_btn_primary_text: "Khám phá khóa học",
+        hero_btn_primary_link: "#courses",
+        hero_btn_secondary_text: "Đăng ký tư vấn miễn phí",
+        hero_btn_secondary_link: "#contact",
+        hero_image_url: "assets/images/teacher-avatar.jpg",
+        
+        about_tag: "Người đồng hành",
+        about_title: "Thầy Tùng Dương",
+        about_intro: "Thầy Tùng Dương, cựu học sinh THPT chuyên Vĩnh Phúc, Tốt nghiệp ĐH Sư phạm Hà Nội ngành Toán Tiếng Anh, Thạc sĩ Toán học ĐH Sư phạm Hà Nội, nhiều năm kinh nghiệm ôn thi vào 10, ôn thi tốt nghiệp THPT, ĐGNL.",
+        about_quote: `"Toán học không đơn thuần là những công thức khô khan, mà là nghệ thuật rèn luyện tư duy logic. Tại Toán Smart, thầy không chỉ truyền thụ kiến thức thi cử bám sát thực tế, mà còn giúp các em xây dựng nền tảng tư duy toán học rộng mở để tự tin vượt qua mọi dạng bài mới."`,
+        about_image_url: "assets/images/teacher-avatar.jpg",
+        
+        feature_1_title: "Tư duy mở rộng",
+        feature_1_desc: "Dạy phương pháp giải bản chất thay vì học vẹt công thức toán.",
+        feature_2_title: "Bám sát đề thi",
+        feature_2_desc: "Cập nhật liên tục xu hướng ra đề thi vào 10, tốt nghiệp THPT mới nhất.",
+        
+        contact_title: "Nhận Tư Vấn Lộ Trình Học Chi Tiết",
+        contact_desc: "Hãy gửi lại thông tin để thầy tư vấn trực tiếp và gửi tặng bộ tài liệu ôn thi đắc lực nhất phù hợp với học lực hiện tại của em.",
+        contact_hotline: "0912.345.678 (Hỗ trợ 24/7)",
+        contact_email: "lienhe@toansmart.edu.vn",
+        
+        footer_desc: "Nơi học Toán từ bản chất, nâng tầm tư duy logic và đồng hành cùng sự bứt phá học thuật của thế hệ trẻ Việt Nam.",
+        footer_fb_link: "#",
+        footer_yt_link: "#",
+        footer_tt_link: "#"
+    };
+
+    async function loadHomepageContent() {
+        let content = null;
+        
+        // 1. Cố gắng tải từ Supabase trước nếu online
+        if (typeof supabaseClient !== 'undefined' && supabaseClient !== null) {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('homepage_settings')
+                    .select('value')
+                    .eq('key', 'content')
+                    .single();
+                
+                if (!error && data) {
+                    content = data.value;
+                }
+            } catch (err) {
+                console.warn("Chưa cấu hình bảng homepage_settings trên Supabase. Sẽ dùng LocalStorage/Mặc định.", err);
+            }
+        }
+        
+        // 2. Nếu online thất bại hoặc offline, tải từ LocalStorage
+        if (!content) {
+            const localData = localStorage.getItem('db_homepage_content');
+            if (localData) {
+                content = JSON.parse(localData);
+            } else {
+                content = DEFAULT_HOMEPAGE_CONTENT;
+            }
+        }
+        
+        homepageContent = content;
+        applyHomepageContent(content);
+    }
+
+    function applyHomepageContent(content) {
+        // Hero Section
+        const heroTitleEl = document.querySelector('.hero-content h1');
+        const heroDescEl = document.querySelector('.hero-content p');
+        const heroBtns = document.querySelectorAll('.hero-btns a');
+        const heroImgEl = document.querySelector('.hero-image');
+        
+        if (heroTitleEl && content.hero_title) heroTitleEl.innerHTML = content.hero_title;
+        if (heroDescEl && content.hero_desc) heroDescEl.textContent = content.hero_desc;
+        if (heroBtns[0] && content.hero_btn_primary_text) {
+            heroBtns[0].textContent = content.hero_btn_primary_text;
+            heroBtns[0].setAttribute('href', content.hero_btn_primary_link || '#');
+        }
+        if (heroBtns[1] && content.hero_btn_secondary_text) {
+            heroBtns[1].textContent = content.hero_btn_secondary_text;
+            heroBtns[1].setAttribute('href', content.hero_btn_secondary_link || '#');
+        }
+        if (heroImgEl && content.hero_image_url) heroImgEl.setAttribute('src', content.hero_image_url);
+        
+        // About Section
+        const aboutTagEl = document.querySelector('.about-content .about-tag');
+        const aboutTitleEl = document.querySelector('.about-content h2');
+        const aboutIntroEl = document.querySelector('.about-content .about-intro');
+        const aboutQuoteEl = document.querySelector('.about-content .about-details p');
+        const aboutImgEl = document.querySelector('.about-img');
+        
+        if (aboutTagEl && content.about_tag) aboutTagEl.textContent = content.about_tag;
+        if (aboutTitleEl && content.about_title) aboutTitleEl.textContent = content.about_title;
+        if (aboutIntroEl && content.about_intro) aboutIntroEl.textContent = content.about_intro;
+        if (aboutQuoteEl && content.about_quote) aboutQuoteEl.textContent = content.about_quote;
+        if (aboutImgEl && content.about_image_url) aboutImgEl.setAttribute('src', content.about_image_url);
+        
+        // Feature boxes
+        const featureBoxes = document.querySelectorAll('.feature-box');
+        if (featureBoxes[0] && content.feature_1_title) {
+            const title = featureBoxes[0].querySelector('h4');
+            const desc = featureBoxes[0].querySelector('p');
+            if (title) title.textContent = content.feature_1_title;
+            if (desc) desc.textContent = content.feature_1_desc;
+        }
+        if (featureBoxes[1] && content.feature_2_title) {
+            const title = featureBoxes[1].querySelector('h4');
+            const desc = featureBoxes[1].querySelector('p');
+            if (title) title.textContent = content.feature_2_title;
+            if (desc) desc.textContent = content.feature_2_desc;
+        }
+        
+        // Contact Section
+        const contactTitleEl = document.querySelector('.contact-info-panel h2');
+        const contactDescEl = document.querySelector('.contact-info-panel p');
+        const contactItems = document.querySelectorAll('.contact-item');
+        if (contactTitleEl && content.contact_title) contactTitleEl.textContent = content.contact_title;
+        if (contactDescEl && content.contact_desc) contactDescEl.textContent = content.contact_desc;
+        if (contactItems[0] && content.contact_hotline) {
+            const p = contactItems[0].querySelector('p');
+            if (p) p.textContent = content.contact_hotline;
+        }
+        if (contactItems[1] && content.contact_email) {
+            const p = contactItems[1].querySelector('p');
+            if (p) p.textContent = content.contact_email;
+        }
+        
+        // Footer Section
+        const footerBrandDesc = document.querySelector('.footer-brand p');
+        const socialLinks = document.querySelectorAll('.social-links a');
+        if (footerBrandDesc && content.footer_desc) footerBrandDesc.textContent = content.footer_desc;
+        if (socialLinks[0] && content.footer_fb_link) socialLinks[0].setAttribute('href', content.footer_fb_link);
+        if (socialLinks[1] && content.footer_yt_link) socialLinks[1].setAttribute('href', content.footer_yt_link);
+        if (socialLinks[2] && content.footer_tt_link) socialLinks[2].setAttribute('href', content.footer_tt_link);
+    }
+
+    // Khởi động tính năng sửa cho admin
+    function initHomepageAdminEditing() {
+        const heroContent = document.querySelector('.hero-content');
+        const aboutContent = document.querySelector('.about-content');
+        const contactInfo = document.querySelector('.contact-info-panel');
+        
+        // Tránh tạo trùng lặp nút nếu hàm chạy nhiều lần
+        if (document.querySelector('.homepage-section-edit-btn')) return;
+
+        // 1. Thêm nút sửa vào phần Hero
+        if (heroContent) {
+            const editBtn = document.createElement('button');
+            editBtn.className = 'homepage-section-edit-btn';
+            editBtn.innerHTML = '<i class="fa-solid fa-pen"></i>';
+            editBtn.title = 'Chỉnh sửa nội dung Hero';
+            editBtn.style.top = '0';
+            editBtn.style.right = '0';
+            editBtn.addEventListener('click', () => {
+                document.getElementById('editHeroTitle').value = homepageContent.hero_title || '';
+                document.getElementById('editHeroDesc').value = homepageContent.hero_desc || '';
+                document.getElementById('editHeroBtnPrimaryText').value = homepageContent.hero_btn_primary_text || '';
+                document.getElementById('editHeroBtnPrimaryLink').value = homepageContent.hero_btn_primary_link || '';
+                document.getElementById('editHeroBtnSecondaryText').value = homepageContent.hero_btn_secondary_text || '';
+                document.getElementById('editHeroBtnSecondaryLink').value = homepageContent.hero_btn_secondary_link || '';
+                document.getElementById('editHeroImageUrl').value = homepageContent.hero_image_url || '';
+                document.getElementById('editHeroModal').classList.add('active');
+            });
+            heroContent.appendChild(editBtn);
+        }
+        
+        // 2. Thêm nút sửa vào phần About
+        if (aboutContent) {
+            const editBtn = document.createElement('button');
+            editBtn.className = 'homepage-section-edit-btn';
+            editBtn.innerHTML = '<i class="fa-solid fa-pen"></i>';
+            editBtn.title = 'Chỉnh sửa phần Giới thiệu';
+            editBtn.style.top = '0';
+            editBtn.style.right = '0';
+            editBtn.addEventListener('click', () => {
+                document.getElementById('editAboutTag').value = homepageContent.about_tag || '';
+                document.getElementById('editAboutTitle').value = homepageContent.about_title || '';
+                document.getElementById('editAboutIntro').value = homepageContent.about_intro || '';
+                document.getElementById('editAboutQuote').value = homepageContent.about_quote || '';
+                document.getElementById('editAboutImageUrl').value = homepageContent.about_image_url || '';
+                document.getElementById('editFeature1Title').value = homepageContent.feature_1_title || '';
+                document.getElementById('editFeature1Desc').value = homepageContent.feature_1_desc || '';
+                document.getElementById('editFeature2Title').value = homepageContent.feature_2_title || '';
+                document.getElementById('editFeature2Desc').value = homepageContent.feature_2_desc || '';
+                document.getElementById('editAboutModal').classList.add('active');
+            });
+            aboutContent.appendChild(editBtn);
+        }
+        
+        // 3. Thêm nút sửa vào phần Contact & Footer
+        if (contactInfo) {
+            const editBtn = document.createElement('button');
+            editBtn.className = 'homepage-section-edit-btn';
+            editBtn.innerHTML = '<i class="fa-solid fa-pen"></i>';
+            editBtn.title = 'Chỉnh sửa phần Liên hệ & Footer';
+            editBtn.style.top = '0';
+            editBtn.style.right = '0';
+            editBtn.addEventListener('click', () => {
+                document.getElementById('editContactTitle').value = homepageContent.contact_title || '';
+                document.getElementById('editContactDesc').value = homepageContent.contact_desc || '';
+                document.getElementById('editContactHotline').value = homepageContent.contact_hotline || '';
+                document.getElementById('editContactEmail').value = homepageContent.contact_email || '';
+                document.getElementById('editFooterDesc').value = homepageContent.footer_desc || '';
+                document.getElementById('editFooterFbLink').value = homepageContent.footer_fb_link || '';
+                document.getElementById('editFooterYtLink').value = homepageContent.footer_yt_link || '';
+                document.getElementById('editFooterTtLink').value = homepageContent.footer_tt_link || '';
+                document.getElementById('editContactModal').classList.add('active');
+            });
+            contactInfo.appendChild(editBtn);
+        }
+    }
+
+    // Đóng Modal trang chủ
+    window.closeHomepageModal = function(modalId) {
+        document.getElementById(modalId).classList.remove('active');
+    };
+
+    // Hàm lưu cấu hình trang chủ chung
+    async function saveHomepageContent(updatedContent) {
+        homepageContent = { ...homepageContent, ...updatedContent };
+        localStorage.setItem('db_homepage_content', JSON.stringify(homepageContent));
+        
+        const isOnline = (typeof supabaseClient !== 'undefined' && supabaseClient !== null);
+        if (isOnline) {
+            try {
+                const { error } = await supabaseClient
+                    .from('homepage_settings')
+                    .upsert({ key: 'content', value: homepageContent });
+                
+                if (error) throw error;
+            } catch (err) {
+                console.error("Lỗi đồng bộ Supabase:", err);
+                alert("Đã lưu thành công vào bộ nhớ trình duyệt của máy (offline). Lưu ý: Việc lưu lên dữ liệu trực tuyến Supabase gặp lỗi (bạn cần chạy câu lệnh SQL tạo bảng 'homepage_settings' ở cuối file 'supabase_setup.sql' trong Dashboard của Supabase để sửa lỗi này).");
+            }
+        }
+        
+        alert("Lưu thay đổi thành công!");
+        window.location.reload();
+    }
+
+    // Thiết lập sự kiện gửi Form
+    const editHeroForm = document.getElementById('editHeroForm');
+    if (editHeroForm) {
+        editHeroForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            saveHomepageContent({
+                hero_title: document.getElementById('editHeroTitle').value.trim(),
+                hero_desc: document.getElementById('editHeroDesc').value.trim(),
+                hero_btn_primary_text: document.getElementById('editHeroBtnPrimaryText').value.trim(),
+                hero_btn_primary_link: document.getElementById('editHeroBtnPrimaryLink').value.trim(),
+                hero_btn_secondary_text: document.getElementById('editHeroBtnSecondaryText').value.trim(),
+                hero_btn_secondary_link: document.getElementById('editHeroBtnSecondaryLink').value.trim(),
+                hero_image_url: document.getElementById('editHeroImageUrl').value.trim()
+            });
+        });
+    }
+
+    const editAboutForm = document.getElementById('editAboutForm');
+    if (editAboutForm) {
+        editAboutForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            saveHomepageContent({
+                about_tag: document.getElementById('editAboutTag').value.trim(),
+                about_title: document.getElementById('editAboutTitle').value.trim(),
+                about_intro: document.getElementById('editAboutIntro').value.trim(),
+                about_quote: document.getElementById('editAboutQuote').value.trim(),
+                about_image_url: document.getElementById('editAboutImageUrl').value.trim(),
+                feature_1_title: document.getElementById('editFeature1Title').value.trim(),
+                feature_1_desc: document.getElementById('editFeature1Desc').value.trim(),
+                feature_2_title: document.getElementById('editFeature2Title').value.trim(),
+                feature_2_desc: document.getElementById('editFeature2Desc').value.trim()
+            });
+        });
+    }
+
+    const editContactForm = document.getElementById('editContactForm');
+    if (editContactForm) {
+        editContactForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            saveHomepageContent({
+                contact_title: document.getElementById('editContactTitle').value.trim(),
+                contact_desc: document.getElementById('editContactDesc').value.trim(),
+                contact_hotline: document.getElementById('editContactHotline').value.trim(),
+                contact_email: document.getElementById('editContactEmail').value.trim(),
+                footer_desc: document.getElementById('editFooterDesc').value.trim(),
+                footer_fb_link: document.getElementById('editFooterFbLink').value.trim(),
+                footer_yt_link: document.getElementById('editFooterYtLink').value.trim(),
+                footer_tt_link: document.getElementById('editFooterTtLink').value.trim()
+            });
+        });
     }
 });

@@ -95,3 +95,47 @@ INSERT INTO lessons (id, chapter_id, title, type, url, duration, is_preview, ord
 SELECT setval('courses_id_seq', (SELECT MAX(id) FROM courses));
 SELECT setval('chapters_id_seq', (SELECT MAX(id) FROM chapters));
 SELECT setval('lessons_id_seq', (SELECT MAX(id) FROM lessons));
+
+-- 6. TẠO BẢNG HỖ TRỢ CHỈNH SỬA TRANG CHỦ (HOMEPAGE CONFIG)
+CREATE TABLE IF NOT EXISTS homepage_settings (
+    key TEXT PRIMARY KEY,
+    value JSONB NOT NULL
+);
+
+-- Bật bảo mật RLS
+ALTER TABLE homepage_settings ENABLE ROW LEVEL SECURITY;
+
+-- Tạo chính sách truy cập công khai
+CREATE POLICY "Allow public read access for homepage_settings" ON homepage_settings FOR SELECT TO anon USING (true);
+CREATE POLICY "Allow authenticated changes for homepage_settings" ON homepage_settings FOR ALL TO authenticated USING (true);
+
+-- Chèn dữ liệu mẫu ban đầu cho trang chủ
+INSERT INTO homepage_settings (key, value) VALUES ('content', $$
+{
+    "hero_title": "Bứt Phá Điểm Số<br><span>Toán Học</span> Kỳ Thi Lớn",
+    "hero_desc": "Khóa học ôn thi Toán chuyên sâu vào lớp 10, thi tốt nghiệp THPT Quốc Gia và Đánh giá năng lực (HSA/APT). Giúp học sinh nắm vững bản chất, rèn luyện tư duy giải nhanh để tự tin đỗ nguyện vọng 1.",
+    "hero_btn_primary_text": "Khám phá khóa học",
+    "hero_btn_primary_link": "#courses",
+    "hero_btn_secondary_text": "Đăng ký tư vấn miễn phí",
+    "hero_btn_secondary_link": "#contact",
+    "hero_image_url": "assets/images/teacher-avatar.jpg",
+    "about_tag": "Người đồng hành",
+    "about_title": "Thầy Tùng Dương",
+    "about_intro": "Thầy Tùng Dương, cựu học sinh THPT chuyên Vĩnh Phúc, Tốt nghiệp ĐH Sư phạm Hà Nội ngành Toán Tiếng Anh, Thạc sĩ Toán học ĐH Sư phạm Hà Nội, nhiều năm kinh nghiệm ôn thi vào 10, ôn thi tốt nghiệp THPT, ĐGNL.",
+    "about_quote": "\"Toán học không đơn thuần là những công thức khô khan, mà là nghệ thuật rèn luyện tư duy logic. Tại Toán Smart, thầy không chỉ truyền thụ kiến thức thi cử bám sát thực tế, mà còn giúp các em xây dựng nền tảng tư duy toán học rộng mở để tự tin vượt qua mọi dạng bài mới.\"",
+    "about_image_url": "assets/images/teacher-avatar.jpg",
+    "feature_1_title": "Tư duy mở rộng",
+    "feature_1_desc": "Dạy phương pháp giải bản chất thay vì học vẹt công thức toán.",
+    "feature_2_title": "Bám sát đề thi",
+    "feature_2_desc": "Cập nhật liên tục xu hướng ra đề thi vào 10, tốt nghiệp THPT mới nhất.",
+    "contact_title": "Nhận Tư Vấn Lộ Trình Học Chi Tiết",
+    "contact_desc": "Hãy gửi lại thông tin để thầy tư vấn trực tiếp và gửi tặng bộ tài liệu ôn thi đắc lực nhất phù hợp với học lực hiện tại của em.",
+    "contact_hotline": "0912.345.678 (Hỗ trợ 24/7)",
+    "contact_email": "lienhe@toansmart.edu.vn",
+    "footer_desc": "Nơi học Toán từ bản chất, nâng tầm tư duy logic và đồng hành cùng sự bứt phá học thuật của thế hệ trẻ Việt Nam.",
+    "footer_fb_link": "#",
+    "footer_yt_link": "#",
+    "footer_tt_link": "#"
+}
+$$) ON CONFLICT (key) DO NOTHING;
+

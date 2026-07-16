@@ -2163,3 +2163,36 @@ body.admin-toolbar-visible .course-detail-layout {
 .lesson-breadcrumb span {
     color: var(--text-secondary);
 }
+
+/* Inline Edit Buttons for Admin Homepage */
+.hero-content, .about-content, .contact-info-panel {
+    position: relative;
+}
+
+.homepage-section-edit-btn {
+    position: absolute;
+    top: 24px;
+    right: 24px;
+    z-index: 99;
+    background: #FFFFFF;
+    border: 1px solid var(--card-border);
+    box-shadow: var(--shadow-soft);
+    color: var(--accent-color);
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 1.05rem;
+    transition: all 0.2s ease-in-out;
+}
+
+.homepage-section-edit-btn:hover {
+    transform: scale(1.1);
+    background: var(--accent-color);
+    color: #FFFFFF;
+    border-color: var(--accent-color);
+}
+

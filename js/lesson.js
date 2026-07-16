@@ -69,7 +69,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             } catch (err) {
                 console.error("Lỗi Auth:", err);
             }
-        } else {
+        }
+        
+        if (!isUserLoggedIn) {
             const demoAdmin = localStorage.getItem('demo_admin_user');
             const demoStudent = localStorage.getItem('demo_student_user');
             if (demoAdmin) {
@@ -768,4 +770,21 @@ document.addEventListener('DOMContentLoaded', async () => {
             await loadLessonData();
         });
     }
+
+    // Tự động trích xuất URL từ thẻ iframe khi admin dán cả thẻ
+    const cleanUrlInputs = ['videoMaterialUrl', 'pdfMaterialUrl', 'otherMaterialUrl'];
+    cleanUrlInputs.forEach(id => {
+        const input = document.getElementById(id);
+        if (input) {
+            input.addEventListener('input', (e) => {
+                let val = e.target.value.trim();
+                if (val.startsWith('<') && val.includes('src=')) {
+                    const match = val.match(/src=["']([^"']+)["']/i);
+                    if (match && match[1]) {
+                        e.target.value = match[1];
+                    }
+                }
+            });
+        }
+    });
 });

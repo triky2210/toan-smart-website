@@ -323,6 +323,172 @@
         </div>
     </footer>
 
+    <!-- Modals for Homepage Admin Editing -->
+    
+    <!-- 1. Edit Hero Modal -->
+    <div class="modal" id="editHeroModal">
+        <div class="modal-content" style="max-width: 600px;">
+            <button class="modal-close" onclick="closeHomepageModal('editHeroModal')"><i class="fa-solid fa-xmark"></i></button>
+            <h3 class="modal-title">Chỉnh sửa phần đầu trang (Hero)</h3>
+            <form id="editHeroForm" style="margin-top: 20px;">
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label class="form-label" style="font-weight: 600;">Tiêu đề chính (Chấp nhận thẻ HTML như &lt;br&gt;, &lt;span&gt;)</label>
+                    <input type="text" class="form-control" id="editHeroTitle" required style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--card-border);">
+                </div>
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label class="form-label" style="font-weight: 600;">Nội dung mô tả ngắn</label>
+                    <textarea class="form-control" id="editHeroDesc" required style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--card-border); height: 80px; resize: vertical;"></textarea>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                    <div class="form-group">
+                        <label class="form-label" style="font-weight: 600;">Nút chính: Nhãn</label>
+                        <input type="text" class="form-control" id="editHeroBtnPrimaryText" required style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--card-border);">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" style="font-weight: 600;">Nút chính: Liên kết (Link)</label>
+                        <input type="text" class="form-control" id="editHeroBtnPrimaryLink" required style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--card-border);">
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                    <div class="form-group">
+                        <label class="form-label" style="font-weight: 600;">Nút phụ: Nhãn</label>
+                        <input type="text" class="form-control" id="editHeroBtnSecondaryText" required style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--card-border);">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" style="font-weight: 600;">Nút phụ: Liên kết (Link)</label>
+                        <input type="text" class="form-control" id="editHeroBtnSecondaryLink" required style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--card-border);">
+                    </div>
+                </div>
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label class="form-label" style="font-weight: 600;">Đường dẫn hình ảnh chân dung (URL)</label>
+                    <input type="text" class="form-control" id="editHeroImageUrl" required style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--card-border);">
+                </div>
+                <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px;">
+                    <button type="button" class="btn btn-secondary" onclick="closeHomepageModal('editHeroModal')" style="padding: 10px 20px; border-radius: 8px; border: 1px solid var(--card-border); background: #f8fafc; cursor: pointer;">Hủy bỏ</button>
+                    <button type="submit" class="btn btn-primary" style="padding: 10px 20px; border-radius: 8px; background: var(--accent-color); color: #fff; border: none; cursor: pointer; font-weight: 600;">Lưu lại</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 2. Edit About Modal -->
+    <div class="modal" id="editAboutModal">
+        <div class="modal-content" style="max-width: 600px; max-height: 90vh; overflow-y: auto;">
+            <button class="modal-close" onclick="closeHomepageModal('editAboutModal')"><i class="fa-solid fa-xmark"></i></button>
+            <h3 class="modal-title">Chỉnh sửa phần giới thiệu (About)</h3>
+            <form id="editAboutForm" style="margin-top: 20px;">
+                <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 16px; margin-bottom: 16px;">
+                    <div class="form-group">
+                        <label class="form-label" style="font-weight: 600;">Nhãn tiêu đề phụ</label>
+                        <input type="text" class="form-control" id="editAboutTag" required style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--card-border);">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" style="font-weight: 600;">Tên giáo viên (Tiêu đề chính)</label>
+                        <input type="text" class="form-control" id="editAboutTitle" required style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--card-border);">
+                    </div>
+                </div>
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label class="form-label" style="font-weight: 600;">Tiểu sử / Giới thiệu chi tiết</label>
+                    <textarea class="form-control" id="editAboutIntro" required style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--card-border); height: 80px; resize: vertical;"></textarea>
+                </div>
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label class="form-label" style="font-weight: 600;">Trích dẫn (Quote)</label>
+                    <textarea class="form-control" id="editAboutQuote" required style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--card-border); height: 80px; resize: vertical;"></textarea>
+                </div>
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label class="form-label" style="font-weight: 600;">Đường dẫn ảnh chân dung giới thiệu (URL)</label>
+                    <input type="text" class="form-control" id="editAboutImageUrl" required style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--card-border);">
+                </div>
+                
+                <h4 style="margin-top: 24px; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px;">Đặc trưng giảng dạy</h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 12px; margin-bottom: 16px;">
+                    <div>
+                        <div class="form-group" style="margin-bottom: 10px;">
+                            <label class="form-label" style="font-weight: 600;">Đặc trưng 1: Tiêu đề</label>
+                            <input type="text" class="form-control" id="editFeature1Title" required style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--card-border);">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" style="font-weight: 600;">Đặc trưng 1: Mô tả</label>
+                            <input type="text" class="form-control" id="editFeature1Desc" required style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--card-border);">
+                        </div>
+                    </div>
+                    <div>
+                        <div class="form-group" style="margin-bottom: 10px;">
+                            <label class="form-label" style="font-weight: 600;">Đặc trưng 2: Tiêu đề</label>
+                            <input type="text" class="form-control" id="editFeature2Title" required style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--card-border);">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" style="font-weight: 600;">Đặc trưng 2: Mô tả</label>
+                            <input type="text" class="form-control" id="editFeature2Desc" required style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--card-border);">
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; border-top: 1px solid #f1f5f9; padding-top: 16px;">
+                    <button type="button" class="btn btn-secondary" onclick="closeHomepageModal('editAboutModal')" style="padding: 10px 20px; border-radius: 8px; border: 1px solid var(--card-border); background: #f8fafc; cursor: pointer;">Hủy bỏ</button>
+                    <button type="submit" class="btn btn-primary" style="padding: 10px 20px; border-radius: 8px; background: var(--accent-color); color: #fff; border: none; cursor: pointer; font-weight: 600;">Lưu lại</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 3. Edit Contact Modal -->
+    <div class="modal" id="editContactModal">
+        <div class="modal-content" style="max-width: 600px; max-height: 90vh; overflow-y: auto;">
+            <button class="modal-close" onclick="closeHomepageModal('editContactModal')"><i class="fa-solid fa-xmark"></i></button>
+            <h3 class="modal-title">Chỉnh sửa liên hệ & chân trang (Footer)</h3>
+            <form id="editContactForm" style="margin-top: 20px;">
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label class="form-label" style="font-weight: 600;">Tiêu đề khung liên hệ</label>
+                    <input type="text" class="form-control" id="editContactTitle" required style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--card-border);">
+                </div>
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label class="form-label" style="font-weight: 600;">Mô tả khung liên hệ</label>
+                    <textarea class="form-control" id="editContactDesc" required style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--card-border); height: 60px; resize: vertical;"></textarea>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                    <div class="form-group">
+                        <label class="form-label" style="font-weight: 600;">Hotline tư vấn</label>
+                        <input type="text" class="form-control" id="editContactHotline" required style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--card-border);">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" style="font-weight: 600;">Email liên hệ</label>
+                        <input type="email" class="form-control" id="editContactEmail" required style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--card-border);">
+                    </div>
+                </div>
+                
+                <h4 style="margin-top: 24px; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px;">Thông tin chân trang (Footer)</h4>
+                <div class="form-group" style="margin-top: 12px; margin-bottom: 16px;">
+                    <label class="form-label" style="font-weight: 600;">Mô tả thương hiệu chân trang</label>
+                    <textarea class="form-control" id="editFooterDesc" required style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--card-border); height: 60px; resize: vertical;"></textarea>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+                    <div class="form-group">
+                        <label class="form-label" style="font-weight: 600;">Link Facebook</label>
+                        <input type="text" class="form-control" id="editFooterFbLink" required style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--card-border);">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" style="font-weight: 600;">Link Youtube</label>
+                        <input type="text" class="form-control" id="editFooterYtLink" required style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--card-border);">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" style="font-weight: 600;">Link Tiktok</label>
+                        <input type="text" class="form-control" id="editFooterTtLink" required style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--card-border);">
+                    </div>
+                </div>
+                
+                <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; border-top: 1px solid #f1f5f9; padding-top: 16px;">
+                    <button type="button" class="btn btn-secondary" onclick="closeHomepageModal('editContactModal')" style="padding: 10px 20px; border-radius: 8px; border: 1px solid var(--card-border); background: #f8fafc; cursor: pointer;">Hủy bỏ</button>
+                    <button type="submit" class="btn btn-primary" style="padding: 10px 20px; border-radius: 8px; background: var(--accent-color); color: #fff; border: none; cursor: pointer; font-weight: 600;">Lưu lại</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Supabase JS Client library CDN -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <!-- Configuration -->
+    <script src="js/config.js"></script>
     <!-- Main JavaScript File -->
     <script src="js/main.js"></script>
 </body>

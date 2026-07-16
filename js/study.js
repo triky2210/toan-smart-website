@@ -58,7 +58,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             } catch (err) {
                 console.error("Lỗi xác thực:", err);
             }
-        } else {
+        }
+        
+        if (!isUserLoggedIn) {
             const demoAdmin = localStorage.getItem('demo_admin_user');
             const demoStudent = localStorage.getItem('demo_student_user');
             if (demoAdmin) {
@@ -73,6 +75,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
         initHeaderAuth();
+        initAntiInspect();
     }
 
     function initHeaderAuth() {
@@ -425,6 +428,52 @@ document.addEventListener('DOMContentLoaded', async () => {
             renderSidebarTree(studyChapter, studyLesson.id);
         }
 
+        // Kiểm tra quyền xem nội dung học liệu chuyên sâu (trả phí)
+        const canView = material.is_preview || isAdminLoggedIn;
+        if (!canView) {
+            contentViewer.innerHTML = `
+                <div style="display: flex; flex-direction: column; flex-grow: 1; height: 100%; width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box;">
+                    <div style="position: relative; width: 100%; height: 80vh; min-height: 700px; border-radius: 12px; overflow: hidden; border: 1px solid var(--card-border); background: #f8fafc;">
+                        ${material.type === 'video' ? `
+                            <div style="width: 100%; height: 100%; filter: blur(15px); opacity: 0.6; pointer-events: none; background: #000; display: flex; align-items: center; justify-content: center;">
+                                <i class="fa-solid fa-play" style="font-size: 4rem; color: rgba(255,255,255,0.15);"></i>
+                            </div>
+                        ` : material.type === 'pdf' ? `
+                            <div style="width: 100%; height: 100%; background: #fff; padding: 48px; display: flex; flex-direction: column; gap: 20px; filter: blur(5px); opacity: 0.85; pointer-events: none; user-select: none; box-sizing: border-box;">
+                                <div style="width: 50%; height: 36px; background: #64748b; border-radius: 6px; margin-bottom: 24px;"></div>
+                                <div style="width: 100%; height: 18px; background: #94a3b8; border-radius: 4px;"></div>
+                                <div style="width: 95%; height: 18px; background: #94a3b8; border-radius: 4px;"></div>
+                                <div style="width: 90%; height: 18px; background: #94a3b8; border-radius: 4px;"></div>
+                                <div style="width: 100%; height: 18px; background: #94a3b8; border-radius: 4px;"></div>
+                                <div style="width: 85%; height: 18px; background: #94a3b8; border-radius: 4px;"></div>
+                                <div style="width: 95%; height: 18px; background: #94a3b8; border-radius: 4px;"></div>
+                                <div style="width: 40%; height: 18px; background: #94a3b8; border-radius: 4px; margin-top: 12px;"></div>
+                                <div style="width: 100%; height: 18px; background: #94a3b8; border-radius: 4px;"></div>
+                                <div style="width: 90%; height: 18px; background: #94a3b8; border-radius: 4px;"></div>
+                            </div>
+                        ` : `
+                            <div style="padding: 40px; filter: blur(8px); opacity: 0.4; line-height: 2; user-select: none;">
+                                <h3 style="font-size: 1.5rem; margin-bottom: 12px;">Bài giảng lý thuyết ôn thi chuyên sâu</h3>
+                                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+                            </div>
+                        `}
+                        
+                        <!-- Lớp phủ mờ (glassmorphism overlay) -->
+                        <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(255, 255, 255, 0.45); backdrop-filter: blur(5px); z-index: 10; text-align: center; padding: 24px; box-sizing: border-box;">
+                             <div style="background: #fee2e2; color: #ef4444; width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; box-shadow: var(--shadow-soft);">
+                                 <i class="fa-solid fa-lock" style="font-size: 1.8rem;"></i>
+                             </div>
+                             <h3 style="font-size: 1.35rem; font-weight: 700; margin-bottom: 12px; color: var(--text-main);">Tài liệu & Bài giảng chuyên sâu</h3>
+                             <p style="color: var(--text-secondary); max-width: 380px; margin-bottom: 24px; line-height: 1.6; font-size: 0.95rem;">Học liệu này chỉ dành cho học viên đăng ký khóa học chuyên sâu. Bạn hãy đăng ký khóa học để mở khóa toàn bộ bài học ôn thi đắc lực này nhé!</p>
+                             <a href="index.html#contact" class="btn btn-primary" style="padding: 12px 28px; border-radius: 8px; font-weight: 600; text-decoration: none; display: inline-block;">Đăng ký khóa học ngay</a>
+                        </div>
+                    </div>
+                </div>
+            `;
+            updateNavButtons();
+            return;
+        }
+
         // Render theo loại học liệu
         if (material.type === 'video') {
             const embedUrl = getYoutubeEmbedUrl(material.url);
@@ -436,13 +485,36 @@ document.addEventListener('DOMContentLoaded', async () => {
             `;
         } 
         else if (material.type === 'pdf') {
+            // Giải pháp 2: Ẩn thanh công cụ PDF cho học sinh
+            let iframeUrl = material.url || '';
+            if (!isAdminLoggedIn && iframeUrl && (iframeUrl.toLowerCase().includes('.pdf') || iframeUrl.toLowerCase().includes('/storage/v1/object/public/'))) {
+                iframeUrl = iframeUrl.includes('#') ? iframeUrl.split('#')[0] + '#toolbar=0' : iframeUrl + '#toolbar=0';
+            }
+
+            // Giải pháp 3: Quyết định hiển thị nút Tải xuống
+            const canDownload = material.is_preview || isAdminLoggedIn;
+            let downloadBtnHtml = '';
+            if (canDownload) {
+                downloadBtnHtml = `
+                    <a href="${material.url}" download class="btn btn-primary" style="width: auto; display: inline-flex; align-items: center; gap: 8px;">
+                        <i class="fa-solid fa-download"></i> Tải tài liệu này về máy (PDF)
+                    </a>
+                `;
+            } else {
+                downloadBtnHtml = `
+                    <button onclick="showPaidDownloadModal()" class="btn btn-primary" style="width: auto; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; border: none; font-weight: 600;">
+                        <i class="fa-solid fa-download"></i> Tải tài liệu này về máy (PDF)
+                    </button>
+                `;
+            }
+
             contentViewer.innerHTML = `
                 <div style="display: flex; flex-direction: column; flex-grow: 1; height: 100%; width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box;">
                     <div class="pdf-frame-wrapper" style="flex-grow: 1; height: 80vh; min-height: 700px; width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box;">
-                        <iframe src="${material.url}" style="width: 100%; max-width: 100%; height: 100%; border: 0; min-width: 0; box-sizing: border-box;"></iframe>
+                        <iframe src="${iframeUrl}" style="width: 100%; max-width: 100%; height: 100%; border: 0; min-width: 0; box-sizing: border-box;"></iframe>
                     </div>
                     <div style="text-align: center; margin-top: 20px;">
-                        <a href="${material.url}" download class="btn btn-primary" style="width: auto; display: inline-flex; align-items: center; gap: 8px;"><i class="fa-solid fa-download"></i> Tải tài liệu này về máy (PDF)</a>
+                        ${downloadBtnHtml}
                     </div>
                 </div>
             `;
@@ -752,4 +824,56 @@ document.addEventListener('DOMContentLoaded', async () => {
             window.location.href = `lesson.html?id=${courseId}&lesson_id=${currentLessonId}`;
         });
     }
+
+    // Tự động trích xuất URL từ thẻ iframe khi admin dán cả thẻ
+    const cleanUrlInputs = ['videoMaterialUrl', 'pdfMaterialUrl', 'otherMaterialUrl'];
+    cleanUrlInputs.forEach(id => {
+        const input = document.getElementById(id);
+        if (input) {
+            input.addEventListener('input', (e) => {
+                let val = e.target.value.trim();
+                if (val.startsWith('<') && val.includes('src=')) {
+                    const match = val.match(/src=["']([^"']+)["']/i);
+                    if (match && match[1]) {
+                        e.target.value = match[1];
+                    }
+                }
+            });
+        }
+    });
+
+    // Giải pháp 1: Khóa chuột phải & F12 cho học sinh
+    function initAntiInspect() {
+        if (isAdminLoggedIn) return; // Admin được phép inspect bình thường
+
+        // 1. Chặn click chuột phải
+        document.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+        });
+
+        // 2. Chặn các phím tắt F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+Shift+C, Ctrl+U
+        document.addEventListener('keydown', (e) => {
+            // Chặn F12
+            if (e.key === 'F12') {
+                e.preventDefault();
+                return false;
+            }
+            // Chặn Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+Shift+C
+            if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C' || e.key === 'i' || e.key === 'j' || e.key === 'c')) {
+                e.preventDefault();
+                return false;
+            }
+            // Chặn Ctrl+U
+            if (e.ctrlKey && (e.key === 'U' || e.key === 'u')) {
+                e.preventDefault();
+                return false;
+            }
+        });
+    }
+
+    // Modal thông báo tải tài liệu trả phí
+    window.showPaidDownloadModal = function() {
+        document.getElementById('paidDownloadModal').classList.add('active');
+    };
 });
+
