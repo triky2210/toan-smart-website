@@ -116,6 +116,24 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </div>
             `;
 
+            if (isAdminLoggedIn) {
+                // Insert Question Bank link next to Resources link for Admin
+                const navLinks = document.querySelectorAll('.nav-menu a');
+                let resourcesLi = null;
+                navLinks.forEach(link => {
+                    const href = link.getAttribute('href') || '';
+                    if (href.includes('resources')) {
+                        resourcesLi = link.closest('li');
+                    }
+                });
+                if (resourcesLi && !document.getElementById('headerQBankLink')) {
+                    const qbLi = document.createElement('li');
+                    qbLi.id = 'headerQBankLink';
+                    qbLi.innerHTML = `<a href="admin.html?tab=questions" class="nav-link" style="color: var(--accent-color); font-weight: 600;"><i class="fa-solid fa-database" style="margin-right: 4px;"></i> Ngân hàng câu hỏi</a>`;
+                    resourcesLi.parentNode.insertBefore(qbLi, resourcesLi.nextSibling);
+                }
+            }
+
             const trigger = document.getElementById('profileTrigger');
             const dropdown = document.getElementById('profileDropdown');
 
@@ -203,6 +221,45 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (currentLesson) {
                     currentChapter = chapters.find(ch => ch.id === currentLesson.chapter_id);
                     materials = materialsMap[lessonId] || [];
+
+                    // Đảm bảo luôn có học liệu Quiz Test cho bài học hiện tại (kể cả khi tải từ Supabase)
+                    const hasQuiz = materials.some(m => m.type === 'quiz' || m.title === 'Quiz Test');
+                    if (!hasQuiz) {
+                        const demoQuizQuestions = [
+                            {
+                                id: 1,
+                                question: "Cho phương trình bậc hai $x^2 - 5x + 6 = 0$. Tổng hai nghiệm $S = x_1 + x_2$ bằng bao nhiêu?",
+                                options: ["A. $S = 5$", "B. $S = -5$", "C. $S = 6$", "D. $S = -6$"],
+                                correct_option: 0,
+                                explanation: "Theo hệ thức Vi-ét, tổng hai nghiệm $S = x_1 + x_2 = -\\frac{b}{a} = -\\frac{-5}{1} = 5$."
+                            },
+                            {
+                                id: 2,
+                                question: "Tính biệt thức $\\Delta$ của phương trình bậc hai $2x^2 - 4x + 1 = 0$.",
+                                options: ["A. $\\Delta = 8$", "B. $\\Delta = 12$", "C. $\\Delta = 0$", "D. $\\Delta = 16$"],
+                                correct_option: 0,
+                                explanation: "Ta có $a = 2, b = -4, c = 1$. Biệt thức $\\Delta = b^2 - 4ac = (-4)^2 - 4 \\cdot 2 \\cdot 1 = 16 - 8 = 8 > 0$."
+                            },
+                            {
+                                id: 3,
+                                question: "Rút gọn biểu thức $P = \\sqrt{a^2}$ với $a \\ge 0$.",
+                                options: ["A. $P = a$", "B. $P = -a$", "C. $P = |a|$", "D. $P = a^2$"],
+                                correct_option: 0,
+                                explanation: "Với $a \\ge 0$, ta có $\\sqrt{a^2} = |a| = a$."
+                            }
+                        ];
+
+                        materials.push({
+                            id: (lessonId * 10) + 99,
+                            lesson_id: lessonId,
+                            title: "Quiz Test",
+                            type: "quiz",
+                            url: "",
+                            content: JSON.stringify(demoQuizQuestions, null, 2),
+                            is_preview: true,
+                            order_index: materials.length + 1
+                        });
+                    }
                 }
             } catch (err) {
                 console.error("Lỗi Supabase, tải offline:", err);
@@ -221,7 +278,49 @@ document.addEventListener('DOMContentLoaded', async () => {
         const dbCourses = JSON.parse(localStorage.getItem('db_courses')) || [];
         const dbLessons = JSON.parse(localStorage.getItem('db_lessons')) || [];
         const dbChapters = JSON.parse(localStorage.getItem('db_chapters')) || [];
-        const dbMaterials = JSON.parse(localStorage.getItem('db_materials')) || [];
+        let dbMaterials = JSON.parse(localStorage.getItem('db_materials')) || [];
+
+        // Đảm bảo bài học hiện tại (bao gồm lesson_id = 3006) có sẵn học liệu demo "Quiz Test"
+        const targetIdCheck = lessonId || 3006;
+        const hasQuizTest = dbMaterials.some(m => (m.lesson_id == targetIdCheck) && (m.type === 'quiz' || m.title === 'Quiz Test'));
+        if (!hasQuizTest) {
+            const demoQuizQuestions = [
+                {
+                    id: 1,
+                    question: "Cho phương trình bậc hai $x^2 - 5x + 6 = 0$. Tổng hai nghiệm $S = x_1 + x_2$ bằng bao nhiêu?",
+                    options: ["A. $S = 5$", "B. $S = -5$", "C. $S = 6$", "D. $S = -6$"],
+                    correct_option: 0,
+                    explanation: "Theo hệ thức Vi-ét, tổng hai nghiệm $S = x_1 + x_2 = -\\frac{b}{a} = -\\frac{-5}{1} = 5$."
+                },
+                {
+                    id: 2,
+                    question: "Tính biệt thức $\\Delta$ của phương trình bậc hai $2x^2 - 4x + 1 = 0$.",
+                    options: ["A. $\\Delta = 8$", "B. $\\Delta = 12$", "C. $\\Delta = 0$", "D. $\\Delta = 16$"],
+                    correct_option: 0,
+                    explanation: "Ta có $a = 2, b = -4, c = 1$. Biệt thức $\\Delta = b^2 - 4ac = (-4)^2 - 4 \\cdot 2 \\cdot 1 = 16 - 8 = 8 > 0$."
+                },
+                {
+                    id: 3,
+                    question: "Rút gọn biểu thức $P = \\sqrt{a^2}$ với $a \\ge 0$.",
+                    options: ["A. $P = a$", "B. $P = -a$", "C. $P = |a|$", "D. $P = a^2$"],
+                    correct_option: 0,
+                    explanation: "Với $a \\ge 0$, ta có $\\sqrt{a^2} = |a| = a$."
+                }
+            ];
+
+            const newId = dbMaterials.length > 0 ? Math.max(...dbMaterials.map(m => m.id)) + 1 : 30063;
+            dbMaterials.push({
+                id: newId,
+                lesson_id: targetIdCheck,
+                title: "Quiz Test",
+                type: "quiz",
+                url: "",
+                content: JSON.stringify(demoQuizQuestions, null, 2),
+                is_preview: true,
+                order_index: 3
+            });
+            localStorage.setItem('db_materials', JSON.stringify(dbMaterials));
+        }
 
         currentCourse = dbCourses.find(c => c.id == courseId);
         chapters = dbChapters.filter(ch => ch.course_id == courseId).sort((a,b) => a.order_index - b.order_index);
@@ -234,9 +333,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
 
         currentLesson = dbLessons.find(l => l.id == lessonId);
+        if (!currentLesson && lessonId) {
+            currentLesson = {
+                id: lessonId,
+                chapter_id: chapters.length > 0 ? chapters[0].id : 101,
+                title: "Bài 0: Giới thiệu chương",
+                order_index: 0
+            };
+            dbLessons.push(currentLesson);
+            localStorage.setItem('db_lessons', JSON.stringify(dbLessons));
+        }
+
         if (currentLesson) {
-            currentChapter = chapters.find(ch => ch.id == currentLesson.chapter_id);
-            materials = materialsMap[lessonId] || [];
+            currentChapter = chapters.find(ch => ch.id == currentLesson.chapter_id) || (chapters.length > 0 ? chapters[0] : null);
+            materials = dbMaterials.filter(m => m.lesson_id == lessonId).sort((a,b) => a.order_index - b.order_index);
+            materialsMap[lessonId] = materials;
         }
     }
     // 4. Render Sidebar mục lục chỉ hiển thị Chương hiện tại đang xem
@@ -625,12 +736,39 @@ document.addEventListener('DOMContentLoaded', async () => {
                 url = document.getElementById('newMaterialUrl').value.trim();
             }
 
+            let contentStr = '';
+            if (type === 'quiz') {
+                contentStr = JSON.stringify([
+                    {
+                        id: 1,
+                        question: "Cho phương trình bậc hai $x^2 - 5x + 6 = 0$. Tổng hai nghiệm $S = x_1 + x_2$ bằng bao nhiêu?",
+                        options: ["A. $S = 5$", "B. $S = -5$", "C. $S = 6$", "D. $S = -6$"],
+                        correct_option: 0,
+                        explanation: "Theo hệ thức Vi-ét, tổng hai nghiệm $S = x_1 + x_2 = -\\frac{b}{a} = -\\frac{-5}{1} = 5$."
+                    },
+                    {
+                        id: 2,
+                        question: "Tính biệt thức $\\Delta$ của phương trình bậc hai $2x^2 - 4x + 1 = 0$.",
+                        options: ["A. $\\Delta = 8$", "B. $\\Delta = 12$", "C. $\\Delta = 0$", "D. $\\Delta = 16$"],
+                        correct_option: 0,
+                        explanation: "Ta có $a = 2, b = -4, c = 1$. Biệt thức $\\Delta = b^2 - 4ac = (-4)^2 - 4 \\cdot 2 \\cdot 1 = 16 - 8 = 8 > 0$."
+                    },
+                    {
+                        id: 3,
+                        question: "Rút gọn biểu thức $P = \\sqrt{a^2}$ với $a \\ge 0$.",
+                        options: ["A. $P = a$", "B. $P = -a$", "C. $P = |a|$", "D. $P = a^2$"],
+                        correct_option: 0,
+                        explanation: "Với $a \\ge 0$, ta có $\\sqrt{a^2} = |a| = a$."
+                    }
+                ], null, 2);
+            }
+
             const materialData = {
                 lesson_id: targetLessonId,
                 title,
                 type,
                 url,
-                content: '',
+                content: contentStr,
                 is_preview: isPreview,
                 order_index: order
             };

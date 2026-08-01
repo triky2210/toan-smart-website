@@ -2196,3 +2196,315 @@ body.admin-toolbar-visible .course-detail-layout {
     border-color: var(--accent-color);
 }
 
+/* ==========================================================================
+   QUIZ ENGINE STYLES - GIAO DIỆN HỌC LIỆU TRẮC NGHIỆM TƯƠNG TÁC
+   ========================================================================== */
+.quiz-container {
+    width: 100%;
+    max-width: 100%;
+    margin: 0 auto;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    padding: 0;
+    box-shadow: none;
+    box-sizing: border-box;
+}
+
+.quiz-header {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--card-border);
+}
+
+.quiz-header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.quiz-badge-round {
+    background: rgba(99, 102, 241, 0.1);
+    color: var(--accent-color);
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.quiz-progress-bar-wrapper {
+    flex-grow: 1;
+    height: 10px;
+    background: #F1F5F9;
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 0 12px;
+    position: relative;
+}
+
+.quiz-progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #6366F1 0%, #0EA5E9 100%);
+    border-radius: 10px;
+    transition: width 0.3s ease;
+}
+
+/* Hàng nút số thứ tự câu hỏi trắc nghiệm (Nav Badges) */
+.quiz-nav-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    margin-top: 4px;
+}
+
+.quiz-nav-badge {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: all 0.2s ease;
+    user-select: none;
+    background: #E2E8F0;
+    color: #475569;
+}
+
+.quiz-nav-badge:hover {
+    transform: scale(1.1);
+}
+
+.quiz-nav-badge.correct {
+    background: #10B981 !important;
+    color: #FFFFFF !important;
+    border-color: #059669 !important;
+}
+
+.quiz-nav-badge.wrong {
+    background: #EF4444 !important;
+    color: #FFFFFF !important;
+    border-color: #DC2626 !important;
+}
+
+.quiz-nav-badge.active {
+    box-shadow: 0 0 0 4px #3B82F6, 0 0 12px rgba(59, 130, 246, 0.5) !important;
+    border-color: #FFFFFF !important;
+    transform: scale(1.2);
+    z-index: 2;
+}
+
+.quiz-nav-badge.unanswered.active {
+    background: #3B82F6 !important;
+    color: #FFFFFF !important;
+}
+
+.quiz-nav-badge.unanswered {
+    background: #F1F5F9;
+    color: #64748B;
+    border-color: #CBD5E1;
+}
+
+.quiz-question-box {
+    margin-bottom: 24px;
+}
+
+.quiz-question-text {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.6;
+    margin-bottom: 20px;
+}
+
+.quiz-options-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.quiz-option-card {
+    display: flex;
+    align-items: center;
+    padding: 16px 20px;
+    background: #FAFAFC;
+    border: 2px solid var(--card-border);
+    border-radius: 14px;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    user-select: none;
+}
+
+.quiz-option-card:hover:not(.disabled) {
+    border-color: var(--accent-color);
+    background: rgba(99, 102, 241, 0.03);
+    transform: translateY(-1px);
+}
+
+.quiz-option-card.selected {
+    border-color: var(--accent-color);
+    background: rgba(99, 102, 241, 0.08);
+}
+
+.quiz-option-card.correct {
+    border-color: #10B981 !important;
+    background: rgba(16, 185, 129, 0.08) !important;
+    color: #065F46;
+}
+
+.quiz-option-card.wrong {
+    border-color: #EF4444 !important;
+    background: rgba(239, 68, 68, 0.08) !important;
+    color: #991B1B;
+}
+
+.quiz-option-letter {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #FFFFFF;
+    border: 1px solid var(--card-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    margin-right: 14px;
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+}
+
+.quiz-option-card.selected .quiz-option-letter {
+    background: var(--accent-color);
+    color: #FFFFFF;
+    border-color: var(--accent-color);
+}
+
+.quiz-option-card.correct .quiz-option-letter {
+    background: #10B981;
+    color: #FFFFFF;
+    border-color: #10B981;
+}
+
+.quiz-option-card.wrong .quiz-option-letter {
+    background: #EF4444;
+    color: #FFFFFF;
+    border-color: #EF4444;
+}
+
+.quiz-option-content {
+    font-size: 1.05rem;
+    color: var(--text-primary);
+    font-weight: 500;
+    line-height: 1.5;
+    flex-grow: 1;
+}
+
+/* Khung hướng dẫn giải */
+.quiz-explanation-box {
+    margin-top: 24px;
+    padding: 20px;
+    border-radius: 14px;
+    background: #F8FAFC;
+    border-left: 4px solid var(--accent-color);
+    animation: fadeIn 0.3s ease;
+}
+
+.quiz-explanation-box.correct-box {
+    background: #F0FDF4;
+    border-left-color: #10B981;
+}
+
+.quiz-explanation-box.wrong-box {
+    background: #FEF2F2;
+    border-left-color: #EF4444;
+}
+
+.quiz-explanation-title {
+    font-weight: 700;
+    font-size: 1rem;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.quiz-explanation-body {
+    font-size: 0.98rem;
+    line-height: 1.6;
+    color: #334155;
+}
+
+/* Màn hình tổng kết điểm số & Lịch sử */
+.quiz-summary-card {
+    text-align: center;
+    padding: 36px 20px;
+}
+
+.quiz-score-badge {
+    width: 110px;
+    height: 110px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%);
+    color: #FFFFFF;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px auto;
+    box-shadow: 0 10px 25px rgba(99, 102, 241, 0.3);
+}
+
+.quiz-score-number {
+    font-size: 2.2rem;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.quiz-score-max {
+    font-size: 0.8rem;
+    opacity: 0.85;
+}
+
+.quiz-history-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 16px;
+    font-size: 0.9rem;
+}
+
+.quiz-history-table th, .quiz-history-table td {
+    padding: 10px 14px;
+    text-align: center;
+    border-bottom: 1px solid var(--card-border);
+}
+
+.quiz-history-table th {
+    background: #F8FAFC;
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+/* Đảm bảo KaTeX hiển thị đẹp và không vỡ layout */
+.katex-display {
+    margin: 12px 0 !important;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 4px 0;
+}
+.katex {
+    font-size: 1.08em !important;
+}
+
+

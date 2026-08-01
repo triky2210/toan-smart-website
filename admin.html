@@ -9,6 +9,9 @@
     <!-- Google Fonts Be Vietnam Pro -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be Vietnam Pro:wght@300;400;500;600;700;800&display=swap">
     
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
     <style>
         :root {
             --bg-color: #F8FAFC;
@@ -374,6 +377,167 @@
             font-size: 0.9rem;
             display: none;
         }
+
+        /* Question Bank Filter Bar */
+        .qbank-filter-bar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .qbank-filter-select {
+            max-width: 200px;
+            padding: 10px 14px;
+            font-size: 0.88rem;
+        }
+
+        .qbank-search-wrapper {
+            position: relative;
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .qbank-search-wrapper i {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
+        .qbank-search-wrapper input {
+            padding-left: 38px;
+        }
+
+        /* Difficulty Badges */
+        .diff-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 6px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+        }
+
+        .diff-nb { background: #D1FAE5; color: #065F46; }
+        .diff-th { background: #DBEAFE; color: #1E40AF; }
+        .diff-vd { background: #FEF3C7; color: #92400E; }
+        .diff-vdc { background: #FEE2E2; color: #991B1B; }
+
+        /* Radio Labels for Difficulty */
+        .qb-radio-label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .qb-radio-label input[type="radio"] {
+            accent-color: var(--accent-color);
+        }
+
+        /* Question Preview Panel */
+        .qb-preview-panel {
+            background: #F8FAFC;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 12px;
+        }
+
+        .qb-preview-title {
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: var(--accent-color);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Question Info Tooltip */
+        .qb-info-icon {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #EEF2FF;
+            color: var(--accent-color);
+            font-size: 0.7rem;
+            font-weight: 700;
+            cursor: help;
+            margin-left: 6px;
+        }
+
+        .qb-info-icon .qb-tooltip {
+            display: none;
+            position: absolute;
+            bottom: calc(100% + 4px);
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1E293B;
+            color: #FFFFFF;
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            font-weight: 400;
+            white-space: normal;
+            min-width: 260px;
+            z-index: 100;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            pointer-events: auto;
+        }
+
+        /* Vùng đệm trong suốt để di chuột lên tooltip không bị mất hover */
+        .qb-info-icon .qb-tooltip::before {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            height: 12px;
+            background: transparent;
+        }
+
+        .qb-info-icon .qb-tooltip::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 6px solid transparent;
+            border-top-color: #1E293B;
+        }
+
+        .qb-info-icon:hover .qb-tooltip,
+        .qb-info-icon .qb-tooltip:hover {
+            display: block;
+        }
+
+        /* Question text truncated in table */
+        .qb-question-preview {
+            max-width: 400px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .qbank-filter-bar {
+                flex-direction: column;
+            }
+            .qbank-filter-select {
+                max-width: 100%;
+            }
+        }
     </style>
 </head>
 <body>
@@ -424,6 +588,7 @@
                 <button class="tab-btn active" data-tab="courses">Khóa học</button>
                 <button class="tab-btn" data-tab="chapters">Chương học</button>
                 <button class="tab-btn" data-tab="lessons">Bài giảng</button>
+                <button class="tab-btn" data-tab="questions"><i class="fa-solid fa-database" style="margin-right: 6px;"></i>Ngân hàng câu hỏi</button>
             </div>
 
             <!-- Tab Content 1: Courses -->
@@ -500,6 +665,57 @@
                 </div>
             </div>
 
+            <!-- Tab Content 4: Ngân hàng câu hỏi -->
+            <div class="tab-pane" id="questionsPane" style="display: none;">
+                <!-- Filter bar -->
+                <div class="qbank-filter-bar">
+                    <select class="form-control qbank-filter-select" id="qbFilterCourse">
+                        <option value="">Tất cả khóa học</option>
+                    </select>
+                    <select class="form-control qbank-filter-select" id="qbFilterChapter">
+                        <option value="">Tất cả chương</option>
+                    </select>
+                    <select class="form-control qbank-filter-select" id="qbFilterLesson">
+                        <option value="">Tất cả bài học</option>
+                    </select>
+                    <select class="form-control qbank-filter-select" id="qbFilterMaterial">
+                        <option value="">Tất cả học liệu</option>
+                    </select>
+                    <select class="form-control qbank-filter-select" id="qbFilterDifficulty">
+                        <option value="">Tất cả độ khó</option>
+                        <option value="NB">Nhận biết</option>
+                        <option value="TH">Thông hiểu</option>
+                        <option value="VD">Vận dụng</option>
+                        <option value="VDC">Vận dụng cao</option>
+                    </select>
+                    <div class="qbank-search-wrapper">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" class="form-control" id="qbSearchInput" placeholder="Tìm kiếm câu hỏi...">
+                    </div>
+                </div>
+
+                <div class="section-header">
+                    <h3>Danh sách câu hỏi <span id="qbQuestionCount" style="font-weight: 400; color: var(--text-secondary); font-size: 0.9rem;"></span></h3>
+                    <button class="btn btn-primary" id="addQuestionBtn" style="width: auto;"><i class="fa-solid fa-plus" style="margin-right: 6px;"></i> Thêm câu hỏi</button>
+                </div>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 50px;">ID</th>
+                                <th>Nội dung câu hỏi</th>
+                                <th style="width: 180px;">Phân loại</th>
+                                <th style="width: 100px;">Độ khó</th>
+                                <th style="width: 100px;">Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody id="questionsTableBody">
+                            <!-- JS dynamically loads rows -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
         </main>
     </div>
 
@@ -516,6 +732,107 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" id="modalCancelBtn">Hủy bỏ</button>
                     <button type="submit" class="btn btn-primary" style="width: auto;">Lưu lại</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 4. QUESTION BANK MODAL -->
+    <div class="admin-modal" id="questionModal">
+        <div class="admin-modal-content" style="max-width: 800px; max-height: 90vh; overflow-y: auto;">
+            <button class="admin-modal-close" onclick="closeQuestionModal()"><i class="fa-solid fa-xmark"></i></button>
+            <h3 class="admin-modal-title" id="questionModalTitle">Thêm câu hỏi mới</h3>
+            
+            <form id="questionForm" onsubmit="saveQuestion(event)">
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label">Khóa học</label>
+                        <select class="form-control" id="qfCourse" onchange="onQfCourseChange()">
+                            <option value="">-- Chọn khóa học --</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label">Chương</label>
+                        <select class="form-control" id="qfChapter" onchange="onQfChapterChange()">
+                            <option value="">-- Chọn chương --</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label">Bài học</label>
+                        <select class="form-control" id="qfLesson" onchange="onQfLessonChange()">
+                            <option value="">-- Chọn bài học --</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label">Học liệu trắc nghiệm</label>
+                        <select class="form-control" id="qfMaterial">
+                            <option value="">-- Chọn học liệu --</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Độ khó</label>
+                    <div style="display: flex; gap: 12px;">
+                        <label class="qb-radio-label"><input type="radio" name="qfDifficulty" value="NB" checked> <span class="diff-badge diff-nb">Nhận biết</span></label>
+                        <label class="qb-radio-label"><input type="radio" name="qfDifficulty" value="TH"> <span class="diff-badge diff-th">Thông hiểu</span></label>
+                        <label class="qb-radio-label"><input type="radio" name="qfDifficulty" value="VD"> <span class="diff-badge diff-vd">Vận dụng</span></label>
+                        <label class="qb-radio-label"><input type="radio" name="qfDifficulty" value="VDC"> <span class="diff-badge diff-vdc">Vận dụng cao</span></label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Nội dung câu hỏi <span style="color: var(--text-secondary); font-weight: 400;">(hỗ trợ LaTeX: $x^2$)</span></label>
+                    <textarea class="form-control" id="qfQuestionText" rows="3" placeholder="Nhập nội dung câu hỏi..." oninput="updateQuestionPreview()" required></textarea>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div class="form-group" style="margin-bottom: 8px;">
+                        <label class="form-label">Đáp án A</label>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <input type="radio" name="qfCorrect" value="0" checked>
+                            <input type="text" class="form-control" id="qfOptionA" placeholder="Nhập đáp án A" oninput="updateQuestionPreview()" required>
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 8px;">
+                        <label class="form-label">Đáp án B</label>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <input type="radio" name="qfCorrect" value="1">
+                            <input type="text" class="form-control" id="qfOptionB" placeholder="Nhập đáp án B" oninput="updateQuestionPreview()" required>
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 8px;">
+                        <label class="form-label">Đáp án C</label>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <input type="radio" name="qfCorrect" value="2">
+                            <input type="text" class="form-control" id="qfOptionC" placeholder="Nhập đáp án C" oninput="updateQuestionPreview()" required>
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 8px;">
+                        <label class="form-label">Đáp án D</label>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <input type="radio" name="qfCorrect" value="3">
+                            <input type="text" class="form-control" id="qfOptionD" placeholder="Nhập đáp án D" oninput="updateQuestionPreview()" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Hướng dẫn giải chi tiết <span style="color: var(--text-secondary); font-weight: 400;">(tùy chọn, hỗ trợ LaTeX)</span></label>
+                    <textarea class="form-control" id="qfExplanation" rows="3" placeholder="Nhập hướng dẫn giải..." oninput="updateQuestionPreview()"></textarea>
+                </div>
+
+                <!-- Live Preview -->
+                <div class="qb-preview-panel">
+                    <div class="qb-preview-title"><i class="fa-solid fa-eye"></i> Xem trước câu hỏi</div>
+                    <div id="qbPreviewContent">
+                        <p style="color: var(--text-secondary); font-style: italic;">Nhập nội dung câu hỏi để xem trước...</p>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeQuestionModal()">Hủy bỏ</button>
+                    <button type="submit" class="btn btn-primary" style="width: auto;">Lưu câu hỏi</button>
                 </div>
             </form>
         </div>

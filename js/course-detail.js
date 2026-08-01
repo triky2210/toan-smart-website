@@ -82,6 +82,7 @@ let dbChapters = JSON.parse(localStorage.getItem('db_chapters')) || [
 ];
 
 let dbLessons = JSON.parse(localStorage.getItem('db_lessons')) || [
+    { id: 3006, chapter_id: 101, title: "Bài 0: Giới thiệu chương", order_index: 0 },
     { id: 1001, chapter_id: 101, title: "Bài 1: Phương trình bậc hai & Hệ thức Vi-ét cơ bản", order_index: 1 },
     { id: 1002, chapter_id: 101, title: "Bài 2: Phương pháp rút gọn biểu thức chứa căn thức bậc hai", order_index: 2 },
     { id: 1003, chapter_id: 101, title: "Bài 3: Giải toán bằng cách lập phương trình, hệ phương trình", order_index: 3 },
@@ -173,6 +174,40 @@ function migrateOfflineDataIfNeeded() {
                 content: "",
                 is_preview: l.id === 1002 || l.id === 2002 || l.id === 3002, // Mở khóa bài 2
                 order_index: 2
+            });
+            const demoQuizQuestions = [
+                {
+                    id: 1,
+                    question: "Cho phương trình bậc hai $x^2 - 5x + 6 = 0$. Tổng hai nghiệm $S = x_1 + x_2$ bằng bao nhiêu?",
+                    options: ["A. $S = 5$", "B. $S = -5$", "C. $S = 6$", "D. $S = -6$"],
+                    correct_option: 0,
+                    explanation: "Theo hệ thức Vi-ét, tổng hai nghiệm $S = x_1 + x_2 = -\\frac{b}{a} = -\\frac{-5}{1} = 5$."
+                },
+                {
+                    id: 2,
+                    question: "Tính biệt thức $\\Delta$ của phương trình bậc hai $2x^2 - 4x + 1 = 0$.",
+                    options: ["A. $\\Delta = 8$", "B. $\\Delta = 12$", "C. $\\Delta = 0$", "D. $\\Delta = 16$"],
+                    correct_option: 0,
+                    explanation: "Ta có $a = 2, b = -4, c = 1$. Biệt thức $\\Delta = b^2 - 4ac = (-4)^2 - 4 \\cdot 2 \\cdot 1 = 16 - 8 = 8 > 0$."
+                },
+                {
+                    id: 3,
+                    question: "Rút gọn biểu thức $P = \\sqrt{a^2}$ với $a \\ge 0$.",
+                    options: ["A. $P = a$", "B. $P = -a$", "C. $P = |a|$", "D. $P = a^2$"],
+                    correct_option: 0,
+                    explanation: "Với $a \\ge 0$, ta có $\\sqrt{a^2} = |a| = a$."
+                }
+            ];
+
+            dbMaterials.push({
+                id: l.id * 10 + 3,
+                lesson_id: l.id,
+                title: "Quiz Test",
+                type: "quiz",
+                url: "",
+                content: JSON.stringify(demoQuizQuestions, null, 2),
+                is_preview: true,
+                order_index: 3
             });
         });
         localStorage.setItem('db_materials', JSON.stringify(dbMaterials));
@@ -300,6 +335,24 @@ document.addEventListener('DOMContentLoaded', async () => {
                     </div>
                 </div>
             `;
+
+            if (isAdminLoggedIn) {
+                // Insert Question Bank link next to Resources link for Admin
+                const navLinks = document.querySelectorAll('.nav-menu a');
+                let resourcesLi = null;
+                navLinks.forEach(link => {
+                    const href = link.getAttribute('href') || '';
+                    if (href.includes('resources')) {
+                        resourcesLi = link.closest('li');
+                    }
+                });
+                if (resourcesLi && !document.getElementById('headerQBankLink')) {
+                    const qbLi = document.createElement('li');
+                    qbLi.id = 'headerQBankLink';
+                    qbLi.innerHTML = `<a href="admin.html?tab=questions" class="nav-link" style="color: var(--accent-color); font-weight: 600;"><i class="fa-solid fa-database" style="margin-right: 4px;"></i> Ngân hàng câu hỏi</a>`;
+                    resourcesLi.parentNode.insertBefore(qbLi, resourcesLi.nextSibling);
+                }
+            }
 
             // Dropdown toggle
             const trigger = document.getElementById('profileTrigger');
@@ -1157,16 +1210,28 @@ document.addEventListener('DOMContentLoaded', async () => {
                         <option value="video">🎥 Video bài giảng</option>
                         <option value="pdf">📄 Tài liệu PDF</option>
                         <option value="text">✍️ Bài viết (Lý thuyết)</option>
-                        <option value="quiz">📝 Trắc nghiệm (Quiz)</option>
+                        <option value="quiz">📝 Luyện tập trắc nghiệm</option>
                     </select>
                 </div>
                 <div class="form-group" id="m_url_group">
                     <label class="form-label">URL (Link nhúng YouTube hoặc Link file PDF)</label>
                     <input type="text" id="m_url" class="form-control" placeholder="https://...">
                 </div>
+
+                <!-- Bộ soạn thảo câu hỏi trắc nghiệm trực quan cho Admin -->
+                <div class="form-group" id="m_quiz_builder_group" style="display: none; border: 1px solid var(--card-border); padding: 12px; border-radius: 8px; background: #F8FAFC; margin-bottom: 12px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <label class="form-label" style="font-weight: 700; color: var(--accent-color); margin: 0;"><i class="fa-solid fa-list-check"></i> Soạn thảo câu hỏi trắc nghiệm (Trực quan)</label>
+                        <button type="button" class="btn btn-primary" id="addQuizQuestionBtn" style="font-size: 0.75rem; padding: 4px 10px; width: auto;"><i class="fa-solid fa-plus"></i> Thêm câu hỏi</button>
+                    </div>
+                    <div id="quizQuestionsContainer" style="display: flex; flex-direction: column; gap: 12px; max-height: 350px; overflow-y: auto; padding-right: 4px;">
+                        <!-- Sẽ được điền động bằng JS -->
+                    </div>
+                </div>
+
                 <div class="form-group" id="m_content_group" style="display: none;">
-                    <label class="form-label">Nội dung lý thuyết (Hỗ trợ HTML)</label>
-                    <textarea id="m_content" class="form-control" style="height: 120px;" placeholder="<p>Nhập văn bản bài học tại đây...</p>"></textarea>
+                    <label class="form-label">Nội dung lý thuyết (Hỗ trợ HTML hoặc JSON thô)</label>
+                    <textarea id="m_content" class="form-control" style="height: 100px;" placeholder="<p>Nhập văn bản bài học tại đây...</p>"></textarea>
                 </div>
                 <div class="form-group" style="display: flex; align-items: center; gap: 8px; margin-top: 10px;">
                     <input type="checkbox" id="m_preview" style="width: 18px; height: 18px; cursor: pointer;">
@@ -1199,6 +1264,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const type = e.target.value;
                 document.getElementById('m_url_group').style.display = (type === 'video' || type === 'pdf') ? 'block' : 'none';
                 document.getElementById('m_content_group').style.display = (type === 'text' || type === 'quiz') ? 'block' : 'none';
+                
+                const mContentLabel = document.querySelector('#m_content_group .form-label');
+                const mContentArea = document.getElementById('m_content');
+                if (type === 'quiz') {
+                    if (mContentLabel) mContentLabel.innerHTML = 'Danh sách câu hỏi trắc nghiệm (Định dạng JSON có hỗ trợ công thức Toán KaTeX)';
+                    if (mContentArea) mContentArea.placeholder = '[\n  {\n    "question": "Cho phương trình $x^2 - 5x + 6 = 0$. Tính $S = x_1 + x_2$.",\n    "options": ["A. $S = 5$", "B. $S = -5$", "C. $S = 6$", "D. $S = -6$"],\n    "correct_option": 0,\n    "explanation": "Theo hệ thức Vi-ét, $S = -b/a = -(-5)/1 = 5$."\n  }\n]';
+                } else {
+                    if (mContentLabel) mContentLabel.innerHTML = 'Nội dung lý thuyết (Hỗ trợ HTML)';
+                    if (mContentArea) mContentArea.placeholder = '<p>Nhập văn bản bài học tại đây...</p>';
+                }
             };
         }
 
@@ -1236,17 +1311,24 @@ document.addEventListener('DOMContentLoaded', async () => {
             else if (m.type === 'text') typeIcon = '✍️';
             else if (m.type === 'quiz') typeIcon = '📝';
 
+            const isQuiz = m.type === 'quiz';
             div.innerHTML = `
                 <div style="display: flex; align-items: center; gap: 8px; flex-grow: 1;">
                     <i class="fa-solid fa-grip-vertical material-drag-handle" style="color: #94A3B8; cursor: grab; padding: 4px;" title="Kéo thả sắp xếp"></i>
                     <span style="font-size: 0.85rem; font-weight: 500;">${typeIcon} ${m.title} ${m.is_preview ? '<b>(Thử)</b>' : ''}</span>
                 </div>
-                <i class="fa-solid fa-pen-to-square" style="color: var(--accent-color); font-size: 0.85rem; padding: 4px;"></i>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                    <i class="fa-solid fa-pen-to-square edit-material-pencil" style="color: var(--accent-color); font-size: 0.85rem; padding: 4px;" title="Sửa tên/cấu hình"></i>
+                    ${isQuiz ? `<i class="fa-solid fa-gear manage-quiz-gear" style="color: var(--accent-color); font-size: 0.85rem; padding: 4px;" title="Quản lý câu hỏi trắc nghiệm"></i>` : ''}
+                </div>
             `;
             
             div.onclick = (e) => {
-                // Nếu click vào biểu tượng kéo thả thì không mở form sửa chi tiết
                 if (e.target.closest('.material-drag-handle')) return;
+                if (e.target.closest('.manage-quiz-gear')) {
+                    window.location.href = `material-manage.html?id=${currentCourseId}&lesson_id=${lessonId}&material_id=${m.id}`;
+                    return;
+                }
                 showMaterialDetailsForm(m, lessonId);
             };
             
@@ -1254,7 +1336,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
 
         // Khởi tạo SortableJS cho danh sách học liệu con
-        if (typeof Sortable !== 'undefined') {
+                if (typeof Sortable !== 'undefined') {
             Sortable.create(container, {
                 handle: '.material-drag-handle',
                 animation: 150,
@@ -1305,7 +1387,103 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             });
         }
+
+        // Chuyển loại học liệu để hiện/ẩn URL vs Content vs Quiz Builder
+        const mTypeSelect = document.getElementById('m_type');
+        if (mTypeSelect) {
+            mTypeSelect.onchange = (e) => {
+                const type = e.target.value;
+                const urlGroup = document.getElementById('m_url_group');
+                const contentGroup = document.getElementById('m_content_group');
+                const quizGroup = document.getElementById('m_quiz_builder_group');
+
+                if (urlGroup) urlGroup.style.display = (type === 'video' || type === 'pdf') ? 'block' : 'none';
+                if (contentGroup) contentGroup.style.display = (type === 'text') ? 'block' : 'none';
+                if (quizGroup) quizGroup.style.display = (type === 'quiz') ? 'block' : 'none';
+            };
+        }
+
+        // Đăng ký sự kiện nút thêm câu hỏi trắc nghiệm trực quan
+        const addQBtn = document.getElementById('addQuizQuestionBtn');
+        if (addQBtn) {
+            addQBtn.onclick = () => {
+                window.currentAdminQuizQuestions.push({
+                    id: window.currentAdminQuizQuestions.length + 1,
+                    question: "",
+                    options: ["A. ", "B. ", "C. ", "D. "],
+                    correct_option: 0,
+                    explanation: ""
+                });
+                renderVisualQuizBuilder();
+            };
+        }
+
+        quickEditModal.classList.add('active');
     }
+
+    // Biến lưu trữ tạm các câu hỏi khi Admin sửa Quiz
+    window.currentAdminQuizQuestions = [];
+
+    // Render bộ soạn thảo câu hỏi trực quan cho Admin
+    function renderVisualQuizBuilder() {
+        const container = document.getElementById('quizQuestionsContainer');
+        if (!container) return;
+        container.innerHTML = '';
+
+        const questions = window.currentAdminQuizQuestions;
+        if (!questions || questions.length === 0) {
+            container.innerHTML = `<div style="text-align: center; color: var(--text-secondary); font-style: italic; font-size: 0.85rem; padding: 12px;">Chưa có câu hỏi nào. Nhấp nút "+ Thêm câu hỏi" ở trên để tạo đề!</div>`;
+            return;
+        }
+
+        questions.forEach((q, idx) => {
+            const card = document.createElement('div');
+            card.style.background = '#FFFFFF';
+            card.style.border = '1px solid var(--card-border)';
+            card.style.borderRadius = '8px';
+            card.style.padding = '10px';
+            card.style.marginBottom = '8px';
+            card.className = 'admin-quiz-question-card';
+
+            const opts = q.options || ["A. ", "B. ", "C. ", "D. "];
+            const correctOpt = q.correct_option !== undefined ? q.correct_option : 0;
+
+            card.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <span style="font-weight: 700; font-size: 0.85rem; color: var(--accent-color);">Câu ${idx + 1}</span>
+                    <button type="button" class="btn btn-danger" onclick="removeAdminQuizQuestion(${idx})" style="font-size: 0.7rem; padding: 2px 6px; width: auto;" title="Xóa câu này"><i class="fa-solid fa-trash"></i> Xóa</button>
+                </div>
+                <div style="margin-bottom: 6px;">
+                    <input type="text" class="form-control q-title-input" value="${(q.question || '').replace(/"/g, '&quot;')}" placeholder="Nội dung câu hỏi (VD: Cho $x^2 - 5x + 6 = 0$...)" style="font-size: 0.85rem; padding: 4px 8px;">
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-bottom: 6px;">
+                    <input type="text" class="form-control q-opt-0" value="${(opts[0] || 'A. ').replace(/"/g, '&quot;')}" placeholder="Đáp án A" style="font-size: 0.8rem; padding: 4px 8px;">
+                    <input type="text" class="form-control q-opt-1" value="${(opts[1] || 'B. ').replace(/"/g, '&quot;')}" placeholder="Đáp án B" style="font-size: 0.8rem; padding: 4px 8px;">
+                    <input type="text" class="form-control q-opt-2" value="${(opts[2] || 'C. ').replace(/"/g, '&quot;')}" placeholder="Đáp án C" style="font-size: 0.8rem; padding: 4px 8px;">
+                    <input type="text" class="form-control q-opt-3" value="${(opts[3] || 'D. ').replace(/"/g, '&quot;')}" placeholder="Đáp án D" style="font-size: 0.8rem; padding: 4px 8px;">
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                    <label style="font-size: 0.8rem; font-weight: 600;">Đáp án đúng:</label>
+                    <select class="form-control q-correct-select" style="width: auto; font-size: 0.8rem; padding: 2px 8px;">
+                        <option value="0" ${correctOpt === 0 ? 'selected' : ''}>Đáp án A</option>
+                        <option value="1" ${correctOpt === 1 ? 'selected' : ''}>Đáp án B</option>
+                        <option value="2" ${correctOpt === 2 ? 'selected' : ''}>Đáp án C</option>
+                        <option value="3" ${correctOpt === 3 ? 'selected' : ''}>Đáp án D</option>
+                    </select>
+                </div>
+                <div>
+                    <input type="text" class="form-control q-exp-input" value="${(q.explanation || '').replace(/"/g, '&quot;')}" placeholder="Hướng dẫn giải chi tiết (Hỗ trợ công thức KaTeX)..." style="font-size: 0.8rem; padding: 4px 8px;">
+                </div>
+            `;
+            container.appendChild(card);
+        });
+    }
+
+    // Xóa câu hỏi khỏi Visual Builder
+    window.removeAdminQuizQuestion = function(idx) {
+        window.currentAdminQuizQuestions.splice(idx, 1);
+        renderVisualQuizBuilder();
+    };
 
     function showMaterialDetailsForm(material, lessonId) {
         const formDiv = document.getElementById('materialEditDetailsForm');
@@ -1326,6 +1504,19 @@ document.addEventListener('DOMContentLoaded', async () => {
             document.getElementById('m_content').value = material.content || '';
             document.getElementById('m_preview').checked = material.is_preview;
             document.getElementById('m_order').value = material.order_index;
+
+            // Load danh sách câu hỏi vào Visual Builder nếu là Quiz
+            if (material.type === 'quiz' && material.content) {
+                try {
+                    window.currentAdminQuizQuestions = JSON.parse(material.content);
+                } catch (e) {
+                    window.currentAdminQuizQuestions = [];
+                }
+            } else {
+                window.currentAdminQuizQuestions = [];
+            }
+
+            renderVisualQuizBuilder();
 
             // Trigger change type
             const event = new Event('change');
@@ -1361,13 +1552,43 @@ document.addEventListener('DOMContentLoaded', async () => {
         const title = document.getElementById('m_title').value.trim();
         const type = document.getElementById('m_type').value;
         const url = document.getElementById('m_url').value.trim();
-        const content = document.getElementById('m_content').value.trim();
+        let content = document.getElementById('m_content').value.trim();
         const is_preview = document.getElementById('m_preview').checked;
         const order_index = parseInt(document.getElementById('m_order').value) || 1;
 
         if (!title) {
             alert("Vui lòng nhập tiêu đề học liệu!");
             return;
+        }
+
+        // Nếu là loại trắc nghiệm, gom toàn bộ dữ liệu từ Visual Builder thành JSON
+        if (type === 'quiz') {
+            const cards = document.querySelectorAll('.admin-quiz-question-card');
+            if (cards.length > 0) {
+                const questionsList = [];
+                cards.forEach((card, idx) => {
+                    const qTitle = card.querySelector('.q-title-input').value.trim();
+                    const opt0 = card.querySelector('.q-opt-0').value.trim();
+                    const opt1 = card.querySelector('.q-opt-1').value.trim();
+                    const opt2 = card.querySelector('.q-opt-2').value.trim();
+                    const opt3 = card.querySelector('.q-opt-3').value.trim();
+                    const correctOpt = parseInt(card.querySelector('.q-correct-select').value) || 0;
+                    const expText = card.querySelector('.q-exp-input').value.trim();
+
+                    if (qTitle) {
+                        questionsList.push({
+                            id: idx + 1,
+                            question: qTitle,
+                            options: [opt0, opt1, opt2, opt3],
+                            correct_option: correctOpt,
+                            explanation: expText
+                        });
+                    }
+                });
+                if (questionsList.length > 0) {
+                    content = JSON.stringify(questionsList, null, 2);
+                }
+            }
         }
 
         const materialData = { lesson_id: lessonId, title, type, url, content, is_preview, order_index };

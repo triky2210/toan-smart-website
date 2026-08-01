@@ -324,6 +324,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             `;
 
+            if (user.isAdmin) {
+                // Insert Question Bank link next to Resources link for Admin
+                const navLinks = document.querySelectorAll('.nav-menu a');
+                let resourcesLi = null;
+                navLinks.forEach(link => {
+                    const href = link.getAttribute('href') || '';
+                    if (href.includes('resources')) {
+                        resourcesLi = link.closest('li');
+                    }
+                });
+                if (resourcesLi && !document.getElementById('headerQBankLink')) {
+                    const qbLi = document.createElement('li');
+                    qbLi.id = 'headerQBankLink';
+                    qbLi.innerHTML = `<a href="admin.html?tab=questions" class="nav-link" style="color: var(--accent-color); font-weight: 600;"><i class="fa-solid fa-database" style="margin-right: 4px;"></i> Ngân hàng câu hỏi</a>`;
+                    resourcesLi.parentNode.insertBefore(qbLi, resourcesLi.nextSibling);
+                }
+            }
+
             // Xử lý đóng mở dropdown
             const trigger = document.getElementById('profileTrigger');
             const dropdown = document.getElementById('profileDropdown');
