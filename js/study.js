@@ -221,8 +221,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             loadOfflineStudyData();
         }
 
-        // Đảm bảo các bài học đều có sẵn học liệu Quiz Test (kể cả ID=30159 của bài 3006)
-        ensureQuizMaterialsInMap();
+        // Chỉ nạp học liệu thực tế từ cơ sở dữ liệu (đã vô hiệu hóa hàm tự bơm học liệu ảo Quiz Test 30159/10119)
+        // ensureQuizMaterialsInMap();
 
         // Tạo danh sách phẳng để điều hướng trước/sau
         buildFlatMaterialsList();
