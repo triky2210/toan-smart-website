@@ -93,19 +93,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         cachedLessons = lessonsRes.data || [];
         cachedMaterials = materialsRes.data || [];
 
-        // Đảm bảo bài giảng hiện hành luôn có ít nhất 1 học liệu trắc nghiệm trong cache
-        cachedLessons.forEach(l => {
-            const hasQuiz = cachedMaterials.some(m => m.lesson_id == l.id && m.type === 'quiz');
-            if (!hasQuiz) {
-                cachedMaterials.push({
-                    id: (l.id * 10) + 99,
-                    lesson_id: l.id,
-                    title: "Quiz Test",
-                    type: "quiz"
-                });
-            }
-        });
-
         // Vẽ Breadcrumb
         renderBreadcrumbs();
 
@@ -163,7 +150,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 ${course.title} <i class="fa-solid fa-angle-right" style="font-size:0.75rem; margin:0 4px;"></i> 
                 ${chapter.title} <i class="fa-solid fa-angle-right" style="font-size:0.75rem; margin:0 4px;"></i> 
                 ${lesson.title} <i class="fa-solid fa-angle-right" style="font-size:0.75rem; margin:0 4px;"></i> 
-                Học liệu: <span>${currentMaterial ? currentMaterial.title : 'Quiz Test'}</span>
+                Học liệu: <span>${currentMaterial ? currentMaterial.title : 'Chưa chọn học liệu'}</span>
             `;
         }
     }

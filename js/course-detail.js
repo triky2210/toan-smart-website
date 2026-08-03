@@ -175,40 +175,6 @@ function migrateOfflineDataIfNeeded() {
                 is_preview: l.id === 1002 || l.id === 2002 || l.id === 3002, // Mở khóa bài 2
                 order_index: 2
             });
-            const demoQuizQuestions = [
-                {
-                    id: 1,
-                    question: "Cho phương trình bậc hai $x^2 - 5x + 6 = 0$. Tổng hai nghiệm $S = x_1 + x_2$ bằng bao nhiêu?",
-                    options: ["A. $S = 5$", "B. $S = -5$", "C. $S = 6$", "D. $S = -6$"],
-                    correct_option: 0,
-                    explanation: "Theo hệ thức Vi-ét, tổng hai nghiệm $S = x_1 + x_2 = -\\frac{b}{a} = -\\frac{-5}{1} = 5$."
-                },
-                {
-                    id: 2,
-                    question: "Tính biệt thức $\\Delta$ của phương trình bậc hai $2x^2 - 4x + 1 = 0$.",
-                    options: ["A. $\\Delta = 8$", "B. $\\Delta = 12$", "C. $\\Delta = 0$", "D. $\\Delta = 16$"],
-                    correct_option: 0,
-                    explanation: "Ta có $a = 2, b = -4, c = 1$. Biệt thức $\\Delta = b^2 - 4ac = (-4)^2 - 4 \\cdot 2 \\cdot 1 = 16 - 8 = 8 > 0$."
-                },
-                {
-                    id: 3,
-                    question: "Rút gọn biểu thức $P = \\sqrt{a^2}$ với $a \\ge 0$.",
-                    options: ["A. $P = a$", "B. $P = -a$", "C. $P = |a|$", "D. $P = a^2$"],
-                    correct_option: 0,
-                    explanation: "Với $a \\ge 0$, ta có $\\sqrt{a^2} = |a| = a$."
-                }
-            ];
-
-            dbMaterials.push({
-                id: l.id * 10 + 3,
-                lesson_id: l.id,
-                title: "Quiz Test",
-                type: "quiz",
-                url: "",
-                content: JSON.stringify(demoQuizQuestions, null, 2),
-                is_preview: true,
-                order_index: 3
-            });
         });
         localStorage.setItem('db_materials', JSON.stringify(dbMaterials));
     }

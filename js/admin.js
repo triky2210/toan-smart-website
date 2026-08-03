@@ -707,19 +707,6 @@ async function initQuestionBank() {
     cachedLessons = lessonsRes.data || [];
     cachedMaterials = materialsRes.data || [];
 
-    // Đảm bảo mỗi bài giảng đều có ít nhất 1 học liệu trắc nghiệm "Quiz Test" (giống như study.js)
-    cachedLessons.forEach(l => {
-        const hasQuiz = cachedMaterials.some(m => m.lesson_id == l.id && m.type === 'quiz');
-        if (!hasQuiz) {
-            cachedMaterials.push({
-                id: (l.id * 10) + 99,
-                lesson_id: l.id,
-                title: "Quiz Test",
-                type: "quiz"
-            });
-        }
-    });
-
     // Populate filter dropdowns
     populateFilterDropdowns();
     
