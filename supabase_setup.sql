@@ -33,20 +33,37 @@ CREATE TABLE IF NOT EXISTS lessons (
     order_index INT DEFAULT 1
 );
 
+-- 3.5. Tạo bảng materials (Học liệu chi tiết thuộc Bài học)
+CREATE TABLE IF NOT EXISTS materials (
+    id SERIAL PRIMARY KEY,
+    lesson_id INT REFERENCES lessons(id) ON DELETE CASCADE,
+    title TEXT NOT NULL,
+    type TEXT CHECK (type IN ('video', 'pdf', 'quiz', 'exercise', 'text')) DEFAULT 'video',
+    url TEXT,
+    content TEXT,
+    duration TEXT,
+    is_preview BOOLEAN DEFAULT FALSE,
+    order_index INT DEFAULT 1
+);
+
 -- 4. BẬT QUYỀN ĐỌC CÔNG KHAI (Row Level Security - RLS)
--- Cho phép bất kỳ ai (học sinh) cũng có thể đọc danh sách khóa học và bài giảng mà không cần đăng nhập.
+-- Cho phép bất kỳ ai (học sinh) cũng có thể đọc danh sách khóa học, bài giảng và học liệu mà không cần đăng nhập.
 ALTER TABLE courses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE chapters ENABLE ROW LEVEL SECURITY;
 ALTER TABLE lessons ENABLE ROW LEVEL SECURITY;
+ALTER TABLE materials ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Allow public read access for courses" ON courses FOR SELECT TO anon USING (true);
 CREATE POLICY "Allow public read access for chapters" ON chapters FOR SELECT TO anon USING (true);
 CREATE POLICY "Allow public read access for lessons" ON lessons FOR SELECT TO anon USING (true);
+CREATE POLICY "Allow public read access for materials" ON materials FOR SELECT TO anon USING (true);
 
 -- Cho phép quyền chỉnh sửa (Insert, Update, Delete) cho người dùng đã đăng nhập (Thầy Tùng Dương)
 CREATE POLICY "Allow authenticated changes for courses" ON courses FOR ALL TO authenticated USING (true);
 CREATE POLICY "Allow authenticated changes for chapters" ON chapters FOR ALL TO authenticated USING (true);
 CREATE POLICY "Allow authenticated changes for lessons" ON lessons FOR ALL TO authenticated USING (true);
+CREATE POLICY "Allow authenticated changes for materials" ON materials FOR ALL TO authenticated USING (true);
+
 
 
 -- 5. CHÈN DỮ LIỆU MẪU BAN ĐẦU (SEED DATA)
@@ -381,3 +398,15 @@ ALTER TABLE questions ADD COLUMN IF NOT EXISTS material_id INT;
 
 -- Cập nhật 5 câu hỏi mẫu ban đầu thuộc trực tiếp học liệu trắc nghiệm 10109 (Bài 1)
 UPDATE questions SET material_id = 10109 WHERE id IN (1, 2, 3, 4, 5);
+
+-- Bổ sung học liệu Trắc nghiệm (Quiz) ID 10109 vào bảng materials
+INSERT INTO materials (id, lesson_id, title, type, url, order_index, is_preview) 
+VALUES (10109, 1001, 'Bài tập trắc nghiệm Vi-ét (15 phút)', 'quiz', '', 4, TRUE)
+ON CONFLICT (id) DO NOTHING;
+
+-- Khóa ngoại kết nối material_questions đến bảng materials
+ALTER TABLE material_questions 
+ADD CONSTRAINT fk_material_questions_material 
+FOREIGN KEY (material_id) REFERENCES materials(id) ON DELETE CASCADE
+ON CONFLICT DO NOTHING;
+
