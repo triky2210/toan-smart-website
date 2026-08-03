@@ -428,11 +428,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 openEditNameModal(material);
             });
             document.getElementById('materialTitleGearBtn').addEventListener('click', () => {
-                if (material.type === 'quiz') {
-                    window.location.href = `material-manage.html?id=${courseId}&lesson_id=${material.lesson_id}&material_id=${material.id}`;
-                } else {
-                    openMaterialGearModal(material);
-                }
+                window.location.href = `material-manage.html?id=${courseId}&lesson_id=${material.lesson_id}&material_id=${material.id}&from=study`;
             });
         } else {
             contentTitle.textContent = material.title;

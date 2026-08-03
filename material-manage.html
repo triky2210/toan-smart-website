@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quản Lý Câu Hỏi Trắc Nghiệm - Toán Smart</title>
+    <title>Quản Lý Nội Dung Học Liệu - Toán Smart</title>
     
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -15,6 +15,9 @@
     
     <!-- KaTeX CSS for Math Formulas -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+
+    <!-- MathLive WYSIWYG Math Editor CDN -->
+    <script defer src="https://unpkg.com/mathlive"></script>
     
     <!-- Custom CSS Styles -->
     <link rel="stylesheet" href="css/style.css">
@@ -52,6 +55,9 @@
             font-size: 1.5rem;
             font-weight: 800;
             color: #0F172A;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
         .manage-breadcrumb {
@@ -120,22 +126,10 @@
         .action-buttons {
             display: flex;
             gap: 12px;
-            border-top: 1px solid #F1F5F9;
-            padding-top: 16px;
-        }
-
-        .action-buttons .btn {
-            width: auto;
-            padding: 10px 20px;
-            font-size: 0.88rem;
-            font-weight: 600;
-            display: inline-flex;
             align-items: center;
-            gap: 8px;
-            border-radius: 8px;
         }
 
-        /* 2 Column Layout */
+        /* 2 Columns Layout */
         .columns-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -145,37 +139,34 @@
         .column-card {
             background: #FFFFFF;
             border-radius: 16px;
-            box-shadow: 0 4px 20px rgba(15, 23, 42, 0.03);
             border: 1px solid #E2E8F0;
             padding: 24px;
-            min-height: 500px;
-            display: flex;
-            flex-direction: column;
+            box-shadow: 0 4px 20px rgba(15, 23, 42, 0.03);
         }
 
         .column-card h3 {
-            margin: 0 0 16px 0;
-            font-size: 1.15rem;
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 1.1rem;
             font-weight: 700;
-            color: #0F172A;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
-        .column-card h3 span.badge {
+        .column-card h3 .badge {
             font-size: 0.78rem;
-            font-weight: 600;
-            background: #EFF6FF;
-            color: var(--accent-color);
             padding: 4px 10px;
-            border-radius: 999px;
+            border-radius: 20px;
+            background: #EEF2FF;
+            color: var(--accent-color);
+            font-weight: 600;
         }
 
         .questions-list-container {
-            flex-grow: 1;
+            min-height: 450px;
+            max-height: 680px;
             overflow-y: auto;
-            max-height: 70vh;
             padding-right: 4px;
         }
 
@@ -302,7 +293,7 @@
 
         /* Modal styling */
         .admin-modal-content {
-            max-width: 750px;
+            max-width: 800px;
             max-height: 90vh;
             overflow-y: auto;
         }
@@ -344,7 +335,6 @@
             color: #475569;
         }
 
-        /* Interactive KaTeX test preview toggles */
         .q-preview-expanded-panel {
             background: #F1F5F9;
             border-radius: 8px;
@@ -353,6 +343,27 @@
             font-size: 0.85rem;
             line-height: 1.5;
             border-left: 3px solid var(--accent-color);
+        }
+
+        /* Generic Section Card */
+        .section-card {
+            background: #FFFFFF;
+            border-radius: 16px;
+            border: 1px solid #E2E8F0;
+            padding: 24px;
+            box-shadow: 0 4px 20px rgba(15, 23, 42, 0.03);
+            margin-bottom: 24px;
+        }
+
+        .section-card h3 {
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: #0F172A;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
         @media (max-width: 1024px) {
@@ -369,17 +380,17 @@
         <!-- Top Nav Header -->
         <div class="manage-header">
             <div>
-                <h2>Thiết Kế Bộ Đề Trắc Nghiệm</h2>
+                <h2 id="manageTitle"><i class="fa-solid fa-layer-group" style="color: var(--accent-color);"></i> Quản Lý Nội Dung Học Liệu</h2>
                 <div class="manage-breadcrumb" id="manageBreadcrumb">
-                    Đang tải lộ trình bài học...
+                    Đang tải thông tin học liệu...
                 </div>
             </div>
-            <a href="#" id="backBtn" class="btn btn-secondary" style="width: auto; padding: 10px 20px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; text-decoration: none;">
-                <i class="fa-solid fa-arrow-left"></i> Quay lại Góc học tập
+            <a href="javascript:void(0)" id="manageBackBtn" class="btn btn-secondary" style="width: auto; padding: 10px 20px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; text-decoration: none;">
+                <i class="fa-solid fa-arrow-left"></i> Quay lại
             </a>
         </div>
 
-        <!-- Filters & Action Toolbar -->
+        <!-- Filters & Action Toolbar (Cho phép đổi nhanh bài/học liệu) -->
         <div class="config-bar">
             <div class="config-filters">
                 <select class="config-select" id="qbFilterCourse">
@@ -394,47 +405,172 @@
                 <select class="config-select" id="qbFilterMaterial">
                     <option value="">Tất cả học liệu</option>
                 </select>
-                <label class="checkbox-container">
-                    <input type="checkbox" id="qbFilterChdc">
-                    <span>Lấy theo CHDC</span>
-                </label>
-            </div>
-            
-            <div class="action-buttons">
-                <button class="btn btn-primary" id="addQuestionBtn">
-                    <i class="fa-solid fa-plus"></i> Tạo câu hỏi mới
-                </button>
-                <button class="btn btn-secondary" id="clearAllBtn" style="color: #EF4444; border-color: #FCA5A5; background: #FFF5F5;">
-                    <i class="fa-solid fa-trash-can"></i> Xóa tất cả trong học liệu này
-                </button>
             </div>
         </div>
 
-        <!-- 2 Columns Source / Selected -->
-        <div class="columns-grid">
-            
-            <!-- Left Column: Source Bank -->
-            <div class="column-card">
-                <h3>
-                    <span>Ngân Hàng Câu Hỏi Nguồn</span>
-                    <span class="badge" id="sourceCount">0 câu hỏi</span>
-                </h3>
-                <div class="questions-list-container" id="sourceList">
-                    <!-- Dynamic question items -->
+        <!-- 1. VIDEO MANAGER SECTION (Dành cho type = 'video') -->
+        <div id="videoManagerSection" style="display: none;">
+            <div class="section-card">
+                <h3><i class="fa-solid fa-circle-play" style="color: #0EA5E9;"></i> Cấu Hình Video Bài Giảng</h3>
+                <form id="videoMaterialForm">
+                    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-bottom: 16px;">
+                        <div class="form-group">
+                            <label class="form-label" style="font-weight: 600; display: block; margin-bottom: 6px;">Đường dẫn URL Video (YouTube / nhúng iFrame)</label>
+                            <input type="text" class="form-control" id="videoUrlInput" placeholder="Ví dụ: https://www.youtube.com/embed/... hoặc mã nhúng <iframe>" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #CBD5E1;">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" style="font-weight: 600; display: block; margin-bottom: 6px;">Thời lượng bài giảng</label>
+                            <input type="text" class="form-control" id="videoDurationInput" placeholder="Ví dụ: 25:12" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #CBD5E1;">
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 16px;">
+                        <label class="form-label" style="font-weight: 600; display: block; margin-bottom: 6px;">Hoặc tải trực tiếp file Video lên Supabase Storage</label>
+                        <input type="file" id="videoFileInput" accept="video/*" style="width: 100%; padding: 8px; border-radius: 8px; border: 1px dashed var(--accent-color); background: #FAF5FF; cursor: pointer;">
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 20px;">
+                        <label class="form-label" style="font-weight: 600; display: block; margin-bottom: 6px;">Ghi chú & Tóm tắt bài giảng (Soạn thảo Toán đồ họa WYSIWYG)</label>
+                        <math-field id="videoNotesMathField" style="margin-bottom: 10px;"></math-field>
+                        <textarea class="form-control" id="videoNotesInput" placeholder="Nội dung ghi chú bài giảng..." style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #CBD5E1; height: 90px; resize: vertical;"></textarea>
+                    </div>
+
+                    <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                        <button type="submit" class="btn btn-primary" style="padding: 10px 24px; font-weight: 600;">
+                            <i class="fa-solid fa-floppy-disk"></i> Lưu thay đổi Video
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Live Preview Video (Vertical Stack) -->
+            <div class="live-preview-box">
+                <div class="live-preview-header">
+                    <h4><i class="fa-solid fa-eye" style="color: var(--accent-color);"></i> Xem Trước Giao Diện Phát Video (Live Preview)</h4>
+                    <span style="font-size: 0.8rem; color: #64748B;">Tự động cập nhật khi bạn dán link hoặc chọn file</span>
+                </div>
+                <div class="preview-frame-container" id="videoPreviewContainer">
+                    <div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #94A3B8;">
+                        <i class="fa-solid fa-play" style="font-size: 3rem;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. PDF MANAGER SECTION (Dành cho type = 'pdf') -->
+        <div id="pdfManagerSection" style="display: none;">
+            <div class="section-card">
+                <h3><i class="fa-solid fa-file-pdf" style="color: #EF4444;"></i> Cấu Hình Tài Liệu PDF</h3>
+                <form id="pdfMaterialForm">
+                    <div class="form-group" style="margin-bottom: 16px;">
+                        <label class="form-label" style="font-weight: 600; display: block; margin-bottom: 6px;">Tải lên file PDF mới (lưu trên Supabase Storage)</label>
+                        <input type="file" id="pdfFileInput" accept=".pdf" style="width: 100%; padding: 8px; border-radius: 8px; border: 1px dashed var(--accent-color); background: #FAF5FF; cursor: pointer;">
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 20px;">
+                        <label class="form-label" style="font-weight: 600; display: block; margin-bottom: 6px;">Hoặc nhập Link URL tài liệu (OneDrive / Google Drive / Supabase)</label>
+                        <input type="text" class="form-control" id="pdfUrlInput" placeholder="Ví dụ: assets/docs/... hoặc mã nhúng <iframe>" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #CBD5E1;">
+                    </div>
+
+                    <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                        <button type="submit" class="btn btn-primary" style="padding: 10px 24px; font-weight: 600;">
+                            <i class="fa-solid fa-floppy-disk"></i> Lưu thay đổi PDF
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Live Preview PDF (Vertical Stack) -->
+            <div class="live-preview-box">
+                <div class="live-preview-header">
+                    <h4><i class="fa-solid fa-eye" style="color: var(--accent-color);"></i> Xem Trước Khung Hiển Thị PDF (Live Preview)</h4>
+                    <span style="font-size: 0.8rem; color: #64748B;">Tự động cập nhật khi bạn dán link hoặc chọn file PDF</span>
+                </div>
+                <div class="preview-frame-container" id="pdfPreviewContainer">
+                    <div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #94A3B8;">
+                        <i class="fa-solid fa-file-pdf" style="font-size: 3rem;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. QUIZ MANAGER SECTION (Dành cho type = 'quiz' / 'exercise') -->
+        <div id="quizManagerSection" style="display: none;">
+            <div class="config-bar" style="margin-bottom: 16px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                    <label class="checkbox-container">
+                        <input type="checkbox" id="qbFilterChdc">
+                        <span>Chỉ lọc câu hỏi thuộc bài học hiện tại</span>
+                    </label>
+                    <div class="action-buttons">
+                        <button class="btn btn-primary" id="addQuestionBtn">
+                            <i class="fa-solid fa-plus"></i> Soạn câu hỏi mới (WYSIWYG Math)
+                        </button>
+                        <button class="btn btn-secondary" id="clearAllBtn" style="color: #EF4444; border-color: #FCA5A5; background: #FFF5F5;">
+                            <i class="fa-solid fa-trash-can"></i> Xóa tất cả câu hỏi trong học liệu này
+                        </button>
+                    </div>
                 </div>
             </div>
 
-            <!-- Right Column: Selected list for current Quiz -->
-            <div class="column-card" style="border-color: #A7F3D0;">
-                <h3>
-                    <span style="color: #065F46;">Câu Hỏi Được Chọn (Học Sinh Sẽ Làm)</span>
-                    <span class="badge" style="background: #D1FAE5; color: #047857;" id="selectedCount">0 câu hỏi</span>
-                </h3>
-                <div class="questions-list-container" id="selectedList">
-                    <!-- Dynamic linked items with drag handles -->
+            <!-- 2 Columns Source / Selected -->
+            <div class="columns-grid">
+                <!-- Left Column: Source Bank -->
+                <div class="column-card">
+                    <h3>
+                        <span><i class="fa-solid fa-database" style="color: var(--accent-color);"></i> Ngân Hàng Câu Hỏi Nguồn</span>
+                        <span class="badge" id="sourceCount">0 câu hỏi</span>
+                    </h3>
+                    <div class="questions-list-container" id="sourceList">
+                        <!-- Dynamic question items -->
+                    </div>
+                </div>
+
+                <!-- Right Column: Selected list for current Quiz -->
+                <div class="column-card" style="border-color: #A7F3D0;">
+                    <h3>
+                        <span style="color: #065F46;"><i class="fa-solid fa-square-check"></i> Câu Hỏi Đã Chọn Trong Đề Thi</span>
+                        <span class="badge" style="background: #D1FAE5; color: #047857;" id="selectedCount">0 câu hỏi</span>
+                    </h3>
+                    <div class="questions-list-container" id="selectedList">
+                        <!-- Dynamic linked items with drag handles -->
+                    </div>
                 </div>
             </div>
+        </div>
 
+        <!-- 4. TEXT MANAGER SECTION (Dành cho type = 'text') -->
+        <div id="textManagerSection" style="display: none;">
+            <div class="section-card">
+                <h3><i class="fa-solid fa-file-lines" style="color: #10B981;"></i> Soạn Thảo Bài Viết Lý Thuyết & Ghi Chú Toán</h3>
+                <form id="textMaterialForm">
+                    <div class="form-group" style="margin-bottom: 16px;">
+                        <label class="form-label" style="font-weight: 600; display: block; margin-bottom: 6px;">Soạn thảo công thức Toán đồ họa (WYSIWYG MathType Style)</label>
+                        <math-field id="textMathField" style="margin-bottom: 10px;"></math-field>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 20px;">
+                        <label class="form-label" style="font-weight: 600; display: block; margin-bottom: 6px;">Nội dung chi tiết bài viết (HTML / Text / KaTeX $...$)</label>
+                        <textarea class="form-control" id="textContentInput" placeholder="Nhập nội dung bài viết lý thuyết..." style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #CBD5E1; height: 200px; resize: vertical; font-family: monospace;"></textarea>
+                    </div>
+
+                    <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                        <button type="submit" class="btn btn-primary" style="padding: 10px 24px; font-weight: 600;">
+                            <i class="fa-solid fa-floppy-disk"></i> Lưu thay đổi Bài viết
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Live Preview Text -->
+            <div class="live-preview-box">
+                <div class="live-preview-header">
+                    <h4><i class="fa-solid fa-eye" style="color: var(--accent-color);"></i> Xem Trước Văn Bản Render KaTeX (Live Preview)</h4>
+                </div>
+                <div style="padding: 20px; background: #FAF5FF; border-radius: 12px; min-height: 150px; line-height: 1.7;" id="textLivePreview">
+                    <!-- Dynamic KaTeX rendered text -->
+                </div>
+            </div>
         </div>
 
     </div>
@@ -445,111 +581,119 @@
             <button class="admin-modal-close" onclick="closeQuestionModal()"><i class="fa-solid fa-xmark"></i></button>
             <h3 class="admin-modal-title" id="questionModalTitle">Thêm câu hỏi mới</h3>
             
-            <!-- Thanh công cụ chèn nhanh công thức Toán học -->
-            <div class="math-quick-toolbar" style="background: #F1F5F9; border: 1px solid #E2E8F0; border-radius: 8px; padding: 8px; margin-bottom: 16px; display: flex; gap: 6px; flex-wrap: wrap; align-items: center;">
-                <span style="font-size: 0.72rem; font-weight: 700; color: #475569; margin-right: 6px;"><i class="fa-solid fa-calculator"></i> Chèn nhanh:</span>
-                <button type="button" class="math-btn" data-latex="$$" title="Bọc công thức LaTeX" style="background: #FFFFFF; border: 1px solid #CBD5E1; padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; cursor: pointer; transition: all 0.2s;">$ $</button>
-                <button type="button" class="math-btn" data-latex="\frac{}{} " title="Phân số" style="background: #FFFFFF; border: 1px solid #CBD5E1; padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; cursor: pointer; transition: all 0.2s;">x/y</button>
-                <button type="button" class="math-btn" data-latex="\sqrt{} " title="Căn thức" style="background: #FFFFFF; border: 1px solid #CBD5E1; padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; cursor: pointer; transition: all 0.2s;">√x</button>
-                <button type="button" class="math-btn" data-latex="^{} " title="Số mũ" style="background: #FFFFFF; border: 1px solid #CBD5E1; padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; cursor: pointer; transition: all 0.2s;">xⁿ</button>
-                <button type="button" class="math-btn" data-latex="_{} " title="Chỉ số dưới" style="background: #FFFFFF; border: 1px solid #CBD5E1; padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; cursor: pointer; transition: all 0.2s;">xₙ</button>
-                <button type="button" class="math-btn" data-latex="\pm " title="Cộng trừ" style="background: #FFFFFF; border: 1px solid #CBD5E1; padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; cursor: pointer; transition: all 0.2s;">±</button>
-                <button type="button" class="math-btn" data-latex="\Delta " title="Delta" style="background: #FFFFFF; border: 1px solid #CBD5E1; padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; cursor: pointer; transition: all 0.2s;">Δ</button>
-                <button type="button" class="math-btn" data-latex="\pi " title="Số Pi" style="background: #FFFFFF; border: 1px solid #CBD5E1; padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; cursor: pointer; transition: all 0.2s;">π</button>
-                <button type="button" class="math-btn" data-latex="\alpha " title="Alpha" style="background: #FFFFFF; border: 1px solid #CBD5E1; padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; cursor: pointer; transition: all 0.2s;">α</button>
-                <button type="button" class="math-btn" data-latex="\beta " title="Beta" style="background: #FFFFFF; border: 1px solid #CBD5E1; padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; cursor: pointer; transition: all 0.2s;">β</button>
-                <button type="button" class="math-btn" data-latex="\le " title="Nhỏ hơn hoặc bằng" style="background: #FFFFFF; border: 1px solid #CBD5E1; padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; cursor: pointer; transition: all 0.2s;">≤</button>
-                <button type="button" class="math-btn" data-latex="\ge " title="Lớn hơn hoặc bằng" style="background: #FFFFFF; border: 1px solid #CBD5E1; padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; cursor: pointer; transition: all 0.2s;">≥</button>
-                <button type="button" class="math-btn" data-latex="\int_{}^{} " title="Tích phân" style="background: #FFFFFF; border: 1px solid #CBD5E1; padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; cursor: pointer; transition: all 0.2s;">∫</button>
-                <button type="button" class="math-btn" data-latex="\lim_{x \to } " title="Giới hạn" style="background: #FFFFFF; border: 1px solid #CBD5E1; padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; cursor: pointer; transition: all 0.2s;">lim</button>
-                <button type="button" class="math-btn" data-latex="\log_{}{} " title="Logarit" style="background: #FFFFFF; border: 1px solid #CBD5E1; padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; cursor: pointer; transition: all 0.2s;">log</button>
-                <button type="button" class="math-btn" data-latex="\vec{} " title="Vectơ" style="background: #FFFFFF; border: 1px solid #CBD5E1; padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; cursor: pointer; transition: all 0.2s;">→</button>
+            <!-- Trình gõ công thức Toán đồ họa WYSIWYG MathLive -->
+            <div class="math-quick-toolbar" style="background: #F1F5F9; border: 1px solid #E2E8F0; border-radius: 8px; padding: 12px; margin-bottom: 16px;">
+                <label style="font-size: 0.8rem; font-weight: 700; color: #475569; display: block; margin-bottom: 6px;">
+                    <i class="fa-solid fa-square-root-variable" style="color: var(--accent-color);"></i> Trình gõ công thức Toán đồ họa WYSIWYG (MathType style):
+                </label>
+                <math-field id="modalMathField"></math-field>
+                <button type="button" class="btn btn-secondary" id="insertMathToTextBtn" style="margin-top: 8px; width: auto; font-size: 0.78rem; padding: 4px 12px;">
+                    <i class="fa-solid fa-arrow-down-long"></i> Chèn công thức vào Đề bài
+                </button>
             </div>
-            
-            <form id="questionForm" onsubmit="saveQuestion(event)">
-                
-                <div class="form-group">
-                    <label class="form-label" style="font-weight: 600;">Độ khó</label>
-                    <div style="display: flex; gap: 16px;">
-                        <label class="checkbox-container" style="font-weight: 500;"><input type="radio" name="qfDifficulty" value="NB" checked> <span class="diff-badge diff-nb">Nhận biết</span></label>
-                        <label class="checkbox-container" style="font-weight: 500;"><input type="radio" name="qfDifficulty" value="TH"> <span class="diff-badge diff-th">Thông hiểu</span></label>
-                        <label class="checkbox-container" style="font-weight: 500;"><input type="radio" name="qfDifficulty" value="VD"> <span class="diff-badge diff-vd">Vận dụng</span></label>
-                        <label class="checkbox-container" style="font-weight: 500;"><input type="radio" name="qfDifficulty" value="VDC"> <span class="diff-badge diff-vdc">Vận dụng cao</span></label>
+
+            <form id="questionForm">
+                <input type="hidden" id="qId">
+                <div class="modal-form-grid" style="margin-bottom: 12px;">
+                    <div class="form-group">
+                        <label class="form-label" style="font-weight: 600;">Thuộc Khóa Học</label>
+                        <select class="config-select" id="modalFormCourse" style="width: 100%;">
+                            <option value="">Chọn khóa học</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" style="font-weight: 600;">Thuộc Chương</label>
+                        <select class="config-select" id="modalFormChapter" style="width: 100%;">
+                            <option value="">Chọn chương</option>
+                        </select>
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label" style="font-weight: 600;">Nội dung câu hỏi <span style="font-weight: 400; color: #64748B;">(Hỗ trợ LaTeX: $x^2$)</span></label>
-                    <textarea class="form-control" id="qfQuestionText" rows="3" placeholder="Nhập nội dung câu hỏi..." oninput="updateQuestionPreview()" required></textarea>
+                <div class="modal-form-grid" style="margin-bottom: 12px;">
+                    <div class="form-group">
+                        <label class="form-label" style="font-weight: 600;">Thuộc Bài Học</label>
+                        <select class="config-select" id="modalFormLesson" style="width: 100%;">
+                            <option value="">Chọn bài học</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" style="font-weight: 600;">Mức Độ Khó</label>
+                        <select class="config-select" id="qDifficulty" style="width: 100%;" required>
+                            <option value="NB">Nhận biết (NB)</option>
+                            <option value="TH">Thông hiểu (TH)</option>
+                            <option value="VD">Vận dụng (VD)</option>
+                            <option value="VDC">Vận dụng cao (VDC)</option>
+                        </select>
+                    </div>
                 </div>
 
-                <div class="modal-form-grid">
-                    <div class="form-group" style="margin-bottom: 8px;">
+                <div class="form-group" style="margin-bottom: 12px;">
+                    <label class="form-label" style="font-weight: 600;">Nội dung câu hỏi (Công thức dạng $...$)</label>
+                    <textarea class="form-control" id="qText" rows="3" required placeholder="Nhập đề bài câu hỏi..." style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #CBD5E1;"></textarea>
+                </div>
+
+                <div class="modal-form-grid" style="margin-bottom: 12px;">
+                    <div class="form-group">
                         <label class="form-label" style="font-weight: 600;">Đáp án A</label>
-                        <div style="display: flex; gap: 8px; align-items: center;">
-                            <input type="radio" name="qfCorrect" value="0" checked>
-                            <input type="text" class="form-control" id="qfOptionA" placeholder="Nhập đáp án A" oninput="updateQuestionPreview()" required>
-                        </div>
+                        <input type="text" class="form-control" id="opt0" required placeholder="Ví dụ: A. $x = 1$" style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #CBD5E1;">
                     </div>
-                    <div class="form-group" style="margin-bottom: 8px;">
+                    <div class="form-group">
                         <label class="form-label" style="font-weight: 600;">Đáp án B</label>
-                        <div style="display: flex; gap: 8px; align-items: center;">
-                            <input type="radio" name="qfCorrect" value="1">
-                            <input type="text" class="form-control" id="qfOptionB" placeholder="Nhập đáp án B" oninput="updateQuestionPreview()" required>
-                        </div>
+                        <input type="text" class="form-control" id="opt1" required placeholder="Ví dụ: B. $x = 2$" style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #CBD5E1;">
                     </div>
-                    <div class="form-group" style="margin-bottom: 8px;">
+                </div>
+
+                <div class="modal-form-grid" style="margin-bottom: 12px;">
+                    <div class="form-group">
                         <label class="form-label" style="font-weight: 600;">Đáp án C</label>
-                        <div style="display: flex; gap: 8px; align-items: center;">
-                            <input type="radio" name="qfCorrect" value="2">
-                            <input type="text" class="form-control" id="qfOptionC" placeholder="Nhập đáp án C" oninput="updateQuestionPreview()" required>
-                        </div>
+                        <input type="text" class="form-control" id="opt2" required placeholder="Ví dụ: C. $x = 3$" style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #CBD5E1;">
                     </div>
-                    <div class="form-group" style="margin-bottom: 8px;">
+                    <div class="form-group">
                         <label class="form-label" style="font-weight: 600;">Đáp án D</label>
-                        <div style="display: flex; gap: 8px; align-items: center;">
-                            <input type="radio" name="qfCorrect" value="3">
-                            <input type="text" class="form-control" id="qfOptionD" placeholder="Nhập đáp án D" oninput="updateQuestionPreview()" required>
-                        </div>
+                        <input type="text" class="form-control" id="opt3" required placeholder="Ví dụ: D. $x = 4$" style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #CBD5E1;">
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label" style="font-weight: 600;">Hướng dẫn giải chi tiết <span style="font-weight: 400; color: #64748B;">(Tùy chọn, hỗ trợ LaTeX)</span></label>
-                    <textarea class="form-control" id="qfExplanation" rows="2" placeholder="Nhập lời giải..." oninput="updateQuestionPreview()"></textarea>
+                <div class="modal-form-grid" style="margin-bottom: 12px;">
+                    <div class="form-group">
+                        <label class="form-label" style="font-weight: 600;">Đáp án Đúng</label>
+                        <select class="config-select" id="qCorrect" style="width: 100%;" required>
+                            <option value="0">Phương án A</option>
+                            <option value="1">Phương án B</option>
+                            <option value="2">Phương án C</option>
+                            <option value="3">Phương án D</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" style="font-weight: 600;">Lời giải chi tiết</label>
+                        <textarea class="form-control" id="qExplanation" rows="2" placeholder="Nhập lời giải chi tiết..." style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #CBD5E1;"></textarea>
+                    </div>
                 </div>
 
-                <!-- Live Preview panel -->
+                <!-- Preview Panel -->
                 <div class="qb-preview-panel">
-                    <div class="qb-preview-title"><i class="fa-solid fa-eye"></i> Xem trước trực tiếp</div>
-                    <div id="qbPreviewContent" class="preview-box">
-                        <p style="color: #94A3B8; font-style: italic; margin: 0;">Nhập nội dung câu hỏi để bắt đầu xem trước...</p>
+                    <div class="qb-preview-title"><i class="fa-solid fa-eye"></i> Xem trước hiển thị KaTeX</div>
+                    <div class="preview-box" id="qLivePreview">
+                        <p style="color: #94A3B8; font-style: italic; margin: 0;">Nhập nội dung câu hỏi để xem trước...</p>
                     </div>
                 </div>
 
-                <div class="modal-footer" style="margin-top: 16px;">
-                    <button type="button" class="btn btn-secondary" onclick="closeQuestionModal()">Hủy bỏ</button>
-                    <button type="submit" class="btn btn-primary" style="width: auto;">Lưu câu hỏi</button>
+                <div style="display: flex; gap: 12px; margin-top: 20px; justify-content: flex-end;">
+                    <button type="button" class="btn btn-secondary" onclick="closeQuestionModal()" style="width: auto; padding: 10px 20px;">Hủy</button>
+                    <button type="submit" class="btn btn-primary" style="width: auto; padding: 10px 20px;">Lưu câu hỏi</button>
                 </div>
-
             </form>
         </div>
     </div>
 
-    <!-- CDNs and Libraries -->
-    <!-- Supabase JS client -->
+    <!-- External Libraries -->
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-    
-    <!-- SortableJS drag drop -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
-    
-    <!-- KaTeX library -->
-    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
-    
-    <!-- Core config & Action Script -->
-    <script src="js/config.js"></script>
-    <script src="js/material-manage.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 
+    <!-- Configuration & Application Logic -->
+    <script src="js/config.js"></script>
+    <script src="js/material-manage.js?v=toansmart-v1.3.0"></script>
 </body>
 </html>

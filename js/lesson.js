@@ -443,7 +443,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     gearBtn.addEventListener('click', (e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        openMaterialGearModal(m);
+                        window.location.href = `material-manage.html?id=${courseId}&lesson_id=${lessonId}&material_id=${m.id}&from=lesson`;
                     });
                 }
             }

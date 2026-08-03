@@ -1277,22 +1277,21 @@ document.addEventListener('DOMContentLoaded', async () => {
             else if (m.type === 'text') typeIcon = '✍️';
             else if (m.type === 'quiz') typeIcon = '📝';
 
-            const isQuiz = m.type === 'quiz';
             div.innerHTML = `
                 <div style="display: flex; align-items: center; gap: 8px; flex-grow: 1;">
                     <i class="fa-solid fa-grip-vertical material-drag-handle" style="color: #94A3B8; cursor: grab; padding: 4px;" title="Kéo thả sắp xếp"></i>
                     <span style="font-size: 0.85rem; font-weight: 500;">${typeIcon} ${m.title} ${m.is_preview ? '<b>(Thử)</b>' : ''}</span>
                 </div>
                 <div style="display: flex; align-items: center; gap: 6px;">
-                    <i class="fa-solid fa-pen-to-square edit-material-pencil" style="color: var(--accent-color); font-size: 0.85rem; padding: 4px;" title="Sửa tên/cấu hình"></i>
-                    ${isQuiz ? `<i class="fa-solid fa-gear manage-quiz-gear" style="color: var(--accent-color); font-size: 0.85rem; padding: 4px;" title="Quản lý câu hỏi trắc nghiệm"></i>` : ''}
+                    <i class="fa-solid fa-pen-to-square edit-material-pencil" style="color: var(--accent-color); font-size: 0.85rem; padding: 4px;" title="Sửa tên & học thử"></i>
+                    <i class="fa-solid fa-gear manage-material-gear" style="color: var(--accent-color); font-size: 0.85rem; padding: 4px;" title="Quản lý nội dung học liệu"></i>
                 </div>
             `;
             
             div.onclick = (e) => {
                 if (e.target.closest('.material-drag-handle')) return;
-                if (e.target.closest('.manage-quiz-gear')) {
-                    window.location.href = `material-manage.html?id=${currentCourseId}&lesson_id=${lessonId}&material_id=${m.id}`;
+                if (e.target.closest('.manage-material-gear')) {
+                    window.location.href = `material-manage.html?id=${currentCourseId}&lesson_id=${lessonId}&material_id=${m.id}&from=course-detail`;
                     return;
                 }
                 showMaterialDetailsForm(m, lessonId);

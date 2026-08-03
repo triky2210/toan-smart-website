@@ -1,743 +1,568 @@
-// js/material-manage.js - Controller for dedicated visual quiz management page (2 columns)
+// ==========================================================
+// TOÁN SMART - QUẢN LÝ NỘI DUNG HỌC LIỆU ĐA NĂNG (v1.3.0)
+// ==========================================================
 
 document.addEventListener('DOMContentLoaded', async () => {
-    const isOnline = (typeof supabaseClient !== 'undefined' && supabaseClient !== null);
-
-    // URL Parameters
+    // 1. Lấy thông số từ URL
     const urlParams = new URLSearchParams(window.location.search);
-    const courseId = parseInt(urlParams.get('id')) || 1;
-    const lessonId = parseInt(urlParams.get('lesson_id'));
-    const currentMaterialId = parseInt(urlParams.get('material_id'));
+    const materialIdParam = parseInt(urlParams.get('material_id')) || parseInt(urlParams.get('id'));
+    const fromParam = urlParams.get('from') || 'study';
 
-    if (!lessonId || !currentMaterialId) {
-        alert("Lỗi: Thiếu thông tin học liệu trắc nghiệm!");
-        window.location.href = "admin.html";
-        return;
-    }
+    // Biến trạng thái
+    let currentMaterialId = materialIdParam;
+    let currentMaterial = null;
+    let currentCourseId = 1;
+    let currentLessonId = null;
 
-    // DOM Elements
-    const manageBreadcrumb = document.getElementById('manageBreadcrumb');
-    const backBtn = document.getElementById('backBtn');
-    const qbFilterCourse = document.getElementById('qbFilterCourse');
-    const qbFilterChapter = document.getElementById('qbFilterChapter');
-    const qbFilterLesson = document.getElementById('qbFilterLesson');
-    const qbFilterMaterial = document.getElementById('qbFilterMaterial');
-    const qbFilterChdc = document.getElementById('qbFilterChdc');
-    const sourceList = document.getElementById('sourceList');
-    const selectedList = document.getElementById('selectedList');
-    const sourceCount = document.getElementById('sourceCount');
-    const selectedCount = document.getElementById('selectedCount');
-    const addQuestionBtn = document.getElementById('addQuestionBtn');
-    const clearAllBtn = document.getElementById('clearAllBtn');
-    const questionModal = document.getElementById('questionModal');
-    const questionForm = document.getElementById('questionForm');
-    const questionModalTitle = document.getElementById('questionModalTitle');
-
-    // Data buffers
     let cachedCourses = [];
     let cachedChapters = [];
     let cachedLessons = [];
     let cachedMaterials = [];
-    let allQuestions = []; // Ngân hàng câu hỏi tổng hợp
-    let selectedQuestions = []; // Câu hỏi đã chọn cho quiz hiện tại
-    let editingQuestionId = null;
+    let allSourceQuestions = [];
+    let selectedQuestions = [];
 
-    // 1. Kiểm tra quyền Admin
-    await checkAdminAuth();
+    // Nút Quay lại thông minh
+    const manageBackBtn = document.getElementById('manageBackBtn');
+    if (manageBackBtn) {
+        manageBackBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (fromParam === 'study' && currentMaterialId) {
+                window.location.href = `study.html?id=${currentCourseId}&material_id=${currentMaterialId}`;
+            } else if (fromParam === 'lesson' && currentLessonId) {
+                window.location.href = `lesson.html?id=${currentCourseId}&lesson_id=${currentLessonId}`;
+            } else {
+                window.location.href = `course-detail.html?id=${currentCourseId}`;
+            }
+        });
+    }
 
-    async function checkAdminAuth() {
-        let isAdmin = false;
+    // 2. Tải dữ liệu ban đầu
+    await initMaterialManager();
+
+    async function initMaterialManager() {
         if (isOnline) {
             try {
-                const { data: { session } } = await supabaseClient.auth.getSession();
-                if (session && session.user) {
-                    if (session.user.email === 'admin@toansmart.edu.vn' || session.user.email === 'trungtamtoansmart@gmail.com') {
-                        isAdmin = true;
-                    }
-                }
+                const [coursesRes, chaptersRes, lessonsRes, materialsRes] = await Promise.all([
+                    supabaseClient.from('courses').select('id, title').order('id'),
+                    supabaseClient.from('chapters').select('id, course_id, title').order('order_index'),
+                    supabaseClient.from('lessons').select('id, chapter_id, title').order('order_index'),
+                    supabaseClient.from('materials').select('*').order('order_index')
+                ]);
+
+                cachedCourses = coursesRes.data || [];
+                cachedChapters = chaptersRes.data || [];
+                cachedLessons = lessonsRes.data || [];
+                cachedMaterials = materialsRes.data || [];
             } catch (err) {
-                console.error("Lỗi Auth Supabase:", err);
+                console.error("Lỗi tải dữ liệu Supabase:", err);
+                loadOfflineCache();
             }
-        }
-        
-        if (!isAdmin) {
-            const demoAdmin = localStorage.getItem('demo_admin_user');
-            if (demoAdmin) isAdmin = true;
+        } else {
+            loadOfflineCache();
         }
 
-        if (!isAdmin) {
-            alert("Vui lòng đăng nhập tài khoản Quản trị viên để truy cập trang này!");
-            window.location.href = "login.html";
-        }
-    }
-
-    // 2. Cấu hình nút quay lại và Breadcrumb
-    backBtn.href = `study.html?id=${courseId}&lesson_id=${lessonId}&material_id=${currentMaterialId}`;
-
-    // 3. Tải toàn bộ dữ liệu cấu trúc và câu hỏi
-    await loadInitialData();
-
-    async function loadInitialData() {
-        if (!supabaseClient) return;
-
-        // Tải các khóa, chương, bài, học liệu để xây dựng bộ lọc và breadcrumb
-        const [coursesRes, chaptersRes, lessonsRes, materialsRes] = await Promise.all([
-            supabaseClient.from('courses').select('id, title').order('id'),
-            supabaseClient.from('chapters').select('id, course_id, title').order('order_index'),
-            supabaseClient.from('lessons').select('id, chapter_id, title').order('order_index'),
-            supabaseClient.from('materials').select('id, lesson_id, title, type').order('order_index')
-        ]);
-
-        cachedCourses = coursesRes.data || [];
-        cachedChapters = chaptersRes.data || [];
-        cachedLessons = lessonsRes.data || [];
-        cachedMaterials = materialsRes.data || [];
-
-        // Vẽ Breadcrumb
-        renderBreadcrumbs();
-
-        // Khởi tạo bộ lọc cascade phía trên
+        // Đổ dữ liệu vào các select lọc
         populateFilterDropdowns();
 
-        // Tải câu hỏi từ ngân hàng & danh sách đã chọn
-        await reloadAll();
-
-        // Lắng nghe sự kiện bộ lọc
-        qbFilterCourse.addEventListener('change', () => {
-            updateChapterFilter(qbFilterCourse.value);
-            loadSourceQuestions();
-        });
-        qbFilterChapter.addEventListener('change', () => {
-            updateLessonFilter(qbFilterChapter.value);
-            loadSourceQuestions();
-        });
-        qbFilterLesson.addEventListener('change', () => {
-            updateMaterialFilter(qbFilterLesson.value);
-            loadSourceQuestions();
-        });
-        qbFilterMaterial.addEventListener('change', () => {
-            loadSourceQuestions();
-        });
-        qbFilterChdc.addEventListener('change', () => {
-            loadSourceQuestions();
-        });
-
-        // Nút Tạo câu hỏi mới
-        addQuestionBtn.onclick = () => openQuestionModal();
-
-        // Nút Xóa tất cả câu hỏi đã chọn
-        clearAllBtn.onclick = async () => {
-            if (selectedQuestions.length === 0) return alert("Bộ đề thi hiện đang trống!");
-            if (!confirm(`Bạn có chắc chắn muốn gỡ toàn bộ ${selectedQuestions.length} câu hỏi ra khỏi học liệu trắc nghiệm này? Các câu hỏi vẫn được lưu trữ tại Ngân hàng câu hỏi.`)) return;
-
-            const { error } = await supabaseClient.from('material_questions').delete().eq('material_id', currentMaterialId);
-            if (error) return alert("Lỗi khi gỡ câu hỏi: " + error.message);
-            await reloadSelectedQuestions();
-        };
-
-        // Kích hoạt tính năng kéo thả sắp xếp cho cột phải
-        initDragAndDrop();
-    }
-
-    function renderBreadcrumbs() {
-        const course = cachedCourses.find(c => c.id == courseId);
-        const lesson = cachedLessons.find(l => l.id == lessonId);
-        const chapter = lesson ? cachedChapters.find(ch => ch.id == lesson.chapter_id) : null;
-        const currentMaterial = cachedMaterials.find(m => m.id == currentMaterialId);
-
-        if (course && lesson && chapter) {
-            manageBreadcrumb.innerHTML = `
-                ${course.title} <i class="fa-solid fa-angle-right" style="font-size:0.75rem; margin:0 4px;"></i> 
-                ${chapter.title} <i class="fa-solid fa-angle-right" style="font-size:0.75rem; margin:0 4px;"></i> 
-                ${lesson.title} <i class="fa-solid fa-angle-right" style="font-size:0.75rem; margin:0 4px;"></i> 
-                Học liệu: <span>${currentMaterial ? currentMaterial.title : 'Chưa chọn học liệu'}</span>
-            `;
+        // Xác định học liệu đang được quản lý
+        if (currentMaterialId) {
+            currentMaterial = cachedMaterials.find(m => m.id == currentMaterialId);
+            if (currentMaterial) {
+                document.getElementById('qbFilterMaterial').value = currentMaterial.id;
+                currentLessonId = currentMaterial.lesson_id;
+                const foundLesson = cachedLessons.find(l => l.id == currentLessonId);
+                if (foundLesson) {
+                    document.getElementById('qbFilterLesson').value = foundLesson.id;
+                    document.getElementById('qbFilterChapter').value = foundLesson.chapter_id;
+                    const foundChapter = cachedChapters.find(ch => ch.id == foundLesson.chapter_id);
+                    if (foundChapter) {
+                        currentCourseId = foundChapter.course_id;
+                        document.getElementById('qbFilterCourse').value = foundChapter.course_id;
+                    }
+                }
+            }
         }
+
+        // Vẽ breadcrumb & hiển thị giao diện theo loại học liệu
+        renderHeaderAndSections();
     }
 
+    function loadOfflineCache() {
+        cachedCourses = JSON.parse(localStorage.getItem('db_courses')) || [];
+        cachedChapters = JSON.parse(localStorage.getItem('db_chapters')) || [];
+        cachedLessons = JSON.parse(localStorage.getItem('db_lessons')) || [];
+        cachedMaterials = JSON.parse(localStorage.getItem('db_materials')) || [];
+    }
+
+    // 3. Đổ dữ liệu vào các Select bộ lọc
     function populateFilterDropdowns() {
-        qbFilterCourse.innerHTML = '<option value="">Tất cả khóa học</option>';
-        cachedCourses.forEach(c => {
-            qbFilterCourse.innerHTML += `<option value="${c.id}">${c.title}</option>`;
-        });
+        const qbFilterCourse = document.getElementById('qbFilterCourse');
+        const qbFilterChapter = document.getElementById('qbFilterChapter');
+        const qbFilterLesson = document.getElementById('qbFilterLesson');
+        const qbFilterMaterial = document.getElementById('qbFilterMaterial');
 
-        // Đặt giá trị mặc định cho bộ lọc ban đầu chính là khóa học, chương và bài học hiện hành
-        const lesson = cachedLessons.find(l => l.id == lessonId);
-        const chapter = lesson ? cachedChapters.find(ch => ch.id == lesson.chapter_id) : null;
+        if (qbFilterCourse) {
+            qbFilterCourse.innerHTML = `<option value="">Tất cả khóa học</option>` + 
+                cachedCourses.map(c => `<option value="${c.id}">${c.title}</option>`).join('');
+        }
+        if (qbFilterChapter) {
+            qbFilterChapter.innerHTML = `<option value="">Tất cả chương</option>` + 
+                cachedChapters.map(ch => `<option value="${ch.id}">${ch.title}</option>`).join('');
+        }
+        if (qbFilterLesson) {
+            qbFilterLesson.innerHTML = `<option value="">Tất cả bài học</option>` + 
+                cachedLessons.map(l => `<option value="${l.id}">${l.title}</option>`).join('');
+        }
+        if (qbFilterMaterial) {
+            qbFilterMaterial.innerHTML = `<option value="">Tất cả học liệu</option>` + 
+                cachedMaterials.map(m => `<option value="${m.id}">${m.title} (${m.type.toUpperCase()})</option>`).join('');
+        }
 
-        if (chapter) {
-            qbFilterCourse.value = courseId;
-            updateChapterFilter(courseId);
-            qbFilterChapter.value = chapter.id;
-            updateLessonFilter(chapter.id);
-            qbFilterLesson.value = lessonId;
-            updateMaterialFilter(lessonId);
-            qbFilterMaterial.value = currentMaterialId;
+        // Sự kiện đổi học liệu trên bộ lọc
+        if (qbFilterMaterial) {
+            qbFilterMaterial.addEventListener('change', (e) => {
+                currentMaterialId = parseInt(e.target.value);
+                currentMaterial = cachedMaterials.find(m => m.id == currentMaterialId);
+                renderHeaderAndSections();
+            });
         }
     }
 
-    function updateChapterFilter(cId) {
-        qbFilterChapter.innerHTML = '<option value="">Tất cả chương</option>';
-        const filtered = cId ? cachedChapters.filter(ch => ch.course_id == cId) : cachedChapters;
-        filtered.forEach(ch => {
-            qbFilterChapter.innerHTML += `<option value="${ch.id}">${ch.title}</option>`;
-        });
-        qbFilterLesson.innerHTML = '<option value="">Tất cả bài học</option>';
-        qbFilterMaterial.innerHTML = '<option value="">Tất cả học liệu</option>';
-    }
+    // 4. Hiển thị phần quản lý tương ứng với Loại học liệu (`type`)
+    function renderHeaderAndSections() {
+        const manageTitle = document.getElementById('manageTitle');
+        const manageBreadcrumb = document.getElementById('manageBreadcrumb');
 
-    function updateLessonFilter(chId) {
-        qbFilterLesson.innerHTML = '<option value="">Tất cả bài học</option>';
-        const filtered = chId ? cachedLessons.filter(l => l.chapter_id == chId) : cachedLessons;
-        filtered.forEach(l => {
-            qbFilterLesson.innerHTML += `<option value="${l.id}">${l.title}</option>`;
-        });
-        qbFilterMaterial.innerHTML = '<option value="">Tất cả học liệu</option>';
-    }
+        const videoSection = document.getElementById('videoManagerSection');
+        const pdfSection = document.getElementById('pdfManagerSection');
+        const quizSection = document.getElementById('quizManagerSection');
+        const textSection = document.getElementById('textManagerSection');
 
-    function updateMaterialFilter(lId) {
-        qbFilterMaterial.innerHTML = '<option value="">Tất cả học liệu</option>';
-        const filtered = lId ? cachedMaterials.filter(m => m.lesson_id == lId && m.type === 'quiz') : cachedMaterials.filter(m => m.type === 'quiz');
-        filtered.forEach(m => {
-            qbFilterMaterial.innerHTML += `<option value="${m.id}">${m.title}</option>`;
-        });
-    }
+        // Ẩn tất cả các section trước
+        videoSection.style.display = 'none';
+        pdfSection.style.display = 'none';
+        quizSection.style.display = 'none';
+        textSection.style.display = 'none';
 
-    async function reloadAll() {
-        await Promise.all([
-            loadSourceQuestions(),
-            reloadSelectedQuestions()
-        ]);
-    }
-
-    async function reloadSelectedQuestions() {
-        if (!supabaseClient) return;
-
-        // Tải các câu hỏi đã chọn cho học liệu hiện tại
-        const { data, error } = await supabaseClient
-            .from('material_questions')
-            .select('order_index, question_id, questions(*)')
-            .eq('material_id', currentMaterialId)
-            .order('order_index');
-
-        if (error) {
-            console.error("Lỗi tải câu hỏi được chọn:", error);
+        if (!currentMaterial) {
+            manageTitle.innerHTML = `<i class="fa-solid fa-layer-group" style="color: var(--accent-color);"></i> Quản Lý Nội Dung Học Liệu`;
+            manageBreadcrumb.innerHTML = `Vui lòng chọn học liệu để cấu hình nội dung chi tiết.`;
             return;
         }
 
-        selectedQuestions = (data || []).map(mq => {
-            if (mq.questions) {
-                return {
-                    ...mq.questions,
-                    order_index: mq.order_index
-                };
-            }
-            return null;
-        }).filter(q => q !== null);
+        // Cập nhật Breadcrumb
+        const lesson = cachedLessons.find(l => l.id == currentMaterial.lesson_id);
+        const chapter = lesson ? cachedChapters.find(ch => ch.id == lesson.chapter_id) : null;
+        const course = chapter ? cachedCourses.find(c => c.id == chapter.course_id) : null;
 
-        renderSelectedList();
-        renderSourceList(); // Vẽ lại cột nguồn để vô hiệu hóa (disabled) nút "Chọn" đối với các câu đã có ở cột phải
+        manageBreadcrumb.innerHTML = `
+            ${course ? course.title : ''} <i class="fa-solid fa-angle-right" style="font-size:0.75rem; margin:0 4px;"></i> 
+            ${chapter ? chapter.title : ''} <i class="fa-solid fa-angle-right" style="font-size:0.75rem; margin:0 4px;"></i> 
+            ${lesson ? lesson.title : ''} <i class="fa-solid fa-angle-right" style="font-size:0.75rem; margin:0 4px;"></i> 
+            Học liệu: <span>${currentMaterial.title}</span>
+        `;
+
+        const type = currentMaterial.type || 'video';
+
+        if (type === 'video') {
+            manageTitle.innerHTML = `<i class="fa-solid fa-circle-play" style="color: #0EA5E9;"></i> Quản Lý Video Bài Giảng: ${currentMaterial.title}`;
+            videoSection.style.display = 'block';
+            setupVideoSection();
+        } else if (type === 'pdf') {
+            manageTitle.innerHTML = `<i class="fa-solid fa-file-pdf" style="color: #EF4444;"></i> Quản Lý Tài Liệu PDF: ${currentMaterial.title}`;
+            pdfSection.style.display = 'block';
+            setupPdfSection();
+        } else if (type === 'quiz' || type === 'exercise') {
+            manageTitle.innerHTML = `<i class="fa-solid fa-square-check" style="color: var(--accent-color);"></i> Thiết Kế Đề Thi Trắc Nghiệm: ${currentMaterial.title}`;
+            quizSection.style.display = 'block';
+            setupQuizSection();
+        } else if (type === 'text') {
+            manageTitle.innerHTML = `<i class="fa-solid fa-file-lines" style="color: #10B981;"></i> Soạn Bài Viết Lý Thuyết: ${currentMaterial.title}`;
+            textSection.style.display = 'block';
+            setupTextSection();
+        }
     }
 
-    async function loadSourceQuestions() {
-        if (!supabaseClient) return;
+    // ----------------------------------------------------------
+    // A. SETUP VIDEO SECTION & LIVE PREVIEW (VERTICAL STACK)
+    // ----------------------------------------------------------
+    function setupVideoSection() {
+        const videoUrlInput = document.getElementById('videoUrlInput');
+        const videoDurationInput = document.getElementById('videoDurationInput');
+        const videoNotesInput = document.getElementById('videoNotesInput');
+        const videoFileInput = document.getElementById('videoFileInput');
+        const videoPreviewContainer = document.getElementById('videoPreviewContainer');
 
-        const cId = qbFilterCourse.value;
-        const chId = qbFilterChapter.value;
-        const lId = qbFilterLesson.value;
-        const mId = qbFilterMaterial.value;
+        videoUrlInput.value = currentMaterial.url || '';
+        videoDurationInput.value = currentMaterial.duration || '';
+        videoNotesInput.value = currentMaterial.content || '';
 
-        if (qbFilterChdc.checked) {
-            // Có tích chọn: Lấy theo CHDC (Câu Hỏi Được Chọn) - các câu hỏi được hiển thị cho học sinh làm bài
-            let mqQuery = supabaseClient.from('material_questions').select('questions(*)');
-            
-            if (mId) {
-                mqQuery = mqQuery.eq('material_id', mId);
-            } else if (lId) {
-                const lessonMats = cachedMaterials.filter(m => m.lesson_id == lId && m.type === 'quiz').map(m => m.id);
-                if (lessonMats.length > 0) {
-                    mqQuery = mqQuery.in('material_id', lessonMats);
-                } else {
-                    allQuestions = [];
-                    renderSourceList();
-                    return;
+        // Tự động rút gọn link nếu dán cả thẻ <iframe>
+        videoUrlInput.addEventListener('input', (e) => {
+            let val = e.target.value.trim();
+            if (val.startsWith('<') && val.includes('src=')) {
+                const match = val.match(/src=["']([^"']+)["']/i);
+                if (match && match[1]) {
+                    e.target.value = match[1];
                 }
-            } else {
-                // Nếu không chọn học liệu/bài học cụ thể nào thì fallback về toàn bộ câu hỏi liên kết
             }
+            updateVideoLivePreview(e.target.value);
+        });
 
-            const { data, error } = await mqQuery;
-            if (error) {
-                console.error("Lỗi tải câu hỏi được chọn của bộ lọc:", error);
-                return;
+        // Tải file trực tiếp
+        videoFileInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            if (isOnline) {
+                try {
+                    const filePath = `videos/${Date.now()}_${file.name}`;
+                    const { error } = await supabaseClient.storage.from('documents').upload(filePath, file);
+                    if (error) throw error;
+                    const { data: urlData } = supabaseClient.storage.from('documents').getPublicUrl(filePath);
+                    videoUrlInput.value = urlData.publicUrl;
+                    updateVideoLivePreview(urlData.publicUrl);
+                } catch (err) {
+                    alert("Lỗi tải video: " + err.message);
+                }
             }
+        });
 
-            const qList = (data || []).map(d => d.questions).filter(q => q !== null);
-            const uniqueIds = new Set();
-            allQuestions = [];
-            qList.forEach(q => {
-                if (!uniqueIds.has(q.id)) {
-                    uniqueIds.add(q.id);
-                    allQuestions.push(q);
+        updateVideoLivePreview(videoUrlInput.value);
+
+        // Form Submit
+        const form = document.getElementById('videoMaterialForm');
+        form.onsubmit = async (e) => {
+            e.preventDefault();
+            const url = videoUrlInput.value.trim();
+            const duration = videoDurationInput.value.trim();
+            const content = videoNotesInput.value.trim();
+
+            if (isOnline) {
+                const { error } = await supabaseClient.from('materials').update({ url, duration, content }).eq('id', currentMaterial.id);
+                if (error) { alert("Lỗi lưu video: " + error.message); return; }
+            }
+            currentMaterial.url = url;
+            currentMaterial.duration = duration;
+            currentMaterial.content = content;
+            alert("Lưu thông tin Video bài giảng thành công!");
+        };
+    }
+
+    function updateVideoLivePreview(rawUrl) {
+        const videoPreviewContainer = document.getElementById('videoPreviewContainer');
+        if (!rawUrl) {
+            videoPreviewContainer.innerHTML = `<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #94A3B8;"><i class="fa-solid fa-play" style="font-size: 3rem;"></i></div>`;
+            return;
+        }
+        let embedUrl = getYoutubeEmbedUrl(rawUrl);
+        videoPreviewContainer.innerHTML = `<iframe src="${embedUrl}" style="width: 100%; height: 100%; border: 0;" allowfullscreen></iframe>`;
+    }
+
+    function getYoutubeEmbedUrl(url) {
+        if (!url) return "";
+        if (url.includes("embed/")) return url;
+        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+        const match = url.match(regExp);
+        if (match && match[2].length === 11) {
+            return `https://www.youtube.com/embed/${match[2]}`;
+        }
+        return url;
+    }
+
+    // ----------------------------------------------------------
+    // B. SETUP PDF SECTION & LIVE PREVIEW (VERTICAL STACK)
+    // ----------------------------------------------------------
+    function setupPdfSection() {
+        const pdfUrlInput = document.getElementById('pdfUrlInput');
+        const pdfFileInput = document.getElementById('pdfFileInput');
+        const pdfPreviewContainer = document.getElementById('pdfPreviewContainer');
+
+        pdfUrlInput.value = currentMaterial.url || '';
+
+        pdfUrlInput.addEventListener('input', (e) => {
+            let val = e.target.value.trim();
+            if (val.startsWith('<') && val.includes('src=')) {
+                const match = val.match(/src=["']([^"']+)["']/i);
+                if (match && match[1]) {
+                    e.target.value = match[1];
+                }
+            }
+            updatePdfLivePreview(e.target.value);
+        });
+
+        pdfFileInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            if (isOnline) {
+                try {
+                    const filePath = `documents/${Date.now()}_${file.name}`;
+                    const { error } = await supabaseClient.storage.from('documents').upload(filePath, file);
+                    if (error) throw error;
+                    const { data: urlData } = supabaseClient.storage.from('documents').getPublicUrl(filePath);
+                    pdfUrlInput.value = urlData.publicUrl;
+                    updatePdfLivePreview(urlData.publicUrl);
+                } catch (err) {
+                    alert("Lỗi tải PDF: " + err.message);
+                }
+            }
+        });
+
+        updatePdfLivePreview(pdfUrlInput.value);
+
+        const form = document.getElementById('pdfMaterialForm');
+        form.onsubmit = async (e) => {
+            e.preventDefault();
+            const url = pdfUrlInput.value.trim();
+            if (isOnline) {
+                const { error } = await supabaseClient.from('materials').update({ url }).eq('id', currentMaterial.id);
+                if (error) { alert("Lỗi lưu PDF: " + error.message); return; }
+            }
+            currentMaterial.url = url;
+            alert("Lưu thông tin tài liệu PDF thành công!");
+        };
+    }
+
+    function updatePdfLivePreview(rawUrl) {
+        const pdfPreviewContainer = document.getElementById('pdfPreviewContainer');
+        if (!rawUrl) {
+            pdfPreviewContainer.innerHTML = `<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #94A3B8;"><i class="fa-solid fa-file-pdf" style="font-size: 3rem;"></i></div>`;
+            return;
+        }
+        pdfPreviewContainer.innerHTML = `<iframe src="${rawUrl}" style="width: 100%; height: 100%; border: 0;"></iframe>`;
+    }
+
+    // ----------------------------------------------------------
+    // C. SETUP TEXT SECTION & MATHLIVE WYSIWYG LIVE PREVIEW
+    // ----------------------------------------------------------
+    function setupTextSection() {
+        const textContentInput = document.getElementById('textContentInput');
+        const textMathField = document.getElementById('textMathField');
+        const textLivePreview = document.getElementById('textLivePreview');
+
+        textContentInput.value = currentMaterial.content || '';
+
+        // Tích hợp MathLive chèn công thức
+        if (textMathField) {
+            textMathField.addEventListener('input', (e) => {
+                const latex = e.target.value;
+                if (latex) {
+                    // Chèn công thức dạng $...$ vào văn bản
                 }
             });
-        } else {
-            // Mặc định (Không tích chọn): Lấy các câu hỏi gốc/nguồn được tạo trực tiếp trong học liệu đó
-            let qQuery = supabaseClient.from('questions').select('*').order('id', { ascending: false });
-            
-            if (cId) qQuery = qQuery.eq('course_id', cId);
-            if (chId) qQuery = qQuery.eq('chapter_id', chId);
-            if (lId) qQuery = qQuery.eq('lesson_id', lId);
-            if (mId) qQuery = qQuery.eq('material_id', mId);
-
-            const { data, error } = await qQuery;
-            if (error) {
-                console.error("Lỗi tải câu hỏi nguồn:", error);
-                return;
-            }
-
-            allQuestions = data || [];
         }
 
-        renderSourceList();
+        const updateTextPreview = () => {
+            textLivePreview.innerHTML = textContentInput.value || `<p style="color:#94A3B8;">Xem trước nội dung văn bản...</p>`;
+            if (window.renderMathInElement) {
+                renderMathInElement(textLivePreview, {
+                    delimiters: [
+                        {left: '$$', right: '$$', display: true},
+                        {left: '$', right: '$', display: false}
+                    ],
+                    throwOnError: false
+                });
+            }
+        };
+
+        textContentInput.addEventListener('input', updateTextPreview);
+        updateTextPreview();
+
+        const form = document.getElementById('textMaterialForm');
+        form.onsubmit = async (e) => {
+            e.preventDefault();
+            const content = textContentInput.value.trim();
+            if (isOnline) {
+                const { error } = await supabaseClient.from('materials').update({ content }).eq('id', currentMaterial.id);
+                if (error) { alert("Lỗi lưu bài viết: " + error.message); return; }
+            }
+            currentMaterial.content = content;
+            alert("Lưu bài viết lý thuyết thành công!");
+        };
     }
 
-    // Rendering Cột Trái (Ngân hàng nguồn)
-    function renderSourceList() {
-        sourceCount.textContent = `${allQuestions.length} câu hỏi`;
-        if (allQuestions.length === 0) {
-            sourceList.innerHTML = `<div style="text-align:center; color:#94A3B8; padding:40px 0; font-style:italic; font-size:0.9rem;"><i class="fa-solid fa-folder-open" style="font-size:2rem; display:block; margin-bottom:8px;"></i>Ngân hàng câu hỏi trống.</div>`;
-            return;
+    // ----------------------------------------------------------
+    // D. SETUP QUIZ SECTION & QUESTION BANK MANAGEMENT
+    // ----------------------------------------------------------
+    async function setupQuizSection() {
+        await reloadAllQuizQuestions();
+
+        const addQuestionBtn = document.getElementById('addQuestionBtn');
+        if (addQuestionBtn) addQuestionBtn.onclick = () => openQuestionModal();
+
+        const clearAllBtn = document.getElementById('clearAllBtn');
+        if (clearAllBtn) {
+            clearAllBtn.onclick = async () => {
+                if (!confirm("Bạn có chắc chắn muốn gỡ tất cả câu hỏi khỏi bài trắc nghiệm này?")) return;
+                if (isOnline) {
+                    await supabaseClient.from('material_questions').delete().eq('material_id', currentMaterial.id);
+                }
+                selectedQuestions = [];
+                renderSelectedQuestions();
+                renderSourceQuestions();
+            };
         }
 
-        sourceList.innerHTML = allQuestions.map(q => {
-            const isAlreadySelected = selectedQuestions.some(sq => sq.id === q.id);
-            const difficultyBadge = getDiffBadgeHTML(q.difficulty);
-            
-            return `
-                <div class="q-card ${isAlreadySelected ? 'selected-item' : ''}" id="source-q-${q.id}">
-                    <div class="q-header">
-                        <span class="q-id">ID câu hỏi: #${q.id}</span>
-                    </div>
-                    <div class="q-text math-render">${q.question_text}</div>
-                    
-                    <!-- Dynamic rendering preview panel -->
-                    <div id="expanded-preview-${q.id}" style="display:none;" class="q-preview-expanded-panel">
-                        <div style="font-weight:700; margin-bottom:6px; color:#475569;">Các phương án lựa chọn:</div>
-                        <ul style="list-style-type:none; padding-left:0; margin:0;">
-                            ${(q.options || []).map((o, idx) => `<li style="margin-bottom:4px; font-weight: ${idx === q.correct_option ? '700; color:#059669;' : '500;'}">${o} ${idx === q.correct_option ? '✓' : ''}</li>`).join('')}
-                        </ul>
-                        ${q.explanation ? `<div style="margin-top:10px; border-top:1px dashed #CBD5E1; padding-top:8px; font-style:italic;"><span style="font-weight:700; color:#475569;">Lời giải:</span> ${q.explanation}</div>` : ''}
-                    </div>
+        // Tích hợp MathLive chèn công thức vào modal câu hỏi
+        const modalMathField = document.getElementById('modalMathField');
+        const insertMathToTextBtn = document.getElementById('insertMathToTextBtn');
+        const qText = document.getElementById('qText');
 
+        if (insertMathToTextBtn && modalMathField && qText) {
+            insertMathToTextBtn.onclick = () => {
+                const latex = modalMathField.value;
+                if (latex) {
+                    const mathTag = `$${latex}$`;
+                    qText.value += ` ${mathTag} `;
+                    qText.dispatchEvent(new Event('input'));
+                }
+            };
+        }
+    }
+
+    async function reloadAllQuizQuestions() {
+        if (isOnline) {
+            try {
+                const [qRes, mqRes] = await Promise.all([
+                    supabaseClient.from('questions').select('*').order('id', { ascending: false }),
+                    supabaseClient.from('material_questions').select('*').eq('material_id', currentMaterial.id).order('order_index')
+                ]);
+                allSourceQuestions = qRes.data || [];
+                const mqList = mqRes.data || [];
+
+                selectedQuestions = mqList.map(mq => {
+                    const q = allSourceQuestions.find(item => item.id == mq.question_id);
+                    return q ? { ...q, order_index: mq.order_index } : null;
+                }).filter(Boolean);
+            } catch (err) {
+                console.error("Lỗi tải câu hỏi:", err);
+            }
+        }
+        renderSourceQuestions();
+        renderSelectedQuestions();
+    }
+
+    function renderSourceQuestions() {
+        const container = document.getElementById('sourceList');
+        const countBadge = document.getElementById('sourceCount');
+        if (!container) return;
+
+        const selectedIds = new Set(selectedQuestions.map(q => q.id));
+        const available = allSourceQuestions;
+        if (countBadge) countBadge.textContent = `${available.length} câu hỏi`;
+
+        container.innerHTML = available.map(q => {
+            const isSelected = selectedIds.has(q.id);
+            const opts = typeof q.options === 'string' ? JSON.parse(q.options) : (q.options || []);
+            return `
+                <div class="q-card ${isSelected ? 'selected-item' : ''}">
+                    <div class="q-header">
+                        <span class="q-id">Câu hỏi #${q.id}</span>
+                        <span class="diff-badge diff-${q.difficulty ? q.difficulty.toLowerCase() : 'nb'}">${q.difficulty || 'NB'}</span>
+                    </div>
+                    <div class="q-text">${q.question_text}</div>
                     <div class="q-footer">
                         <div class="q-badges">
-                            ${difficultyBadge}
+                            <span style="font-size:0.75rem; color:#64748B;">Đáp án đúng: Option ${parseInt(q.correct_option) + 1}</span>
                         </div>
                         <div class="q-actions">
-                            <button class="btn btn-secondary" onclick="togglePreviewExpand(${q.id})" style="font-size:0.72rem; padding:4px 8px;"><i class="fa-solid fa-eye"></i> Xem thử</button>
-                            <button class="btn btn-secondary" onclick="editQuestion(${q.id})" style="font-size:0.72rem; padding:4px 8px; color:var(--accent-color);"><i class="fa-solid fa-pen"></i> Sửa</button>
-                            <button class="btn btn-secondary" onclick="deleteQuestion(${q.id})" style="font-size:0.72rem; padding:4px 8px; color:#EF4444;"><i class="fa-solid fa-trash"></i> Xóa</button>
-                            ${isAlreadySelected ? 
-                                `<button class="btn btn-secondary" disabled style="background:#E2E8F0; color:#94A3B8; font-size:0.72rem; padding:4px 8px;">Đã chọn</button>` : 
-                                `<button class="btn btn-primary btn-select" onclick="selectQuestion(${q.id})" style="font-size:0.72rem; padding:4px 8px;"><i class="fa-solid fa-circle-check"></i> Chọn</button>`
-                            }
+                            ${isSelected ? `
+                                <button class="btn btn-unselect" onclick="toggleSelectQuestion(${q.id}, false)"><i class="fa-solid fa-minus"></i> Gỡ khỏi đề</button>
+                            ` : `
+                                <button class="btn btn-select" onclick="toggleSelectQuestion(${q.id}, true)"><i class="fa-solid fa-plus"></i> Thêm vào đề</button>
+                            `}
                         </div>
                     </div>
                 </div>
             `;
         }).join('');
 
-        // Tự động vẽ lại KaTeX cho nội dung toán học mới
-        renderMathInElement(sourceList, {
-            delimiters: [
-                { left: "$$", right: "$$", display: true },
-                { left: "$", right: "$", display: false },
-                { left: "\\(", right: "\\)", display: false }
-            ]
-        });
+        if (window.renderMathInElement) {
+            renderMathInElement(container, { delimiters: [{left: '$', right: '$', display: false}] });
+        }
     }
 
-    // Rendering Cột Phải (Câu hỏi được chọn)
-    function renderSelectedList() {
-        selectedCount.textContent = `${selectedQuestions.length} câu hỏi`;
-        if (selectedQuestions.length === 0) {
-            selectedList.innerHTML = `<div style="text-align:center; color:#94A3B8; padding:40px 0; font-style:italic; font-size:0.9rem;"><i class="fa-solid fa-circle-question" style="font-size:2rem; display:block; margin-bottom:8px;"></i>Hãy chọn câu hỏi từ Cột nguồn để đưa vào đề thi.</div>`;
-            return;
-        }
+    function renderSelectedQuestions() {
+        const container = document.getElementById('selectedList');
+        const countBadge = document.getElementById('selectedCount');
+        if (!container) return;
 
-        selectedList.innerHTML = selectedQuestions.map((q, index) => {
-            const difficultyBadge = getDiffBadgeHTML(q.difficulty);
+        if (countBadge) countBadge.textContent = `${selectedQuestions.length} câu hỏi`;
 
-            return `
-                <div class="q-card" data-qid="${q.id}">
-                    <div style="display:flex; align-items:flex-start;">
-                        <div class="drag-handle"><i class="fa-solid fa-grip-vertical"></i></div>
-                        <div style="flex-grow:1;">
-                            <div class="q-header">
-                                <span class="q-id" style="color: #047857;">Câu ${index + 1} (ID: #${q.id})</span>
-                            </div>
-                            <div class="q-text math-render">${q.question_text}</div>
-                            
-                            <!-- Dynamic preview for selected list -->
-                            <div id="expanded-preview-sel-${q.id}" style="display:none;" class="q-preview-expanded-panel">
-                                <div style="font-weight:700; margin-bottom:6px; color:#475569;">Các phương án lựa chọn:</div>
-                                <ul style="list-style-type:none; padding-left:0; margin:0;">
-                                    ${(q.options || []).map((o, idx) => `<li style="margin-bottom:4px; font-weight: ${idx === q.correct_option ? '700; color:#059669;' : '500;'}">${o} ${idx === q.correct_option ? '✓' : ''}</li>`).join('')}
-                                </ul>
-                                ${q.explanation ? `<div style="margin-top:10px; border-top:1px dashed #CBD5E1; padding-top:8px; font-style:italic;"><span style="font-weight:700; color:#475569;">Lời giải:</span> ${q.explanation}</div>` : ''}
-                            </div>
-
-                            <div class="q-footer">
-                                <div class="q-badges">
-                                    ${difficultyBadge}
-                                </div>
-                                <div class="q-actions">
-                                    <button class="btn btn-secondary" onclick="toggleSelectedPreviewExpand(${q.id})" style="font-size:0.72rem; padding:4px 8px;"><i class="fa-solid fa-eye"></i> Xem thử</button>
-                                    <button class="btn btn-unselect" onclick="unselectQuestion(${q.id})" style="font-size:0.72rem; padding:4px 8px;"><i class="fa-solid fa-trash-arrow-up"></i> Gỡ bỏ</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+        container.innerHTML = selectedQuestions.map((q, idx) => `
+            <div class="q-card selected-item" data-q-id="${q.id}">
+                <div class="q-header">
+                    <span class="drag-handle"><i class="fa-solid fa-grip-vertical"></i></span>
+                    <span class="q-id" style="color: var(--accent-color);">Câu ${idx + 1} (ID #${q.id})</span>
+                    <span class="diff-badge diff-${q.difficulty ? q.difficulty.toLowerCase() : 'nb'}">${q.difficulty || 'NB'}</span>
                 </div>
-            `;
-        }).join('');
+                <div class="q-text">${q.question_text}</div>
+                <div class="q-footer">
+                    <button class="btn btn-unselect" onclick="toggleSelectQuestion(${q.id}, false)"><i class="fa-solid fa-trash-can"></i> Gỡ khỏi đề</button>
+                </div>
+            </div>
+        `).join('');
 
-        renderMathInElement(selectedList, {
-            delimiters: [
-                { left: "$$", right: "$$", display: true },
-                { left: "$", right: "$", display: false },
-                { left: "\\(", right: "\\)", display: false }
-            ]
-        });
-    }
-
-    function getDiffBadgeHTML(difficulty) {
-        const map = {
-            'NB': '<span class="diff-badge diff-nb">NB</span>',
-            'TH': '<span class="diff-badge diff-th">TH</span>',
-            'VD': '<span class="diff-badge diff-vd">VD</span>',
-            'VDC': '<span class="diff-badge diff-vdc">VDC</span>'
-        };
-        return map[difficulty] || '<span class="diff-badge">--</span>';
-    }
-
-    // Toggle preview KaTeX
-    window.togglePreviewExpand = function(qId) {
-        const panel = document.getElementById(`expanded-preview-${qId}`);
-        if (panel) {
-            panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
-        }
-    };
-
-    window.toggleSelectedPreviewExpand = function(qId) {
-        const panel = document.getElementById(`expanded-preview-sel-${qId}`);
-        if (panel) {
-            panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
-        }
-    };
-
-    // Chọn câu hỏi chuyển sang cột phải
-    window.selectQuestion = async function(qId) {
-        if (!supabaseClient) return;
-
-        const newOrderIndex = selectedQuestions.length + 1;
-        const { error } = await supabaseClient.from('material_questions').insert({
-            material_id: currentMaterialId,
-            question_id: qId,
-            order_index: newOrderIndex
-        });
-
-        if (error) {
-            alert("Lỗi khi thêm liên kết câu hỏi: " + error.message);
-            return;
+        if (window.renderMathInElement) {
+            renderMathInElement(container, { delimiters: [{left: '$', right: '$', display: false}] });
         }
 
-        await reloadSelectedQuestions();
-    };
+        // Kích hoạt Sortable kéo thả thứ tự
+        if (window.Sortable) {
+            new Sortable(container, {
+                handle: '.drag-handle',
+                animation: 150,
+                onEnd: async () => {
+                    const cards = Array.from(container.querySelectorAll('.q-card'));
+                    const newSelected = cards.map((card, index) => {
+                        const qId = parseInt(card.getAttribute('data-q-id'));
+                        const q = selectedQuestions.find(item => item.id == qId);
+                        return q ? { ...q, order_index: index + 1 } : null;
+                    }).filter(Boolean);
 
-    // Gỡ câu hỏi ra khỏi đề thi
-    window.unselectQuestion = async function(qId) {
-        if (!supabaseClient) return;
-
-        const { error } = await supabaseClient.from('material_questions').delete()
-            .eq('material_id', currentMaterialId)
-            .eq('question_id', qId);
-
-        if (error) {
-            alert("Lỗi khi gỡ liên kết câu hỏi: " + error.message);
-            return;
-        }
-
-        await reloadSelectedQuestions();
-    };
-
-    // Xóa vĩnh viễn câu hỏi khỏi ngân hàng
-    window.deleteQuestion = async function(qId) {
-        if (!confirm(`Bạn có chắc chắn muốn XÓA VĨNH VIỄN câu hỏi #${qId} khỏi ngân hàng câu hỏi? Thao tác này sẽ tự động gỡ câu hỏi khỏi tất cả học liệu trắc nghiệm.`)) return;
-
-        const { error } = await supabaseClient.from('questions').delete().eq('id', qId);
-        if (error) {
-            alert("Lỗi khi xóa câu hỏi: " + error.message);
-            return;
-        }
-
-        await reloadAll();
-    };
-
-    // Drag Drop Sorting
-    function initDragAndDrop() {
-        if (typeof Sortable === 'undefined') return;
-
-        Sortable.create(selectedList, {
-            handle: '.drag-handle',
-            animation: 150,
-            ghostClass: 'sortable-ghost',
-            onEnd: async function () {
-                const items = selectedList.querySelectorAll('.q-card');
-                if (items.length === 0) return;
-
-                const promises = Array.from(items).map((item, index) => {
-                    const qId = parseInt(item.getAttribute('data-qid'));
-                    return supabaseClient.from('material_questions')
-                        .update({ order_index: index + 1 })
-                        .eq('material_id', currentMaterialId)
-                        .eq('question_id', qId);
-                });
-
-                try {
-                    await Promise.all(promises);
-                    console.log("Đã lưu thứ tự câu hỏi mới.");
-                } catch (e) {
-                    console.error("Lỗi lưu thứ tự kéo thả:", e);
+                    selectedQuestions = newSelected;
+                    if (isOnline) {
+                        await supabaseClient.from('material_questions').delete().eq('material_id', currentMaterial.id);
+                        const newMq = selectedQuestions.map((q, idx) => ({
+                            material_id: currentMaterial.id,
+                            question_id: q.id,
+                            order_index: idx + 1
+                        }));
+                        await supabaseClient.from('material_questions').insert(newMq);
+                    }
+                    renderSelectedQuestions();
                 }
-
-                // Tải lại danh sách để đồng bộ thứ tự chỉ số index
-                await reloadSelectedQuestions();
-            }
-        });
+            });
+        }
     }
 
-    // Modal CRUD Question logic
-    window.openQuestionModal = function(qId = null) {
-        editingQuestionId = qId;
-        questionForm.reset();
-
-        if (qId) {
-            questionModalTitle.textContent = "Chỉnh sửa câu hỏi";
-            const q = allQuestions.find(item => item.id === qId);
-            if (q) {
-                // Set difficulty
-                const diffRadio = document.querySelector(`input[name="qfDifficulty"][value="${q.difficulty}"]`);
-                if (diffRadio) diffRadio.checked = true;
-
-                // Set question text
-                document.getElementById('qfQuestionText').value = q.question_text || '';
-
-                // Set options
-                const options = q.options || [];
-                document.getElementById('qfOptionA').value = options[0] || '';
-                document.getElementById('qfOptionB').value = options[1] || '';
-                document.getElementById('qfOptionC').value = options[2] || '';
-                document.getElementById('qfOptionD').value = options[3] || '';
-
-                // Set correct option
-                const correctRadio = document.querySelector(`input[name="qfCorrect"][value="${q.correct_option}"]`);
-                if (correctRadio) correctRadio.checked = true;
-
-                // Set explanation
-                document.getElementById('qfExplanation').value = q.explanation || '';
+    window.toggleSelectQuestion = async function(qId, shouldAdd) {
+        if (shouldAdd) {
+            const q = allSourceQuestions.find(item => item.id == qId);
+            if (q && !selectedQuestions.some(item => item.id == qId)) {
+                selectedQuestions.push({ ...q, order_index: selectedQuestions.length + 1 });
+                if (isOnline) {
+                    await supabaseClient.from('material_questions').insert([{
+                        material_id: currentMaterial.id,
+                        question_id: qId,
+                        order_index: selectedQuestions.length
+                    }]);
+                }
             }
         } else {
-            questionModalTitle.textContent = "Tạo câu hỏi mới";
+            selectedQuestions = selectedQuestions.filter(item => item.id != qId);
+            if (isOnline) {
+                await supabaseClient.from('material_questions').delete().eq('material_id', currentMaterial.id).eq('question_id', qId);
+            }
         }
+        renderSourceQuestions();
+        renderSelectedQuestions();
+    };
 
-        updateQuestionPreview();
-        questionModal.classList.add('active');
+    window.openQuestionModal = function(qData = null) {
+        document.getElementById('questionModal').classList.add('active');
     };
 
     window.closeQuestionModal = function() {
-        questionModal.classList.remove('active');
-        editingQuestionId = null;
+        document.getElementById('questionModal').classList.remove('active');
     };
-
-    // Sửa câu hỏi
-    window.editQuestion = function(qId) {
-        openQuestionModal(qId);
-    };
-
-    // Live Preview KaTeX
-    window.updateQuestionPreview = function() {
-        const previewEl = document.getElementById('qbPreviewContent');
-        if (!previewEl) return;
-
-        const qText = document.getElementById('qfQuestionText').value.trim();
-        const optA = document.getElementById('qfOptionA').value.trim();
-        const optB = document.getElementById('qfOptionB').value.trim();
-        const optC = document.getElementById('qfOptionC').value.trim();
-        const optD = document.getElementById('qfOptionD').value.trim();
-        const correctRadio = document.querySelector('input[name="qfCorrect"]:checked');
-        const correctIdx = correctRadio ? parseInt(correctRadio.value) : 0;
-        const explanation = document.getElementById('qfExplanation').value.trim();
-
-        if (!qText && !optA && !optB && !optC && !optD) {
-            previewEl.innerHTML = `<p style="color:#94A3B8; font-style:italic; margin:0;">Nhập nội dung câu hỏi để bắt đầu xem trước...</p>`;
-            return;
-        }
-
-        previewEl.innerHTML = `
-            <div style="font-weight:700; margin-bottom:8px; color:var(--text-main);">${qText || '(Chưa nhập nội dung câu hỏi)'}</div>
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-top:8px;">
-                <div style="padding:6px 12px; border-radius:6px; background:${correctIdx === 0 ? '#D1FAE5; font-weight:700; border:1px solid #10B981;' : '#F1F5F9;'}">A. ${optA || ''}</div>
-                <div style="padding:6px 12px; border-radius:6px; background:${correctIdx === 1 ? '#D1FAE5; font-weight:700; border:1px solid #10B981;' : '#F1F5F9;'}">B. ${optB || ''}</div>
-                <div style="padding:6px 12px; border-radius:6px; background:${correctIdx === 2 ? '#D1FAE5; font-weight:700; border:1px solid #10B981;' : '#F1F5F9;'}">C. ${optC || ''}</div>
-                <div style="padding:6px 12px; border-radius:6px; background:${correctIdx === 3 ? '#D1FAE5; font-weight:700; border:1px solid #10B981;' : '#F1F5F9;'}">D. ${optD || ''}</div>
-            </div>
-            ${explanation ? `
-                <div class="q-preview-explanation">
-                    <span style="font-weight:700; color:#475569;"><i class="fa-solid fa-lightbulb"></i> Lời giải chi tiết:</span><br>
-                    ${explanation}
-                </div>
-            ` : ''}
-        `;
-
-        // Render KaTeX
-        renderMathInElement(previewEl, {
-            delimiters: [
-                { left: "$$", right: "$$", display: true },
-                { left: "$", right: "$", display: false },
-                { left: "\\(", right: "\\)", display: false }
-            ]
-        });
-    };
-
-    // Save Question (insert/update)
-    window.saveQuestion = async function(event) {
-        event.preventDefault();
-        if (!supabaseClient) return;
-
-        const difficulty = document.querySelector('input[name="qfDifficulty"]:checked').value;
-        const questionText = document.getElementById('qfQuestionText').value.trim();
-        const optionA = document.getElementById('qfOptionA').value.trim();
-        const optionB = document.getElementById('qfOptionB').value.trim();
-        const optionC = document.getElementById('qfOptionC').value.trim();
-        const optionD = document.getElementById('qfOptionD').value.trim();
-        const correctOption = parseInt(document.querySelector('input[name="qfCorrect"]:checked').value);
-        const explanation = document.getElementById('qfExplanation').value.trim();
-
-        if (!questionText) return alert('Vui lòng nhập nội dung câu hỏi!');
-        if (!optionA || !optionB || !optionC || !optionD) return alert('Vui lòng nhập đầy đủ 4 đáp án!');
-
-        // Lấy thông tin bài học của học liệu hiện hành
-        const lesson = cachedLessons.find(l => l.id == lessonId);
-        const chapter = lesson ? cachedChapters.find(ch => ch.id == lesson.chapter_id) : null;
-
-        const questionData = {
-            course_id: courseId,
-            chapter_id: chapter ? chapter.id : null,
-            lesson_id: lessonId,
-            material_id: currentMaterialId,
-            question_type: 'multiple_choice',
-            difficulty: difficulty,
-            question_text: questionText,
-            options: [optionA, optionB, optionC, optionD],
-            correct_option: correctOption,
-            explanation: explanation || null,
-            updated_at: new Date().toISOString()
-        };
-
-        let result;
-        if (editingQuestionId) {
-            result = await supabaseClient.from('questions').update(questionData).eq('id', editingQuestionId).select();
-        } else {
-            result = await supabaseClient.from('questions').insert(questionData).select();
-        }
-
-        if (result.error) {
-            alert('Lỗi lưu câu hỏi: ' + result.error.message);
-            return;
-        }
-
-        const savedQuestion = result.data && result.data[0];
-        if (savedQuestion) {
-            // Khi tạo mới hoặc sửa: tự động tạo/cập nhật liên kết trong material_questions của học liệu hiện tại
-            await supabaseClient.from('material_questions').delete().eq('question_id', savedQuestion.id);
-            
-            const newOrderIndex = selectedQuestions.length + 1;
-            await supabaseClient.from('material_questions').insert({
-                material_id: currentMaterialId,
-                question_id: savedQuestion.id,
-                order_index: newOrderIndex
-            });
-        }
-
-        closeQuestionModal();
-        await reloadAll();
-    };
-
-    // =============================================
-    // ĐỒNG BỘ CHÈN NHANH CÔNG THỨC TOÁN (MATH TOOLBAR)
-    // =============================================
-    let lastActiveInput = document.getElementById('qfQuestionText');
-    const inputIds = ['qfQuestionText', 'qfOptionA', 'qfOptionB', 'qfOptionC', 'qfOptionD', 'qfExplanation'];
-    
-    inputIds.forEach(id => {
-        const input = document.getElementById(id);
-        if (input) {
-            input.addEventListener('focus', () => {
-                lastActiveInput = input;
-            });
-        }
-    });
-
-    const mathBtns = document.querySelectorAll('.math-btn');
-    mathBtns.forEach(btn => {
-        btn.addEventListener('mousedown', (e) => {
-            e.preventDefault(); // Tránh làm mất focus hiện tại
-            const latex = btn.getAttribute('data-latex');
-            if (lastActiveInput && latex) {
-                insertTextAtCursor(lastActiveInput, latex);
-            }
-        });
-        
-        // CSS hover style cho nút chèn nhanh
-        btn.addEventListener('mouseenter', () => {
-            btn.style.background = '#F1F5F9';
-            btn.style.borderColor = 'var(--accent-color)';
-            btn.style.color = 'var(--accent-color)';
-        });
-        btn.addEventListener('mouseleave', () => {
-            btn.style.background = '#FFFFFF';
-            btn.style.borderColor = '#CBD5E1';
-            btn.style.color = 'inherit';
-        });
-    });
-
-    function insertTextAtCursor(el, text) {
-        const startPos = el.selectionStart;
-        const endPos = el.selectionEnd;
-        const val = el.value;
-        
-        el.value = val.substring(0, startPos) + text + val.substring(endPos, val.length);
-        
-        // Di chuyển con trỏ vào giữa dấu ngoặc {} nếu có
-        let newCursorPos = startPos + text.length;
-        
-        // Nếu là bọc dấu $ $
-        if (text === '$$') {
-            newCursorPos = startPos + 1;
-        } else {
-            const braceIdx = text.indexOf('{');
-            if (braceIdx !== -1) {
-                newCursorPos = startPos + braceIdx + 1;
-            }
-        }
-        
-        el.focus();
-        el.setSelectionRange(newCursorPos, newCursorPos);
-        
-        // Trigger live preview
-        updateQuestionPreview();
-    }
-
 });
