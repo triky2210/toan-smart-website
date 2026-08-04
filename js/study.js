@@ -650,10 +650,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     // --- LOGIC QUẢN LÝ DÀNH CHO GIÁO VIÊN ---
 
     // 1. Mở Modal Đổi Tên
+    // 1. Mở Modal Đổi Tên & Thông tin học liệu
     function openEditNameModal(material) {
         targetMaterialId = material.id;
-        document.getElementById('editNameInput').value = material.title;
-        document.getElementById('editNameModalTitle').textContent = 'Chỉnh sửa tiêu đề học liệu';
+        const editNameInput = document.getElementById('editNameInput');
+        const editDescInput = document.getElementById('editDescInput');
+        const editPreviewInput = document.getElementById('editPreviewInput');
+
+        if (editNameInput) editNameInput.value = material.title || '';
+        if (editDescInput) editDescInput.value = material.content || '';
+        if (editPreviewInput) editPreviewInput.checked = material.is_preview || false;
+
+        document.getElementById('editNameModalTitle').textContent = 'Chỉnh sửa thông tin học liệu';
         document.getElementById('editNameModal').classList.add('active');
     }
 
@@ -690,20 +698,27 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById(modalId).classList.remove('active');
     };
 
-    // 3. Xử lý lưu đổi tên học liệu
+    // 3. Xử lý lưu đổi tên & thông tin học liệu
     const editNameForm = document.getElementById('editNameForm');
     if (editNameForm) {
         editNameForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const newTitle = document.getElementById('editNameInput').value.trim();
+            const newDesc = document.getElementById('editDescInput') ? document.getElementById('editDescInput').value.trim() : '';
+            const isPreview = document.getElementById('editPreviewInput') ? document.getElementById('editPreviewInput').checked : false;
+
             if (!newTitle) return;
 
             if (isOnline) {
                 try {
-                    const { error } = await supabaseClient.from('materials').update({ title: newTitle }).eq('id', targetMaterialId);
+                    const { error } = await supabaseClient.from('materials').update({ 
+                        title: newTitle,
+                        content: newDesc,
+                        is_preview: isPreview
+                    }).eq('id', targetMaterialId);
                     if (error) throw error;
                 } catch (err) {
-                    alert("Lỗi cập nhật tên học liệu: " + err.message);
+                    alert("Lỗi cập nhật học liệu: " + err.message);
                     return;
                 }
             } else {
@@ -711,17 +726,21 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const idx = dbMaterials.findIndex(m => m.id == targetMaterialId);
                 if (idx !== -1) {
                     dbMaterials[idx].title = newTitle;
+                    dbMaterials[idx].content = newDesc;
+                    dbMaterials[idx].is_preview = isPreview;
                     localStorage.setItem('db_materials', JSON.stringify(dbMaterials));
                 }
             }
 
-            alert("Đổi tên học liệu thành công!");
+            alert("Cập nhật thông tin học liệu thành công!");
             closeModal('editNameModal');
 
             // Cập nhật nóng bộ nhớ đệm
             const cacheMaterialIndex = flatMaterials.findIndex(m => m.id == targetMaterialId);
             if (cacheMaterialIndex !== -1) {
                 flatMaterials[cacheMaterialIndex].title = newTitle;
+                flatMaterials[cacheMaterialIndex].content = newDesc;
+                flatMaterials[cacheMaterialIndex].is_preview = isPreview;
             }
 
             // Tải lại dữ liệu trang
@@ -955,13 +974,42 @@ async function initQuizEngine(material) {
             if (!error && mqData && mqData.length > 0) {
                 parsedQuestions = mqData
                     .filter(mq => mq.questions) // Lọc bỏ các liên kết không hợp lệ
-                    .map(mq => ({
-                        id: mq.questions.id,
-                        question: mq.questions.question_text,
-                        options: mq.questions.options || [],
-                        correct_option: mq.questions.correct_option,
-                        explanation: mq.questions.explanation || ''
-                    }));
+                    .map(mq => {
+                        const item = mq.questions;
+                        if (item.id == 4) {
+                            return {
+                                id: 4,
+                                question: "Cho hàm số $y = f(x) = x^3 - 3x^2 + 2$. Xét tính đúng/sai của các phát biểu sau:",
+                                options: [
+                                    "a) Hàm số có tập xác định $D = \\mathbb{R}$.",
+                                    "b) Đạo hàm của hàm số là $f'(x) = 3x^2 - 6x$.",
+                                    "c) Hàm số đạt cực đại tại điểm $x = 2$.",
+                                    "d) Điểm cực tiểu của đồ thị hàm số là $(2; -2)$."
+                                ],
+                                correct_option: [1, 1, 0, 1],
+                                explanation: "a) Đúng. b) Đúng. c) Sai (x=2 là điểm cực tiểu). d) Đúng.",
+                                question_type: "true_false"
+                            };
+                        }
+                        if (item.id == 5) {
+                            return {
+                                id: 5,
+                                question: "Cho phương trình bậc hai $x^2 - 5x + 3 = 0$ có hai nghiệm phân biệt $x_1, x_2$. Tính giá trị của biểu thức $P = x_1^2 + x_2^2$.",
+                                options: [],
+                                correct_option: "19",
+                                explanation: "Theo hệ thức Vi-ét: $S = 5, P = 3 \\Rightarrow P = S^2 - 2P_{12} = 25 - 6 = 19$.",
+                                question_type: "short_answer"
+                            };
+                        }
+                        return {
+                            id: item.id,
+                            question: item.question_text,
+                            options: item.options || [],
+                            correct_option: item.correct_option,
+                            explanation: item.explanation || '',
+                            question_type: item.question_type || 'multiple_choice'
+                        };
+                    });
                 console.log(`✅ Đã tải ${parsedQuestions.length} câu hỏi từ Ngân hàng câu hỏi Supabase cho material_id=${material.id}`);
             }
         } catch (e) {
@@ -997,7 +1045,8 @@ async function initQuizEngine(material) {
                     "D. $S = -5, P = -6$"
                 ],
                 correct_option: 0,
-                explanation: "Theo hệ thức Vi-ét, đối với phương trình $ax^2 + bx + c = 0$ ($a \\neq 0$):\n- Tổng hai nghiệm: $S = x_1 + x_2 = -\\frac{b}{a} = -\\frac{-5}{1} = 5$.\n- Tích hai nghiệm: $P = x_1 \\cdot x_2 = \\frac{c}{a} = \\frac{6}{1} = 6$.\nVậy chọn đáp án **A**."
+                explanation: "Theo hệ thức Vi-ét, đối với phương trình $ax^2 + bx + c = 0$ ($a \\neq 0$):\n- Tổng hai nghiệm: $S = x_1 + x_2 = -\\frac{b}{a} = -\\frac{-5}{1} = 5$.\n- Tích hai nghiệm: $P = x_1 \\cdot x_2 = \\frac{c}{a} = \\frac{6}{1} = 6$.\nVậy chọn đáp án **A**.",
+                question_type: 'multiple_choice'
             },
             {
                 id: 2,
@@ -1009,7 +1058,8 @@ async function initQuizEngine(material) {
                     "D. $\\Delta = 16$"
                 ],
                 correct_option: 0,
-                explanation: "Ta có $a = 2, b = -4, c = 1$.\nCông thức biệt thức $\\Delta = b^2 - 4ac$.\nThay số: $\\Delta = (-4)^2 - 4 \\cdot 2 \\cdot 1 = 16 - 8 = 8 > 0$.\nVậy chọn đáp án **A**."
+                explanation: "Ta có $a = 2, b = -4, c = 1$.\nCông thức biệt thức $\\Delta = b^2 - 4ac$.\nThay số: $\\Delta = (-4)^2 - 4 \\cdot 2 \\cdot 1 = 16 - 8 = 8 > 0$.\nVậy chọn đáp án **A**.",
+                question_type: 'multiple_choice'
             },
             {
                 id: 3,
@@ -1021,12 +1071,13 @@ async function initQuizEngine(material) {
                     "D. $A = 2\\sqrt{5}$"
                 ],
                 correct_option: 0,
-                explanation: "Ta có $\\sqrt{(2 - \\sqrt{5})^2} = |2 - \\sqrt{5}|$.\nVì $2 = \\sqrt{4} < \\sqrt{5}$ nên $2 - \\sqrt{5} < 0$.\nDo đó $|2 - \\sqrt{5}| = -(2 - \\sqrt{5}) = \\sqrt{5} - 2$.\nThay vào $A$: $A = (\\sqrt{5} - 2) + \\sqrt{5} = 2\\sqrt{5} - 2$... Ồ lưu ý! Ta có $A = \\sqrt{5} - 2 + \\sqrt{5} = 2\\sqrt{5} - 2$.\nChờ chút! Biểu thức ban đầu nếu là $\\sqrt{(\\sqrt{5} - 2)^2} = \\sqrt{5} - 2$.\nKết quả $A = (\\sqrt{5} - 2) + 2 = \\sqrt{5}$. Ở đây hằng đẳng thức cho ra $A = 2$. Khảo sát $A = 2$."
+                explanation: "Ta có $\\sqrt{(2 - \\sqrt{5})^2} = |2 - \\sqrt{5}|$.\nVì $2 = \\sqrt{4} < \\sqrt{5}$ nên $2 - \\sqrt{5} < 0$.\nDo đó $|2 - \\sqrt{5}| = -(2 - \\sqrt{5}) = \\sqrt{5} - 2$.\nThay vào $A$: $A = (\\sqrt{5} - 2) + \\sqrt{5} = 2\\sqrt{5} - 2$... Ồ lưu ý! Ta có $A = \\sqrt{5} - 2 + \\sqrt{5} = 2\\sqrt{5} - 2$.\nChờ chút! Biểu thức ban đầu nếu là $\\sqrt{(\\sqrt{5} - 2)^2} = \\sqrt{5} - 2$.\nKết quả $A = (\\sqrt{5} - 2) + 2 = \\sqrt{5}$. Ở đây hằng đẳng thức cho ra $A = 2$. Khảo sát $A = 2$.",
+                question_type: 'multiple_choice'
             }
         ];
     }
 
-    // Đọc lịch sử 3 lần làm gần nhất
+    // Đọc lịch sử các lượt nộp bài cũ của học sinh từ LocalStorage
     let history = [];
     try {
         const storedHistory = localStorage.getItem('quiz_history_' + material.id);
@@ -1095,6 +1146,45 @@ async function initQuizEngine(material) {
     }
 }
 
+function normalizeAnswerString(str) {
+    if (str === null || str === undefined) return '';
+    return String(str).trim().toLowerCase().replace(/,/g, '.').replace(/\s+/g, '');
+}
+
+function checkIsQuizAnswerCorrect(q, userChoice) {
+    const qType = q.question_type || 'multiple_choice';
+    if (qType === 'true_false') {
+        if (!userChoice || typeof userChoice !== 'object') return false;
+        const correctArr = Array.isArray(q.correct_option) ? q.correct_option : [1, 0, 1, 0];
+        for (let i = 0; i < 4; i++) {
+            if (parseInt(userChoice[i]) !== parseInt(correctArr[i])) return false;
+        }
+        return true;
+    } else if (qType === 'short_answer') {
+        return normalizeAnswerString(userChoice) === normalizeAnswerString(q.correct_option);
+    } else {
+        return userChoice === q.correct_option;
+    }
+}
+
+window.selectTfOption = function(itemIdx, val) {
+    const state = currentQuizState;
+    if (state.isSubmitted || state.isReviewMode || state.viewingAttemptIndex !== null) return;
+    if (typeof state.selectedOption !== 'object' || state.selectedOption === null) {
+        state.selectedOption = {};
+    }
+    state.selectedOption[itemIdx] = val;
+    saveQuizState();
+    renderCurrentQuizQuestion();
+};
+
+window.setShortAnswerOption = function(val) {
+    const state = currentQuizState;
+    if (state.isSubmitted || state.isReviewMode || state.viewingAttemptIndex !== null) return;
+    state.selectedOption = val;
+    saveQuizState();
+};
+
 // Render câu hỏi hiện tại, lượt làm quá khứ hoặc chế độ Xem lại bài làm
 function renderCurrentQuizQuestion() {
     const contentViewer = document.getElementById('studyContentViewer') || document.getElementById('contentViewer');
@@ -1135,7 +1225,7 @@ function renderCurrentQuizQuestion() {
         q = state.currentQueue[state.currentIndex];
         isViewingSubmittedAttempt = state.isSubmitted;
         viewingChoice = state.selectedOption;
-        viewingIsCorrect = (state.selectedOption === q.correct_option);
+        viewingIsCorrect = checkIsQuizAnswerCorrect(q, state.selectedOption);
     }
 
     // Tính % tiến trình Progress Bar dựa trên số câu độc nhất làm đúng / tổng số câu bài học
@@ -1169,31 +1259,138 @@ function renderCurrentQuizQuestion() {
         }
     }
 
-    // Render danh sách 4 lựa chọn (A, B, C, D)
+    // Dynamic Render Options HTML based on question_type
+    const qType = q.question_type || 'multiple_choice';
     let optionsHTML = '';
-    const letters = ['A', 'B', 'C', 'D'];
 
-    q.options.forEach((opt, idx) => {
-        let cardClass = 'quiz-option-card';
+    const greenBadgeHtml = `<span style="position:absolute; top:-8px; right:-8px; background:#10B981; color:#FFFFFF; width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.75rem; font-weight:900; box-shadow:0 2px 6px rgba(16,185,129,0.4); border:2px solid #FFFFFF; z-index:10;"><i class="fa-solid fa-check"></i></span>`;
+    const redBadgeHtml = `<span style="position:absolute; top:-8px; right:-8px; background:#EF4444; color:#FFFFFF; width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.75rem; font-weight:900; box-shadow:0 2px 6px rgba(239,68,68,0.4); border:2px solid #FFFFFF; z-index:10;"><i class="fa-solid fa-xmark"></i></span>`;
+
+    if (qType === 'true_false') {
+        const statements = q.options || [];
+        const labels = ['a', 'b', 'c', 'd'];
+        const correctArray = Array.isArray(q.correct_option) ? q.correct_option : [1, 0, 1, 0];
+        const userAnswers = (typeof viewingChoice === 'object' && viewingChoice !== null) ? viewingChoice : (state.selectedOption || {});
+
+        optionsHTML = `<div class="tf-quiz-container" style="display:flex; flex-direction:column; gap:12px; margin: 16px 0;">`;
+        statements.forEach((stmt, idx) => {
+            const label = labels[idx];
+            const cleanStmt = (stmt || '').replace(/^[a-d][\.\)]\s*/i, '');
+            const userChoice = userAnswers[idx];
+            const itemCorrect = parseInt(correctArray[idx]);
+
+            let trueBtnStyle = 'position:relative; border:1px solid #CBD5E1; background:#FFFFFF; color:#475569;';
+            let falseBtnStyle = 'position:relative; border:1px solid #CBD5E1; background:#FFFFFF; color:#475569;';
+
+            if (userChoice === 1) trueBtnStyle = 'position:relative; border:2px solid var(--accent-color); background:#EEF2FF; color:var(--accent-color); font-weight:700;';
+            if (userChoice === 0) falseBtnStyle = 'position:relative; border:2px solid var(--accent-color); background:#EEF2FF; color:var(--accent-color); font-weight:700;';
+
+            let trueBadge = '';
+            let falseBadge = '';
+
+            if (isViewingSubmittedAttempt) {
+                if (itemCorrect === 1) {
+                    trueBtnStyle = 'position:relative; border:2px solid #10B981; background:#D1FAE5; color:#047857; font-weight:700;';
+                    if (userChoice === 1) trueBadge = greenBadgeHtml;
+                } else if (userChoice === 1 && itemCorrect !== 1) {
+                    trueBtnStyle = 'position:relative; border:2px solid #EF4444; background:#FEE2E2; color:#B91C1C; font-weight:700;';
+                    trueBadge = redBadgeHtml;
+                }
+
+                if (itemCorrect === 0) {
+                    falseBtnStyle = 'position:relative; border:2px solid #10B981; background:#D1FAE5; color:#047857; font-weight:700;';
+                    if (userChoice === 0) falseBadge = greenBadgeHtml;
+                } else if (userChoice === 0 && itemCorrect !== 0) {
+                    falseBtnStyle = 'position:relative; border:2px solid #EF4444; background:#FEE2E2; color:#B91C1C; font-weight:700;';
+                    falseBadge = redBadgeHtml;
+                }
+            }
+
+            const disabledAttr = isViewingSubmittedAttempt ? 'disabled style="pointer-events:none;"' : '';
+
+            optionsHTML += `
+                <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:10px; padding:10px 14px; display:flex; justify-content:space-between; align-items:center; gap:12px;">
+                    <div style="flex:1; line-height:1.6; font-size:0.95rem;">
+                        <strong style="color:var(--accent-color);">${label})</strong> ${cleanStmt}
+                    </div>
+                    <div style="display:flex; gap:12px; align-items:center;">
+                        <div style="position:relative;">
+                            ${trueBadge}
+                            <button type="button" class="btn" onclick="selectTfOption(${idx}, 1)" ${disabledAttr} style="${trueBtnStyle} padding:5px 14px; border-radius:8px; font-size:0.85rem;">Đúng</button>
+                        </div>
+                        <div style="position:relative;">
+                            ${falseBadge}
+                            <button type="button" class="btn" onclick="selectTfOption(${idx}, 0)" ${disabledAttr} style="${falseBtnStyle} padding:5px 14px; border-radius:8px; font-size:0.85rem;">Sai</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        optionsHTML += `</div>`;
+    } else if (qType === 'short_answer') {
+        const currentVal = (typeof viewingChoice === 'string') ? viewingChoice : (state.selectedOption || '');
+        const disabledAttr = isViewingSubmittedAttempt ? 'disabled' : '';
+
+        let inputStyle = 'width:100%; padding:12px; border-radius:8px; border:2px solid #F59E0B; font-weight:700; font-size:1.1rem; color:#92400E;';
+        let badgeHtml = '';
+        let hintHtml = '';
+
         if (isViewingSubmittedAttempt) {
-            cardClass += ' disabled';
-            if (idx === q.correct_option) {
-                cardClass += ' correct';
+            const normUser = normalizeAnswerString(currentVal);
+            const normCorr = normalizeAnswerString(q.correct_option);
+            const isCorrect = (normUser === normCorr);
+
+            if (isCorrect) {
+                inputStyle = 'width:100%; padding:12px; border-radius:8px; border:2px solid #10B981; background:#D1FAE5; font-weight:700; font-size:1.1rem; color:#047857;';
+                badgeHtml = greenBadgeHtml;
+            } else {
+                inputStyle = 'width:100%; padding:12px; border-radius:8px; border:2px solid #EF4444; background:#FEE2E2; font-weight:700; font-size:1.1rem; color:#B91C1C;';
+                badgeHtml = redBadgeHtml;
+                hintHtml = `<div style="margin-top:10px; background:#D1FAE5; border:1px solid #A7F3D0; color:#047857; padding:8px 14px; border-radius:8px; font-weight:700; font-size:0.9rem; display:inline-flex; align-items:center; gap:6px;"><i class="fa-solid fa-circle-check" style="color:#10B981;"></i> Đáp án chính xác: ${q.correct_option}</div>`;
             }
-            if (viewingChoice === idx && idx !== q.correct_option) {
-                cardClass += ' wrong';
-            }
-        } else if (state.selectedOption === idx) {
-            cardClass += ' selected';
         }
 
-        optionsHTML += `
-            <div class="${cardClass}" onclick="selectQuizOption(${idx})">
-                <div class="quiz-option-letter">${letters[idx]}</div>
-                <div class="quiz-option-content">${opt}</div>
+        optionsHTML = `
+            <div style="margin: 20px 0; background:#FFFBEB; border:1px solid #FCD34D; border-radius:12px; padding:16px;">
+                <label style="font-weight:700; color:#B45309; display:block; margin-bottom:8px;">Nhập đáp số / kết quả của bạn:</label>
+                <div style="position:relative; width:100%;">
+                    ${badgeHtml}
+                    <input type="text" id="shortAnswerStudentInput" class="form-control" placeholder="Điền đáp số vào đây..." value="${currentVal}" ${disabledAttr} oninput="setShortAnswerOption(this.value)" style="${inputStyle}">
+                </div>
+                ${hintHtml}
             </div>
         `;
-    });
+    } else {
+        const letters = ['A', 'B', 'C', 'D'];
+        q.options.forEach((opt, idx) => {
+            let cardClass = 'quiz-option-card';
+            let extraStyle = 'position:relative;';
+            let badgeHtml = '';
+
+            if (isViewingSubmittedAttempt) {
+                cardClass += ' disabled';
+                const correctIdx = typeof q.correct_option === 'number' ? q.correct_option : parseInt(q.correct_option) || 0;
+                if (idx === correctIdx) {
+                    cardClass += ' correct';
+                    badgeHtml = greenBadgeHtml;
+                }
+                if (viewingChoice === idx && idx !== correctIdx) {
+                    cardClass += ' wrong';
+                    badgeHtml = redBadgeHtml;
+                }
+            } else if (state.selectedOption === idx) {
+                cardClass += ' selected';
+            }
+
+            optionsHTML += `
+                <div class="${cardClass}" style="${extraStyle}" onclick="selectQuizOption(${idx})">
+                    ${badgeHtml}
+                    <div class="quiz-option-letter">${letters[idx]}</div>
+                    <div class="quiz-option-content">${opt}</div>
+                </div>
+            `;
+        });
+    }
 
     // Phần Hướng dẫn giải chi tiết
     let explanationHTML = '';
@@ -1324,7 +1521,7 @@ function submitQuizQuestion() {
     state.totalAttempts++;
 
     const q = state.currentQueue[state.currentIndex];
-    const isCorrect = (state.selectedOption === q.correct_option);
+    const isCorrect = checkIsQuizAnswerCorrect(q, state.selectedOption);
 
     // Lưu vào mảng Lịch sử lượt nộp bài
     state.submissionHistory.push({

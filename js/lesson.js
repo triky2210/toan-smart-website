@@ -436,7 +436,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     penBtn.addEventListener('click', (e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        openEditNameModal('material', m.id, m.title);
+                        openEditNameModal('material', m.id, m);
                     });
                 }
                 if (gearBtn) {
@@ -454,12 +454,30 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // --- LOGIC QUẢN LÝ DÀNH CHO GIÁO VIÊN ---
     
-    // 1. Mở Modal Đổi Tên
-    function openEditNameModal(type, id, currentTitle) {
+    // 1. Mở Modal Đổi Tên & Thông tin
+    function openEditNameModal(type, id, data) {
         editingNameType = type;
         editingNameId = id;
-        document.getElementById('editNameInput').value = currentTitle;
-        document.getElementById('editNameModalTitle').textContent = type === 'lesson' ? 'Chỉnh sửa tiêu đề bài học' : 'Chỉnh sửa tiêu đề học liệu';
+        const editNameInput = document.getElementById('editNameInput');
+        const editDescInput = document.getElementById('editDescInput');
+        const editPreviewInput = document.getElementById('editPreviewInput');
+        const editDescGroup = document.getElementById('editDescGroup');
+        const editPreviewGroup = document.getElementById('editPreviewGroup');
+
+        if (type === 'material') {
+            const material = (typeof data === 'object') ? data : (materials.find(m => m.id == id) || { title: data });
+            if (editNameInput) editNameInput.value = material.title || '';
+            if (editDescInput) editDescInput.value = material.content || '';
+            if (editPreviewInput) editPreviewInput.checked = material.is_preview || false;
+            if (editDescGroup) editDescGroup.style.display = 'block';
+            if (editPreviewGroup) editPreviewGroup.style.display = 'block';
+            document.getElementById('editNameModalTitle').textContent = 'Chỉnh sửa thông tin học liệu';
+        } else {
+            if (editNameInput) editNameInput.value = (typeof data === 'string') ? data : (data ? data.title : '');
+            if (editDescGroup) editDescGroup.style.display = 'none';
+            if (editPreviewGroup) editPreviewGroup.style.display = 'none';
+            document.getElementById('editNameModalTitle').textContent = 'Chỉnh sửa tiêu đề bài học';
+        }
         document.getElementById('editNameModal').classList.add('active');
     }
 
@@ -575,12 +593,19 @@ document.addEventListener('DOMContentLoaded', async () => {
                     }
                 }
             } else if (editingNameType === 'material') {
+                const newDesc = document.getElementById('editDescInput') ? document.getElementById('editDescInput').value.trim() : '';
+                const isPreview = document.getElementById('editPreviewInput') ? document.getElementById('editPreviewInput').checked : false;
+
                 if (isOnline) {
                     try {
-                        const { error } = await supabaseClient.from('materials').update({ title: newTitle }).eq('id', editingNameId);
+                        const { error } = await supabaseClient.from('materials').update({ 
+                            title: newTitle,
+                            content: newDesc,
+                            is_preview: isPreview
+                        }).eq('id', editingNameId);
                         if (error) throw error;
                     } catch (err) {
-                        alert("Lỗi cập nhật tên học liệu: " + err.message);
+                        alert("Lỗi cập nhật học liệu: " + err.message);
                         return;
                     }
                 } else {
@@ -588,6 +613,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                     const idx = dbMaterials.findIndex(m => m.id == editingNameId);
                     if (idx !== -1) {
                         dbMaterials[idx].title = newTitle;
+                        dbMaterials[idx].content = newDesc;
+                        dbMaterials[idx].is_preview = isPreview;
                         localStorage.setItem('db_materials', JSON.stringify(dbMaterials));
                     }
                 }

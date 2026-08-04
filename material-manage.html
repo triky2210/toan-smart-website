@@ -270,6 +270,28 @@
             background: #FCA5A5;
         }
 
+        .btn-preview-q {
+            background: #F0F9FF;
+            color: #0284C7;
+            border: 1px solid #BAE6FD;
+            padding: 3px 9px;
+            border-radius: 8px;
+            font-size: 0.76rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .btn-preview-q:hover {
+            background: #0284C7;
+            color: #FFFFFF;
+            border-color: #0284C7;
+            box-shadow: 0 2px 8px rgba(2, 132, 199, 0.25);
+        }
+
         /* Drag handle for selected list */
         .drag-handle {
             cursor: grab;
@@ -291,11 +313,116 @@
             border: 2px dashed var(--accent-color);
         }
 
+        /* Modal CRUD Overlay */
+        .admin-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.5);
+            backdrop-filter: blur(6px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s ease;
+            padding: 24px;
+        }
+
+        .admin-modal.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
         /* Modal styling */
         .admin-modal-content {
+            background: #FFFFFF;
+            border: 1px solid #E2E8F0;
+            border-radius: 20px;
+            width: 100%;
             max-width: 800px;
             max-height: 90vh;
             overflow-y: auto;
+            padding: 30px;
+            position: relative;
+            transform: scale(0.92) translateY(20px);
+            transition: all 0.3s ease;
+            box-shadow: 0 25px 60px rgba(15, 23, 42, 0.15);
+        }
+
+        /* Fixed Modal Layout with Sticky Footer */
+        .admin-modal-content.fixed-layout {
+            display: flex;
+            flex-direction: column;
+            max-height: 88vh;
+            overflow: hidden;
+            padding: 0;
+        }
+
+        .modal-fixed-header {
+            padding: 20px 28px 16px 28px;
+            border-bottom: 1px solid #E2E8F0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+            background: #FFFFFF;
+        }
+
+        .modal-fixed-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px 28px;
+        }
+
+        .modal-fixed-footer {
+            padding: 14px 28px;
+            border-top: 1px solid #E2E8F0;
+            background: #FFFFFF;
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            align-items: center;
+            flex-shrink: 0;
+            box-shadow: 0 -4px 16px rgba(15, 23, 42, 0.06);
+            z-index: 10;
+        }
+
+        .admin-modal.active .admin-modal-content {
+            transform: scale(1) translateY(0);
+        }
+
+        .admin-modal-close {
+            position: absolute;
+            top: 18px;
+            right: 18px;
+            background: #F1F5F9;
+            border: none;
+            font-size: 1.2rem;
+            color: #64748B;
+            cursor: pointer;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .admin-modal-close:hover {
+            background: #FEE2E2;
+            color: #EF4444;
+        }
+
+        .admin-modal-title {
+            font-size: 1.3rem;
+            font-weight: 800;
+            margin-bottom: 20px;
+            color: #0F172A;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
         .modal-form-grid {
@@ -370,6 +497,312 @@
             .columns-grid {
                 grid-template-columns: 1fr;
             }
+        }
+
+        /* Rich Text Editor */
+        .rte-wrapper {
+            border: 1px solid #CBD5E1;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #FFFFFF;
+            transition: border-color 0.2s;
+        }
+
+        .rte-wrapper:focus-within {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .rte-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2px;
+            padding: 6px 8px;
+            background: #F8FAFC;
+            border-bottom: 1px solid #E2E8F0;
+            align-items: center;
+        }
+
+        .rte-toolbar-mini {
+            display: flex;
+            gap: 2px;
+            padding: 4px 6px;
+            background: #F8FAFC;
+            border-bottom: 1px solid #E2E8F0;
+            align-items: center;
+        }
+
+        .rte-toolbar .separator, .rte-toolbar-mini .separator {
+            width: 1px;
+            height: 20px;
+            background: #CBD5E1;
+            margin: 0 4px;
+        }
+
+        .rte-btn {
+            background: none;
+            border: none;
+            padding: 5px 7px;
+            border-radius: 6px;
+            cursor: pointer;
+            color: #475569;
+            font-size: 0.85rem;
+            transition: all 0.15s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 28px;
+            height: 28px;
+        }
+
+        .rte-btn:hover {
+            background: #E2E8F0;
+            color: #0F172A;
+        }
+
+        .rte-btn.active {
+            background: #EEF2FF;
+            color: var(--accent-color);
+        }
+
+        .rte-btn.formula-btn {
+            color: var(--accent-color);
+            font-weight: 700;
+        }
+
+        .rte-btn.image-btn {
+            color: #0EA5E9;
+        }
+
+        .rte-content {
+            min-height: 120px;
+            padding: 12px 14px;
+            outline: none;
+            font-size: 0.92rem;
+            line-height: 1.7;
+            color: #1E293B;
+            overflow-y: auto;
+            max-height: 300px;
+        }
+
+        .rte-content.rte-compact {
+            min-height: 40px;
+            max-height: 100px;
+            padding: 8px 12px;
+        }
+
+        .rte-content:empty::before {
+            content: attr(data-placeholder);
+            color: #94A3B8;
+            font-style: italic;
+            pointer-events: none;
+        }
+
+        /* Smart Single-Editor Question Items */
+        .rte-btn-action {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 5px !important;
+            padding: 4px 10px !important;
+            font-weight: 700 !important;
+            font-size: 0.8rem !important;
+            border-radius: 6px !important;
+            background: #FFFFFF !important;
+            border: 1px solid #CBD5E1 !important;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .rte-btn-action:hover {
+            background: #EEF2FF !important;
+            border-color: var(--accent-color) !important;
+        }
+
+        .rte-mc-item, .rte-tf-item {
+            padding: 8px 14px;
+            margin: 6px 0;
+            border-radius: 8px;
+            background: #F8FAFC;
+            border: 1px solid #CBD5E1;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .rte-mc-item:hover, .rte-tf-item:hover {
+            border-color: #94A3B8;
+        }
+
+        .rte-mc-item[data-correct="true"], .rte-tf-item[data-correct="1"] {
+            border: 2px dashed #10B981 !important;
+            background: #ECFDF5 !important;
+            color: #065F46 !important;
+            font-weight: 600;
+        }
+
+        .rte-mc-item[data-correct="true"]::after, .rte-tf-item[data-correct="1"]::after {
+            content: ' ✔️ Đáp án đúng';
+            font-weight: 800;
+            color: #059669;
+            margin-left: 10px;
+            font-size: 0.8rem;
+            background: #D1FAE5;
+            padding: 2px 8px;
+            border-radius: 6px;
+        }
+
+        .rte-sa-item {
+            padding: 10px 14px;
+            margin: 8px 0;
+            border-radius: 8px;
+            background: #FFFBEB;
+            border: 2px solid #F59E0B;
+            font-weight: 700;
+            color: #92400E;
+        }
+
+        .rte-content .katex-rendered {
+            display: inline-block;
+            background: #F5F3FF;
+            border: 1px solid #DDD6FE;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            transition: all 0.15s;
+            vertical-align: middle;
+        }
+
+        .rte-content .katex-rendered:hover {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.15);
+        }
+
+        .rte-content img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            margin: 8px auto;
+            display: block;
+            cursor: pointer;
+            transition: outline 0.15s, box-shadow 0.15s;
+            user-select: none;
+        }
+
+        .rte-content img.rte-img-selected {
+            outline: 3px solid #0EA5E9 !important;
+            box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.25);
+        }
+
+        /* Floating Image Control Bar & Corner Resize Handles */
+        .rte-img-toolbar {
+            position: absolute;
+            z-index: 1050;
+            background: #0F172A;
+            border-radius: 8px;
+            padding: 4px 8px;
+            display: flex;
+            gap: 6px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            align-items: center;
+        }
+
+        .rte-img-toolbar button {
+            background: none;
+            border: none;
+            color: #F8FAFC;
+            font-size: 0.8rem;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .rte-img-toolbar button:hover {
+            background: #334155;
+            color: #38BDF8;
+        }
+
+        .rte-img-handle {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: #0EA5E9;
+            border: 2px solid #FFFFFF;
+            border-radius: 3px;
+            z-index: 1051;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        }
+
+        .rte-img-handle.nw { cursor: nwse-resize; }
+        .rte-img-handle.ne { cursor: nesw-resize; }
+        .rte-img-handle.se { cursor: nwse-resize; }
+        .rte-img-handle.sw { cursor: nesw-resize; }
+
+        /* Math Insert Mini Modal */
+        .math-insert-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(4px);
+            z-index: 1100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.25s;
+        }
+
+        .math-insert-modal.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .math-insert-content {
+            background: #FFFFFF;
+            border-radius: 16px;
+            padding: 24px;
+            width: 100%;
+            max-width: 560px;
+            box-shadow: 0 20px 50px rgba(15, 23, 42, 0.2);
+            transform: scale(0.95);
+            transition: transform 0.25s;
+        }
+
+        .math-insert-modal.active .math-insert-content {
+            transform: scale(1);
+        }
+
+        .math-insert-content h4 {
+            margin: 0 0 16px 0;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #0F172A;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Heading dropdown in toolbar */
+        .rte-heading-select {
+            padding: 3px 6px;
+            border: 1px solid #CBD5E1;
+            border-radius: 6px;
+            font-size: 0.78rem;
+            background: #FFFFFF;
+            cursor: pointer;
+            color: #475569;
+            outline: none;
+        }
+
+        .rte-color-input {
+            width: 24px;
+            height: 24px;
+            padding: 0;
+            border: 1px solid #CBD5E1;
+            border-radius: 4px;
+            cursor: pointer;
+            background: none;
         }
     </style>
 </head>
@@ -503,7 +936,7 @@
                         <span>Chỉ lọc câu hỏi thuộc bài học hiện tại</span>
                     </label>
                     <div class="action-buttons">
-                        <button class="btn btn-primary" id="addQuestionBtn">
+                        <button class="btn btn-primary" id="addQuestionBtn" onclick="openQuestionModal()">
                             <i class="fa-solid fa-plus"></i> Soạn câu hỏi mới (WYSIWYG Math)
                         </button>
                         <button class="btn btn-secondary" id="clearAllBtn" style="color: #EF4444; border-color: #FCA5A5; background: #FFF5F5;">
@@ -542,16 +975,41 @@
         <!-- 4. TEXT MANAGER SECTION (Dành cho type = 'text') -->
         <div id="textManagerSection" style="display: none;">
             <div class="section-card">
-                <h3><i class="fa-solid fa-file-lines" style="color: #10B981;"></i> Soạn Thảo Bài Viết Lý Thuyết & Ghi Chú Toán</h3>
+                <h3><i class="fa-solid fa-file-lines" style="color: #10B981;"></i> Soạn Thảo Bài Viết Lý Thuyết</h3>
                 <form id="textMaterialForm">
-                    <div class="form-group" style="margin-bottom: 16px;">
-                        <label class="form-label" style="font-weight: 600; display: block; margin-bottom: 6px;">Soạn thảo công thức Toán đồ họa (WYSIWYG MathType Style)</label>
-                        <math-field id="textMathField" style="margin-bottom: 10px;"></math-field>
-                    </div>
-
                     <div class="form-group" style="margin-bottom: 20px;">
-                        <label class="form-label" style="font-weight: 600; display: block; margin-bottom: 6px;">Nội dung chi tiết bài viết (HTML / Text / KaTeX $...$)</label>
-                        <textarea class="form-control" id="textContentInput" placeholder="Nhập nội dung bài viết lý thuyết..." style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #CBD5E1; height: 200px; resize: vertical; font-family: monospace;"></textarea>
+                        <label class="form-label" style="font-weight: 600; display: block; margin-bottom: 6px;">Nội dung bài viết</label>
+                        <div class="rte-wrapper">
+                            <div class="rte-toolbar">
+                                <button type="button" class="rte-btn" title="In đậm" onclick="document.execCommand('bold', false, null)"><i class="fa-solid fa-bold"></i></button>
+                                <button type="button" class="rte-btn" title="In nghiêng" onclick="document.execCommand('italic', false, null)"><i class="fa-solid fa-italic"></i></button>
+                                <button type="button" class="rte-btn" title="Gạch chân" onclick="document.execCommand('underline', false, null)"><i class="fa-solid fa-underline"></i></button>
+                                <button type="button" class="rte-btn" title="Gạch ngang" onclick="document.execCommand('strikethrough', false, null)"><i class="fa-solid fa-strikethrough"></i></button>
+                                <div class="separator"></div>
+                                <select class="rte-heading-select" onchange="document.execCommand('formatBlock', false, this.value); this.selectedIndex=0;">
+                                    <option value="" hidden>Heading</option>
+                                    <option value="H1">Heading 1</option>
+                                    <option value="H2">Heading 2</option>
+                                    <option value="H3">Heading 3</option>
+                                    <option value="P">Paragraph</option>
+                                </select>
+                                <input type="color" class="rte-color-input" title="Màu chữ" onchange="document.execCommand('foreColor', false, this.value)">
+                                <input type="color" class="rte-color-input" title="Màu nền" onchange="document.execCommand('hiliteColor', false, this.value)" value="#ffffff">
+                                <div class="separator"></div>
+                                <button type="button" class="rte-btn" title="Danh sách số" onclick="document.execCommand('insertOrderedList', false, null)"><i class="fa-solid fa-list-ol"></i></button>
+                                <button type="button" class="rte-btn" title="Danh sách chấm" onclick="document.execCommand('insertUnorderedList', false, null)"><i class="fa-solid fa-list-ul"></i></button>
+                                <div class="separator"></div>
+                                <button type="button" class="rte-btn" title="Chỉ số dưới" onclick="document.execCommand('subscript', false, null)"><i class="fa-solid fa-subscript"></i></button>
+                                <button type="button" class="rte-btn" title="Chỉ số trên" onclick="document.execCommand('superscript', false, null)"><i class="fa-solid fa-superscript"></i></button>
+                                <div class="separator"></div>
+                                <button type="button" class="rte-btn formula-btn" title="Chèn công thức" onclick="openMathInsertModal('textContentEditor')"><i class="fa-solid fa-square-root-variable"></i></button>
+                                <button type="button" class="rte-btn image-btn" title="Chèn hình ảnh" onclick="openImageInsertModal('textContentEditor')"><i class="fa-solid fa-image"></i></button>
+                                <div class="separator"></div>
+                                <button type="button" class="rte-btn" title="Hoàn tác" onclick="document.execCommand('undo', false, null)"><i class="fa-solid fa-rotate-left"></i></button>
+                                <button type="button" class="rte-btn" title="Làm lại" onclick="document.execCommand('redo', false, null)"><i class="fa-solid fa-rotate-right"></i></button>
+                            </div>
+                            <div contenteditable="true" id="textContentEditor" class="rte-content" data-placeholder="Nhập nội dung bài viết lý thuyết..." style="min-height: 300px; max-height: 600px;"></div>
+                        </div>
                     </div>
 
                     <div style="display: flex; gap: 12px; justify-content: flex-end;">
@@ -565,124 +1023,291 @@
             <!-- Live Preview Text -->
             <div class="live-preview-box">
                 <div class="live-preview-header">
-                    <h4><i class="fa-solid fa-eye" style="color: var(--accent-color);"></i> Xem Trước Văn Bản Render KaTeX (Live Preview)</h4>
+                    <h4><i class="fa-solid fa-eye" style="color: var(--accent-color);"></i> Xem Trước Văn Bản (Live Preview)</h4>
                 </div>
                 <div style="padding: 20px; background: #FAF5FF; border-radius: 12px; min-height: 150px; line-height: 1.7;" id="textLivePreview">
-                    <!-- Dynamic KaTeX rendered text -->
+                    <!-- Dynamic rendered text -->
                 </div>
             </div>
         </div>
-
     </div>
 
     <!-- Visual Question CRUD Modal -->
     <div class="admin-modal" id="questionModal">
-        <div class="admin-modal-content">
-            <button class="admin-modal-close" onclick="closeQuestionModal()"><i class="fa-solid fa-xmark"></i></button>
-            <h3 class="admin-modal-title" id="questionModalTitle">Thêm câu hỏi mới</h3>
+        <div class="admin-modal-content fixed-layout" style="max-width: 920px;">
+            <div class="modal-fixed-header">
+                <h3 class="admin-modal-title" id="questionModalTitle" style="margin: 0;"><i class="fa-solid fa-pen-to-square" style="color:var(--accent-color);"></i> Chỉnh sửa câu hỏi</h3>
+                <button type="button" class="admin-modal-close" onclick="closeQuestionModal()" style="position: static; font-size: 1.2rem; cursor: pointer; color: #64748B; background: none; border: none;"><i class="fa-solid fa-xmark"></i></button>
+            </div>
             
-            <!-- Trình gõ công thức Toán đồ họa WYSIWYG MathLive -->
-            <div class="math-quick-toolbar" style="background: #F1F5F9; border: 1px solid #E2E8F0; border-radius: 8px; padding: 12px; margin-bottom: 16px;">
-                <label style="font-size: 0.8rem; font-weight: 700; color: #475569; display: block; margin-bottom: 6px;">
-                    <i class="fa-solid fa-square-root-variable" style="color: var(--accent-color);"></i> Trình gõ công thức Toán đồ họa WYSIWYG (MathType style):
-                </label>
-                <math-field id="modalMathField"></math-field>
-                <button type="button" class="btn btn-secondary" id="insertMathToTextBtn" style="margin-top: 8px; width: auto; font-size: 0.78rem; padding: 4px 12px;">
-                    <i class="fa-solid fa-arrow-down-long"></i> Chèn công thức vào Đề bài
+            <form id="questionForm" style="display: flex; flex-direction: column; flex: 1; overflow: hidden; margin: 0;">
+                <div class="modal-fixed-body">
+                    <input type="hidden" id="qId">
+                    <div class="modal-form-grid" style="margin-bottom: 12px;">
+                        <div class="form-group">
+                            <label class="form-label" style="font-weight: 600;">Dạng Câu Hỏi</label>
+                            <select class="config-select" id="qType" style="width: 100%; font-weight: 700; color: var(--accent-color);" onchange="switchQuestionTypeForm(this.value)">
+                                <option value="multiple_choice">📝 Trắc nghiệm 4 lựa chọn (A, B, C, D)</option>
+                                <option value="true_false">☑️ Câu hỏi Đúng / Sai (4 ý a, b, c, d)</option>
+                                <option value="short_answer">✍️ Câu hỏi Trả lời ngắn (Điền đáp số)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" style="font-weight: 600;">Mức Độ Khó</label>
+                            <select class="config-select" id="qDifficulty" style="width: 100%;" required>
+                                <option value="NB">Nhận biết (NB)</option>
+                                <option value="TH">Thông hiểu (TH)</option>
+                                <option value="VD">Vận dụng (VD)</option>
+                                <option value="VDC">Vận dụng cao (VDC)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 16px;">
+                        <label class="form-label" style="font-weight: 600;">Nội dung câu hỏi & Lựa chọn / Phát biểu</label>
+                        <div class="rte-wrapper">
+                            <div class="rte-toolbar">
+                                <button type="button" class="rte-btn" title="In đậm" onclick="document.execCommand('bold', false, null)"><i class="fa-solid fa-bold"></i></button>
+                                <button type="button" class="rte-btn" title="In nghiêng" onclick="document.execCommand('italic', false, null)"><i class="fa-solid fa-italic"></i></button>
+                                <button type="button" class="rte-btn" title="Gạch chân" onclick="document.execCommand('underline', false, null)"><i class="fa-solid fa-underline"></i></button>
+                                <button type="button" class="rte-btn" title="Gạch ngang" onclick="document.execCommand('strikethrough', false, null)"><i class="fa-solid fa-strikethrough"></i></button>
+                                <div class="separator"></div>
+                                <select class="rte-heading-select" onchange="document.execCommand('formatBlock', false, this.value); this.selectedIndex=0;">
+                                    <option value="" hidden>Heading</option>
+                                    <option value="H1">Heading 1</option>
+                                    <option value="H2">Heading 2</option>
+                                    <option value="H3">Heading 3</option>
+                                    <option value="P">Paragraph</option>
+                                </select>
+                                <input type="color" class="rte-color-input" title="Màu chữ" onchange="document.execCommand('foreColor', false, this.value)">
+                                <input type="color" class="rte-color-input" title="Màu nền" onchange="document.execCommand('hiliteColor', false, this.value)" value="#ffffff">
+                                <div class="separator"></div>
+                                <button type="button" class="rte-btn formula-btn" title="Chèn công thức" onclick="openMathInsertModal('qTextEditor')"><i class="fa-solid fa-square-root-variable"></i></button>
+                                <button type="button" class="rte-btn image-btn" title="Chèn hình ảnh" onclick="openImageInsertModal('qTextEditor')"><i class="fa-solid fa-image"></i></button>
+                                <div class="separator"></div>
+                                <!-- Smart Tools -->
+                                <button type="button" class="rte-btn-action" title="Tạo 4 phương án trắc nghiệm A, B, C, D" onclick="convertSelectionToMcOptions()"><i class="fa-solid fa-list-check" style="color:#0EA5E9;"></i> Trắc nghiệm</button>
+                                <button type="button" class="rte-btn-action" title="Tạo 4 phát biểu Đúng / Sai 1, 2, 3, 4" onclick="convertSelectionToTfOptions()"><i class="fa-solid fa-square-check" style="color:#7E22CE;"></i> Đúng / Sai</button>
+                                <button type="button" class="rte-btn-action" title="Tạo đáp số trả lời ngắn" onclick="convertSelectionToSaOption()"><i class="fa-solid fa-pen-to-square" style="color:#B45309;"></i> Trả lời ngắn</button>
+                                <div class="separator"></div>
+                                <button type="button" class="rte-btn-action" title="Đánh dấu phương án / phát biểu đang chọn làm ĐÚNG" onclick="markSelectedAsCorrect()"><i class="fa-solid fa-check" style="color:#10B981; font-weight:900;"></i> Chọn đáp án đúng</button>
+                                <button type="button" class="rte-btn-action" title="Hủy bỏ đánh dấu đáp án đúng" onclick="unmarkSelectedAsCorrect()"><i class="fa-solid fa-xmark" style="color:#EF4444; font-weight:900;"></i> Bỏ chọn đáp án</button>
+                            </div>
+                            <div contenteditable="true" id="qTextEditor" class="rte-content" style="min-height: 220px;" data-placeholder="Soạn nội dung đề bài và các dòng lựa chọn ở đây..."></div>
+                        </div>
+                    </div>
+
+                    <!-- LỜI GIẢI CHI TIẾT (ALWAYS VISIBLE FOR ALL QUESTION TYPES) -->
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label" style="font-weight: 600;">Lời giải chi tiết</label>
+                        <div class="rte-wrapper">
+                            <div class="rte-toolbar">
+                                <button type="button" class="rte-btn" title="In đậm" onclick="document.execCommand('bold', false, null)"><i class="fa-solid fa-bold"></i></button>
+                                <button type="button" class="rte-btn" title="In nghiêng" onclick="document.execCommand('italic', false, null)"><i class="fa-solid fa-italic"></i></button>
+                                <button type="button" class="rte-btn" title="Gạch chân" onclick="document.execCommand('underline', false, null)"><i class="fa-solid fa-underline"></i></button>
+                                <button type="button" class="rte-btn" title="Gạch ngang" onclick="document.execCommand('strikethrough', false, null)"><i class="fa-solid fa-strikethrough"></i></button>
+                                <div class="separator"></div>
+                                <select class="rte-heading-select" onchange="document.execCommand('formatBlock', false, this.value); this.selectedIndex=0;">
+                                    <option value="" hidden>Heading</option>
+                                    <option value="H1">Heading 1</option>
+                                    <option value="H2">Heading 2</option>
+                                    <option value="H3">Heading 3</option>
+                                    <option value="P">Paragraph</option>
+                                </select>
+                                <input type="color" class="rte-color-input" title="Màu chữ" onchange="document.execCommand('foreColor', false, this.value)">
+                                <input type="color" class="rte-color-input" title="Màu nền" onchange="document.execCommand('hiliteColor', false, this.value)" value="#ffffff">
+                                <div class="separator"></div>
+                                <button type="button" class="rte-btn" title="Danh sách số" onclick="document.execCommand('insertOrderedList', false, null)"><i class="fa-solid fa-list-ol"></i></button>
+                                <button type="button" class="rte-btn" title="Danh sách chấm" onclick="document.execCommand('insertUnorderedList', false, null)"><i class="fa-solid fa-list-ul"></i></button>
+                                <div class="separator"></div>
+                                <button type="button" class="rte-btn" title="Chỉ số dưới" onclick="document.execCommand('subscript', false, null)"><i class="fa-solid fa-subscript"></i></button>
+                                <button type="button" class="rte-btn" title="Chỉ số trên" onclick="document.execCommand('superscript', false, null)"><i class="fa-solid fa-superscript"></i></button>
+                                <div class="separator"></div>
+                                <button type="button" class="rte-btn formula-btn" title="Chèn công thức" onclick="openMathInsertModal('qExplanationEditor')"><i class="fa-solid fa-square-root-variable"></i></button>
+                                <button type="button" class="rte-btn image-btn" title="Chèn hình ảnh" onclick="openImageInsertModal('qExplanationEditor')"><i class="fa-solid fa-image"></i></button>
+                                <div class="separator"></div>
+                                <button type="button" class="rte-btn" title="Hoàn tác" onclick="document.execCommand('undo', false, null)"><i class="fa-solid fa-rotate-left"></i></button>
+                                <button type="button" class="rte-btn" title="Làm lại" onclick="document.execCommand('redo', false, null)"><i class="fa-solid fa-rotate-right"></i></button>
+                            </div>
+                            <div contenteditable="true" id="qExplanationEditor" class="rte-content" data-placeholder="Nhập lời giải chi tiết..."></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-fixed-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeQuestionModal()" style="width: auto; padding: 10px 20px;">Hủy</button>
+                    <button type="button" class="btn-preview-q" onclick="previewCurrentDraftQuestion(event)" style="padding: 10px 20px; font-size: 0.9rem;"><i class="fa-solid fa-eye"></i> Xem trước</button>
+                    <button type="submit" class="btn btn-primary" style="width: auto; padding: 10px 20px;"><i class="fa-solid fa-check"></i> Lưu câu hỏi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Independent Math Live Mini Modal -->
+    <div class="math-insert-modal" id="mathInsertModal">
+        <div class="math-insert-content">
+            <h4><i class="fa-solid fa-square-root-variable"></i> Chèn Công Thức Toán</h4>
+            <math-field id="mathLiveField"></math-field>
+            <div style="display:flex; gap:8px; margin-top:12px; justify-content:flex-end;">
+                <button type="button" class="btn btn-secondary" onclick="closeMathInsertModal()" style="width:auto; padding:6px 16px;">Hủy</button>
+                <button type="button" class="btn btn-primary" onclick="insertMathFormula()" style="width:auto; padding:6px 16px;"><i class="fa-solid fa-check"></i> Chèn</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Independent Multi-tab Image Insert Modal -->
+    <div class="math-insert-modal" id="imageInsertModal">
+        <div class="math-insert-content" style="max-width: 580px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <h4 style="margin: 0;"><i class="fa-solid fa-image" style="color: #0EA5E9;"></i> Chèn Hình Ảnh Vào Bài</h4>
+                <button type="button" style="background: none; border: none; font-size: 1.2rem; cursor: pointer; color: #64748B;" onclick="closeImageInsertModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <!-- Tabs chọn phương thức -->
+            <div style="display: flex; border-bottom: 2px solid #E2E8F0; margin-bottom: 16px; gap: 8px;">
+                <button type="button" class="img-tab-btn active" id="tabUploadBtn" onclick="switchImageTab('upload')" style="padding: 8px 16px; border: none; background: none; font-weight: 700; color: var(--accent-color); border-bottom: 2px solid var(--accent-color); cursor: pointer; margin-bottom: -2px;">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> Tải ảnh từ máy tính
+                </button>
+                <button type="button" class="img-tab-btn" id="tabUrlBtn" onclick="switchImageTab('url')" style="padding: 8px 16px; border: none; background: none; font-weight: 600; color: #64748B; cursor: pointer; margin-bottom: -2px;">
+                    <i class="fa-solid fa-link"></i> Đường dẫn URL
                 </button>
             </div>
 
-            <form id="questionForm">
-                <input type="hidden" id="qId">
-                <div class="modal-form-grid" style="margin-bottom: 12px;">
-                    <div class="form-group">
-                        <label class="form-label" style="font-weight: 600;">Thuộc Khóa Học</label>
-                        <select class="config-select" id="modalFormCourse" style="width: 100%;">
-                            <option value="">Chọn khóa học</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label" style="font-weight: 600;">Thuộc Chương</label>
-                        <select class="config-select" id="modalFormChapter" style="width: 100%;">
-                            <option value="">Chọn chương</option>
-                        </select>
-                    </div>
+            <!-- Panel 1: Tải file từ máy tính -->
+            <div id="imageUploadPanel">
+                <div id="imageDropZone" style="border: 2px dashed #93C5FD; background: #F0F9FF; border-radius: 12px; padding: 24px; text-align: center; cursor: pointer; transition: all 0.2s; margin-bottom: 12px;" onclick="document.getElementById('imageFileInput').click()">
+                    <i class="fa-solid fa-cloud-arrow-up" style="font-size: 2.5rem; color: #0EA5E9; margin-bottom: 8px; display: block;"></i>
+                    <span style="font-weight: 700; color: #0369A1; display: block;">Nhấp vào đây để chọn ảnh hoặc Kéo & Thả ảnh vào đây</span>
+                    <span style="font-size: 0.78rem; color: #64748B; margin-top: 4px; display: block;">Hỗ trợ định dạng PNG, JPG, JPEG, GIF, WEBP (Tối đa 5MB)</span>
+                    <input type="file" id="imageFileInput" accept="image/*" style="display: none;">
                 </div>
+            </div>
 
-                <div class="modal-form-grid" style="margin-bottom: 12px;">
-                    <div class="form-group">
-                        <label class="form-label" style="font-weight: 600;">Thuộc Bài Học</label>
-                        <select class="config-select" id="modalFormLesson" style="width: 100%;">
-                            <option value="">Chọn bài học</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label" style="font-weight: 600;">Mức Độ Khó</label>
-                        <select class="config-select" id="qDifficulty" style="width: 100%;" required>
-                            <option value="NB">Nhận biết (NB)</option>
-                            <option value="TH">Thông hiểu (TH)</option>
-                            <option value="VD">Vận dụng (VD)</option>
-                            <option value="VDC">Vận dụng cao (VDC)</option>
-                        </select>
-                    </div>
-                </div>
-
+            <!-- Panel 2: Nhập Link URL -->
+            <div id="imageUrlPanel" style="display: none;">
                 <div class="form-group" style="margin-bottom: 12px;">
-                    <label class="form-label" style="font-weight: 600;">Nội dung câu hỏi (Công thức dạng $...$)</label>
-                    <textarea class="form-control" id="qText" rows="3" required placeholder="Nhập đề bài câu hỏi..." style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #CBD5E1;"></textarea>
+                    <label style="font-weight: 600; font-size: 0.85rem; display: block; margin-bottom: 6px;">Đường dẫn hình ảnh (URL):</label>
+                    <input type="text" id="imageUrlField" class="form-control" placeholder="https://domain.com/image.png" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #CBD5E1;" oninput="previewImageFromUrl(this.value)">
                 </div>
+            </div>
 
-                <div class="modal-form-grid" style="margin-bottom: 12px;">
-                    <div class="form-group">
-                        <label class="form-label" style="font-weight: 600;">Đáp án A</label>
-                        <input type="text" class="form-control" id="opt0" required placeholder="Ví dụ: A. $x = 1$" style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #CBD5E1;">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label" style="font-weight: 600;">Đáp án B</label>
-                        <input type="text" class="form-control" id="opt1" required placeholder="Ví dụ: B. $x = 2$" style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #CBD5E1;">
-                    </div>
-                </div>
+            <!-- Khung Xem Trước Hình Ảnh (Image Preview) -->
+            <div id="imagePreviewWrapper" style="display: none; margin-bottom: 16px; text-align: center; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px; padding: 12px; position: relative;">
+                <div style="font-size: 0.78rem; font-weight: 700; color: #475569; margin-bottom: 8px; text-align: left;"><i class="fa-solid fa-eye"></i> Xem trước hình ảnh:</div>
+                <img id="imagePreviewImg" src="" alt="Preview" style="max-height: 180px; max-width: 100%; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+                <button type="button" onclick="clearImageSelection()" style="position: absolute; top: 10px; right: 10px; background: #EF4444; color: white; border: none; width: 24px; height: 24px; border-radius: 50%; cursor: pointer; font-size: 0.75rem;" title="Xóa chọn ảnh"><i class="fa-solid fa-xmark"></i></button>
+            </div>
 
-                <div class="modal-form-grid" style="margin-bottom: 12px;">
-                    <div class="form-group">
-                        <label class="form-label" style="font-weight: 600;">Đáp án C</label>
-                        <input type="text" class="form-control" id="opt2" required placeholder="Ví dụ: C. $x = 3$" style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #CBD5E1;">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label" style="font-weight: 600;">Đáp án D</label>
-                        <input type="text" class="form-control" id="opt3" required placeholder="Ví dụ: D. $x = 4$" style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #CBD5E1;">
-                    </div>
+            <!-- Kích thước & Căn lề tùy chỉnh -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+                <div>
+                    <label style="font-weight: 600; font-size: 0.8rem; display: block; margin-bottom: 4px;">Rộng (Width):</label>
+                    <input type="text" id="imageWidthInput" class="form-control" placeholder="Tự động (vd: 100% hoặc 400px)" style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #CBD5E1; font-size: 0.85rem;">
                 </div>
+                <div>
+                    <label style="font-weight: 600; font-size: 0.8rem; display: block; margin-bottom: 4px;">Cao (Height):</label>
+                    <input type="text" id="imageHeightInput" class="form-control" placeholder="Auto" style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #CBD5E1; font-size: 0.85rem;">
+                </div>
+                <div>
+                    <label style="font-weight: 600; font-size: 0.8rem; display: block; margin-bottom: 4px;">Căn vị trí (Align):</label>
+                    <select id="imageAlignSelect" class="form-control" style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #CBD5E1; font-size: 0.85rem;">
+                        <option value="center">Giữa dòng (Center)</option>
+                        <option value="left">Trái (Left)</option>
+                        <option value="right">Phải (Right)</option>
+                        <option value="inline">Trên cùng dòng (Inline)</option>
+                    </select>
+                </div>
+            </div>
 
-                <div class="modal-form-grid" style="margin-bottom: 12px;">
-                    <div class="form-group">
-                        <label class="form-label" style="font-weight: 600;">Đáp án Đúng</label>
-                        <select class="config-select" id="qCorrect" style="width: 100%;" required>
-                            <option value="0">Phương án A</option>
-                            <option value="1">Phương án B</option>
-                            <option value="2">Phương án C</option>
-                            <option value="3">Phương án D</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label" style="font-weight: 600;">Lời giải chi tiết</label>
-                        <textarea class="form-control" id="qExplanation" rows="2" placeholder="Nhập lời giải chi tiết..." style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #CBD5E1;"></textarea>
-                    </div>
-                </div>
+            <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                <button type="button" class="btn btn-secondary" onclick="closeImageInsertModal()" style="width: auto; padding: 8px 18px;">Hủy</button>
+                <button type="button" class="btn btn-primary" id="btnConfirmInsertImage" onclick="insertImageToEditor()" style="width: auto; padding: 8px 20px; font-weight: 600;">
+                    <i class="fa-solid fa-check"></i> Chèn Hình Ảnh
+                </button>
+            </div>
+        </div>
+    </div>
 
-                <!-- Preview Panel -->
-                <div class="qb-preview-panel">
-                    <div class="qb-preview-title"><i class="fa-solid fa-eye"></i> Xem trước hiển thị KaTeX</div>
-                    <div class="preview-box" id="qLivePreview">
-                        <p style="color: #94A3B8; font-style: italic; margin: 0;">Nhập nội dung câu hỏi để xem trước...</p>
-                    </div>
-                </div>
+    <!-- Independent Double-Click Image Property & Edit Modal -->
+    <div class="math-insert-modal" id="imageEditModal">
+        <div class="math-insert-content" style="max-width: 520px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <h4 style="margin: 0;"><i class="fa-solid fa-sliders" style="color: #0EA5E9;"></i> Chỉnh Sửa Thuộc Tính Hình Ảnh</h4>
+                <button type="button" style="background: none; border: none; font-size: 1.2rem; cursor: pointer; color: #64748B;" onclick="closeImageEditModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
 
-                <div style="display: flex; gap: 12px; margin-top: 20px; justify-content: flex-end;">
-                    <button type="button" class="btn btn-secondary" onclick="closeQuestionModal()" style="width: auto; padding: 10px 20px;">Hủy</button>
-                    <button type="submit" class="btn btn-primary" style="width: auto; padding: 10px 20px;">Lưu câu hỏi</button>
+            <div style="text-align: center; margin-bottom: 16px; background: #F8FAFC; padding: 12px; border-radius: 12px; border: 1px solid #E2E8F0;">
+                <img id="editModalPreviewImg" src="" style="max-height: 160px; max-width: 100%; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                <div>
+                    <label style="font-weight: 600; font-size: 0.85rem; display: block; margin-bottom: 4px;">Chiều rộng (Width):</label>
+                    <input type="text" id="editImageWidth" class="form-control" placeholder="vd: 400px hoặc 80%" style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #CBD5E1;">
                 </div>
-            </form>
+                <div>
+                    <label style="font-weight: 600; font-size: 0.85rem; display: block; margin-bottom: 4px;">Chiều cao (Height):</label>
+                    <input type="text" id="editImageHeight" class="form-control" placeholder="auto" style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #CBD5E1;">
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 12px;">
+                <label style="font-weight: 600; font-size: 0.85rem; display: block; margin-bottom: 4px;">Căn vị trí (Align):</label>
+                <select id="editImageAlign" class="form-control" style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #CBD5E1;">
+                    <option value="center">Giữa dòng (Center)</option>
+                    <option value="left">Trái (Left)</option>
+                    <option value="right">Phải (Right)</option>
+                    <option value="inline">Trên cùng dòng (Inline)</option>
+                </select>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 16px;">
+                <label style="font-weight: 600; font-size: 0.85rem; display: block; margin-bottom: 4px;">Chú thích / Alt text:</label>
+                <input type="text" id="editImageAlt" class="form-control" placeholder="Nhập mô tả hình ảnh..." style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #CBD5E1;">
+            </div>
+
+            <div style="display: flex; gap: 8px; justify-content: space-between; align-items: center;">
+                <button type="button" class="btn btn-secondary" onclick="deleteEditingImage()" style="color: #EF4444; border-color: #FCA5A5; background: #FFF5F5; width: auto; padding: 8px 16px;">
+                    <i class="fa-solid fa-trash-can"></i> Xóa ảnh
+                </button>
+                <div style="display: flex; gap: 8px;">
+                    <button type="button" class="btn btn-secondary" onclick="closeImageEditModal()" style="width: auto; padding: 8px 16px;">Hủy</button>
+                    <button type="button" class="btn btn-primary" onclick="applyImageEdits()" style="width: auto; padding: 8px 20px; font-weight: 600;">
+                        <i class="fa-solid fa-check"></i> Lưu thuộc tính
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Interactive Question Preview Modal for Teachers -->
+    <div class="admin-modal" id="previewQuestionModal">
+        <div class="admin-modal-content" style="max-width: 800px; border-radius: 20px; padding: 28px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #E2E8F0; padding-bottom: 14px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <h3 class="admin-modal-title" style="margin: 0; font-size: 1.25rem;"><i class="fa-solid fa-eye" style="color: var(--accent-color);"></i> Xem Thử Câu Hỏi</h3>
+                    <span id="previewQBadge"></span>
+                </div>
+                <button class="admin-modal-close" onclick="closePreviewQuestionModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <!-- Question Statement -->
+            <div id="previewQText" style="font-size: 1rem; line-height: 1.7; color: #1E293B; margin-bottom: 20px; background: #F8FAFC; padding: 16px; border-radius: 12px; border: 1px solid #E2E8F0;"></div>
+
+            <!-- Interactive Answer Area -->
+            <div id="previewQOptions" style="margin-bottom: 20px;"></div>
+
+            <!-- Action Buttons -->
+            <div style="display: flex; gap: 12px; justify-content: flex-end; align-items: center; margin-top: 20px;">
+                <button type="button" class="btn btn-secondary" onclick="closePreviewQuestionModal()" style="width: auto; padding: 10px 20px; font-weight: 600;">Đóng</button>
+                <button type="button" class="btn btn-secondary" id="previewResetBtn" onclick="resetPreviewState()" style="width: auto; padding: 10px 20px; font-weight: 600; display: none;"><i class="fa-solid fa-rotate-left"></i> Thử lại</button>
+                <button type="button" class="btn btn-primary" id="previewCheckBtn" onclick="checkPreviewAnswer()" style="width: auto; padding: 10px 24px; font-weight: 700;"><i class="fa-solid fa-circle-check"></i> Kiểm tra đáp án</button>
+            </div>
+
+            <!-- Explanation Box -->
+            <div id="previewQExplanation" style="margin-top: 20px; display: none;"></div>
+        </div>
+    </div>
         </div>
     </div>
 
