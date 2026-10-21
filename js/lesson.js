@@ -220,46 +220,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                 if (currentLesson) {
                     currentChapter = chapters.find(ch => ch.id === currentLesson.chapter_id);
+                    // Nạp danh sách học liệu thực tế
                     materials = materialsMap[lessonId] || [];
-
-                    // Đảm bảo luôn có học liệu Quiz Test cho bài học hiện tại (kể cả khi tải từ Supabase)
-                    const hasQuiz = materials.some(m => m.type === 'quiz' || m.title === 'Quiz Test');
-                    if (!hasQuiz) {
-                        const demoQuizQuestions = [
-                            {
-                                id: 1,
-                                question: "Cho phương trình bậc hai $x^2 - 5x + 6 = 0$. Tổng hai nghiệm $S = x_1 + x_2$ bằng bao nhiêu?",
-                                options: ["A. $S = 5$", "B. $S = -5$", "C. $S = 6$", "D. $S = -6$"],
-                                correct_option: 0,
-                                explanation: "Theo hệ thức Vi-ét, tổng hai nghiệm $S = x_1 + x_2 = -\\frac{b}{a} = -\\frac{-5}{1} = 5$."
-                            },
-                            {
-                                id: 2,
-                                question: "Tính biệt thức $\\Delta$ của phương trình bậc hai $2x^2 - 4x + 1 = 0$.",
-                                options: ["A. $\\Delta = 8$", "B. $\\Delta = 12$", "C. $\\Delta = 0$", "D. $\\Delta = 16$"],
-                                correct_option: 0,
-                                explanation: "Ta có $a = 2, b = -4, c = 1$. Biệt thức $\\Delta = b^2 - 4ac = (-4)^2 - 4 \\cdot 2 \\cdot 1 = 16 - 8 = 8 > 0$."
-                            },
-                            {
-                                id: 3,
-                                question: "Rút gọn biểu thức $P = \\sqrt{a^2}$ với $a \\ge 0$.",
-                                options: ["A. $P = a$", "B. $P = -a$", "C. $P = |a|$", "D. $P = a^2$"],
-                                correct_option: 0,
-                                explanation: "Với $a \\ge 0$, ta có $\\sqrt{a^2} = |a| = a$."
-                            }
-                        ];
-
-                        materials.push({
-                            id: (lessonId * 10) + 99,
-                            lesson_id: lessonId,
-                            title: "Quiz Test",
-                            type: "quiz",
-                            url: "",
-                            content: JSON.stringify(demoQuizQuestions, null, 2),
-                            is_preview: true,
-                            order_index: materials.length + 1
-                        });
-                    }
                 }
             } catch (err) {
                 console.error("Lỗi Supabase, tải offline:", err);
@@ -280,47 +242,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const dbChapters = JSON.parse(localStorage.getItem('db_chapters')) || [];
         let dbMaterials = JSON.parse(localStorage.getItem('db_materials')) || [];
 
-        // Đảm bảo bài học hiện tại (bao gồm lesson_id = 3006) có sẵn học liệu demo "Quiz Test"
-        const targetIdCheck = lessonId || 3006;
-        const hasQuizTest = dbMaterials.some(m => (m.lesson_id == targetIdCheck) && (m.type === 'quiz' || m.title === 'Quiz Test'));
-        if (!hasQuizTest) {
-            const demoQuizQuestions = [
-                {
-                    id: 1,
-                    question: "Cho phương trình bậc hai $x^2 - 5x + 6 = 0$. Tổng hai nghiệm $S = x_1 + x_2$ bằng bao nhiêu?",
-                    options: ["A. $S = 5$", "B. $S = -5$", "C. $S = 6$", "D. $S = -6$"],
-                    correct_option: 0,
-                    explanation: "Theo hệ thức Vi-ét, tổng hai nghiệm $S = x_1 + x_2 = -\\frac{b}{a} = -\\frac{-5}{1} = 5$."
-                },
-                {
-                    id: 2,
-                    question: "Tính biệt thức $\\Delta$ của phương trình bậc hai $2x^2 - 4x + 1 = 0$.",
-                    options: ["A. $\\Delta = 8$", "B. $\\Delta = 12$", "C. $\\Delta = 0$", "D. $\\Delta = 16$"],
-                    correct_option: 0,
-                    explanation: "Ta có $a = 2, b = -4, c = 1$. Biệt thức $\\Delta = b^2 - 4ac = (-4)^2 - 4 \\cdot 2 \\cdot 1 = 16 - 8 = 8 > 0$."
-                },
-                {
-                    id: 3,
-                    question: "Rút gọn biểu thức $P = \\sqrt{a^2}$ với $a \\ge 0$.",
-                    options: ["A. $P = a$", "B. $P = -a$", "C. $P = |a|$", "D. $P = a^2$"],
-                    correct_option: 0,
-                    explanation: "Với $a \\ge 0$, ta có $\\sqrt{a^2} = |a| = a$."
-                }
-            ];
-
-            const newId = dbMaterials.length > 0 ? Math.max(...dbMaterials.map(m => m.id)) + 1 : 30063;
-            dbMaterials.push({
-                id: newId,
-                lesson_id: targetIdCheck,
-                title: "Quiz Test",
-                type: "quiz",
-                url: "",
-                content: JSON.stringify(demoQuizQuestions, null, 2),
-                is_preview: true,
-                order_index: 3
-            });
-            localStorage.setItem('db_materials', JSON.stringify(dbMaterials));
-        }
+        // Nạp danh sách học liệu thực tế từ LocalStorage
 
         currentCourse = dbCourses.find(c => c.id == courseId);
         chapters = dbChapters.filter(ch => ch.course_id == courseId).sort((a,b) => a.order_index - b.order_index);
@@ -524,14 +446,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                     penBtn.addEventListener('click', (e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        openEditNameModal('material', m.id, m.title);
+                        openEditNameModal('material', m.id, m);
                     });
                 }
                 if (gearBtn) {
                     gearBtn.addEventListener('click', (e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        openMaterialGearModal(m);
+                        window.location.href = `material-manage.html?id=${courseId}&lesson_id=${lessonId}&material_id=${m.id}&from=lesson`;
                     });
                 }
             }
@@ -542,12 +464,30 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // --- LOGIC QUẢN LÝ DÀNH CHO GIÁO VIÊN ---
     
-    // 1. Mở Modal Đổi Tên
-    function openEditNameModal(type, id, currentTitle) {
+    // 1. Mở Modal Đổi Tên & Thông tin
+    function openEditNameModal(type, id, data) {
         editingNameType = type;
         editingNameId = id;
-        document.getElementById('editNameInput').value = currentTitle;
-        document.getElementById('editNameModalTitle').textContent = type === 'lesson' ? 'Chỉnh sửa tiêu đề bài học' : 'Chỉnh sửa tiêu đề học liệu';
+        const editNameInput = document.getElementById('editNameInput');
+        const editDescInput = document.getElementById('editDescInput');
+        const editPreviewInput = document.getElementById('editPreviewInput');
+        const editDescGroup = document.getElementById('editDescGroup');
+        const editPreviewGroup = document.getElementById('editPreviewGroup');
+
+        if (type === 'material') {
+            const material = (typeof data === 'object') ? data : (materials.find(m => m.id == id) || { title: data });
+            if (editNameInput) editNameInput.value = material.title || '';
+            if (editDescInput) editDescInput.value = material.content || '';
+            if (editPreviewInput) editPreviewInput.checked = material.is_preview || false;
+            if (editDescGroup) editDescGroup.style.display = 'block';
+            if (editPreviewGroup) editPreviewGroup.style.display = 'block';
+            document.getElementById('editNameModalTitle').textContent = 'Chỉnh sửa thông tin học liệu';
+        } else {
+            if (editNameInput) editNameInput.value = (typeof data === 'string') ? data : (data ? data.title : '');
+            if (editDescGroup) editDescGroup.style.display = 'none';
+            if (editPreviewGroup) editPreviewGroup.style.display = 'none';
+            document.getElementById('editNameModalTitle').textContent = 'Chỉnh sửa tiêu đề bài học';
+        }
         document.getElementById('editNameModal').classList.add('active');
     }
 
@@ -663,12 +603,19 @@ document.addEventListener('DOMContentLoaded', async () => {
                     }
                 }
             } else if (editingNameType === 'material') {
+                const newDesc = document.getElementById('editDescInput') ? document.getElementById('editDescInput').value.trim() : '';
+                const isPreview = document.getElementById('editPreviewInput') ? document.getElementById('editPreviewInput').checked : false;
+
                 if (isOnline) {
                     try {
-                        const { error } = await supabaseClient.from('materials').update({ title: newTitle }).eq('id', editingNameId);
+                        const { error } = await supabaseClient.from('materials').update({ 
+                            title: newTitle,
+                            content: newDesc,
+                            is_preview: isPreview
+                        }).eq('id', editingNameId);
                         if (error) throw error;
                     } catch (err) {
-                        alert("Lỗi cập nhật tên học liệu: " + err.message);
+                        alert("Lỗi cập nhật học liệu: " + err.message);
                         return;
                     }
                 } else {
@@ -676,6 +623,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                     const idx = dbMaterials.findIndex(m => m.id == editingNameId);
                     if (idx !== -1) {
                         dbMaterials[idx].title = newTitle;
+                        dbMaterials[idx].content = newDesc;
+                        dbMaterials[idx].is_preview = isPreview;
                         localStorage.setItem('db_materials', JSON.stringify(dbMaterials));
                     }
                 }

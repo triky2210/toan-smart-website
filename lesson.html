@@ -187,19 +187,29 @@
     </div>
 
     <!-- Modals for Teacher Management -->
-    <!-- 1. Edit Name Modal (for Lesson/Material Title) -->
+    <!-- 1. Edit Name & Quick Props Modal (for Material Title, Description & Preview) -->
     <div class="modal" id="editNameModal">
-        <div class="modal-content">
+        <div class="modal-content" style="max-width: 500px;">
             <button class="modal-close" onclick="document.getElementById('editNameModal').classList.remove('active')"><i class="fa-solid fa-xmark"></i></button>
-            <h3 class="modal-title" id="editNameModalTitle">Chỉnh sửa tiêu đề</h3>
+            <h3 class="modal-title" id="editNameModalTitle">Chỉnh sửa thông tin học liệu</h3>
             <form id="editNameForm" style="margin-top: 20px;">
-                <div class="form-group" style="margin-bottom: 20px;">
-                    <label class="form-label" style="font-weight: 600; display: block; margin-bottom: 8px;">Tiêu đề mới</label>
-                    <input type="text" class="form-control" id="editNameInput" required style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--card-border); font-family: inherit;">
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label class="form-label" style="font-weight: 600; display: block; margin-bottom: 8px;">Tên bài học / Học liệu</label>
+                    <input type="text" class="form-control" id="editNameInput" required style="width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--card-border); font-family: inherit;">
+                </div>
+                <div class="form-group" style="margin-bottom: 16px;" id="editDescGroup">
+                    <label class="form-label" style="font-weight: 600; display: block; margin-bottom: 8px;">Mô tả ngắn học liệu</label>
+                    <textarea class="form-control" id="editDescInput" rows="3" placeholder="Mô tả nội dung tóm tắt..." style="width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--card-border); font-family: inherit; resize: vertical;"></textarea>
+                </div>
+                <div class="form-group" style="margin-bottom: 20px;" id="editPreviewGroup">
+                    <label style="display: flex; align-items: center; gap: 10px; font-weight: 600; cursor: pointer; user-select: none; color: #334155;">
+                        <input type="checkbox" id="editPreviewInput" style="width: 18px; height: 18px; accent-color: var(--accent-color); cursor: pointer;">
+                        <span>Cho phép học thử (xem trước không cần đăng nhập)</span>
+                    </label>
                 </div>
                 <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px;">
                     <button type="button" class="btn btn-secondary" onclick="document.getElementById('editNameModal').classList.remove('active')" style="padding: 10px 20px; border-radius: 8px; border: 1px solid var(--card-border); background: #f8fafc; cursor: pointer;">Hủy bỏ</button>
-                    <button type="submit" class="btn btn-primary" style="padding: 10px 20px; border-radius: 8px; background: var(--accent-color); color: #fff; border: none; cursor: pointer; font-weight: 600;">Lưu lại</button>
+                    <button type="submit" class="btn btn-primary" style="padding: 10px 20px; border-radius: 8px; background: var(--accent-color); color: #fff; border: none; cursor: pointer; font-weight: 600;">Lưu thay đổi</button>
                 </div>
             </form>
         </div>
