@@ -4,18 +4,18 @@
 let dbCourses = JSON.parse(localStorage.getItem('db_courses')) || [
     {
         id: 1,
-        title: "Luyện Thi Vào Lớp 10 Toán Mục Tiêu 9+",
-        tag: "grade10",
-        tag_label: "Lớp 9 lên 10",
+        title: "Toán Học Lớp 11 - Nền Tảng & Chuyên Sâu",
+        tag: "grade11",
+        tag_label: "Toán Lớp 11",
         price: 1500000,
-        description: "Bứt phá điểm số hình học học kỳ 2, đại số chuyên đề, luyện giải đề thi thử tuyển sinh chính thức bám sát cấu trúc sở GD&ĐT các năm gần đây. Rèn luyện tư duy tự học giúp học sinh vững vàng đỗ trường THPT mong muốn.",
+        description: "Bứt phá toàn bộ kiến thức Hàm số lượng giác, Dãy số, Cấp số cộng - Cấp số nhân, Giới hạn, Đạo hàm, Xác suất và Hình học không gian 11 bám sát chương trình mới GDPT 2018.",
         duration: "6 tháng (72 buổi)",
         image_url: "assets/images/course-10.png",
         target_audience: [
-            "Học sinh lớp 9 chuẩn bị thi vào lớp 10.",
-            "Học sinh bị hổng kiến thức hình học phẳng.",
-            "Học sinh muốn đạt điểm 8.5 - 9.5 môn Toán.",
-            "Học sinh ôn thi các lớp chuyên Toán cấp ba."
+            "Học sinh lớp 11 bám sát chương trình GDPT 2018.",
+            "Học sinh cần nắm chắc bản chất Đại số và Hình không gian 11.",
+            "Học sinh muốn đạt điểm 8.5 - 9.5 trên lớp và thi học sinh giỏi.",
+            "Xây dựng nền tảng vững vàng chuẩn bị sớm cho kỳ thi THPT & ĐGNL."
         ],
         features: [
             { icon: "fa-regular fa-clock", text: "Thời lượng: 6 tháng (72 buổi)" },
@@ -26,17 +26,17 @@ let dbCourses = JSON.parse(localStorage.getItem('db_courses')) || [
     },
     {
         id: 2,
-        title: "Luyện Thi Tốt Nghiệp THPT Chuyên Sâu",
-        tag: "thpt",
-        tag_label: "Lớp 12 ôn thi THPT",
+        title: "Toán Học Lớp 12 - Luyện Thi THPT & ĐGNL",
+        tag: "grade12",
+        tag_label: "Toán Lớp 12",
         price: 2000000,
-        description: "Hệ thống toàn bộ kiến thức đại số, giải tích, hình học 12. Rèn luyện các kỹ năng phân tích nhanh trắc nghiệm, bấm máy tính Casio tối ưu 30 giây mỗi câu giúp học sinh bứt phá đạt điểm 9+ thi THPT Quốc Gia.",
+        description: "Hệ thống toàn diện Giải tích 12, Ứng dụng đạo hàm, Khảo sát hàm số, Vectơ và Hình không gian Oxyz, Tích phân và Xác suất. Chinh phục kỳ thi Tốt nghiệp THPT và ĐGNL (HSA/APT).",
         duration: "8 tháng (96 buổi)",
         image_url: "assets/images/course-thpt.png",
         target_audience: [
-            "Học sinh lớp 12 đang chuẩn bị cho kỳ thi Tốt nghiệp THPT.",
+            "Học sinh lớp 12 đang chuẩn bị cho kỳ thi Tốt nghiệp THPT và ĐGNL.",
             "Học sinh muốn tối ưu hóa thời gian làm bài trắc nghiệm Toán.",
-            "Học sinh muốn rèn luyện kỹ thuật Casio nâng cao.",
+            "Học sinh muốn rèn luyện tuyệt kỹ Casio giải nhanh nâng cao.",
             "Học sinh đặt mục tiêu đỗ các trường đại học top đầu (Bách Khoa, NEU...)."
         ],
         features: [
@@ -70,35 +70,88 @@ let dbCourses = JSON.parse(localStorage.getItem('db_courses')) || [
     }
 ];
 
+// Tự động đồng bộ khóa Lớp 11 & 12 vào LocalStorage nếu còn lưu cache cũ
+if (dbCourses[0] && dbCourses[0].id === 1 && (dbCourses[0].title.includes("Vào Lớp 10") || dbCourses[0].tag === "grade10")) {
+    dbCourses[0].title = "Toán Học Lớp 11 - Nền Tảng & Chuyên Sâu";
+    dbCourses[0].tag = "grade11";
+    dbCourses[0].tag_label = "Toán Lớp 11";
+    dbCourses[0].description = "Bứt phá toàn bộ kiến thức Hàm số lượng giác, Dãy số, Cấp số cộng - Cấp số nhân, Giới hạn, Đạo hàm, Xác suất và Hình học không gian 11 bám sát chương trình mới GDPT 2018.";
+    localStorage.setItem('db_courses', JSON.stringify(dbCourses));
+}
+if (dbCourses[1] && dbCourses[1].id === 2 && (dbCourses[1].tag === "thpt" || dbCourses[1].title.includes("Luyện Thi Tốt Nghiệp"))) {
+    dbCourses[1].title = "Toán Học Lớp 12 - Luyện Thi THPT & ĐGNL";
+    dbCourses[1].tag = "grade12";
+    dbCourses[1].tag_label = "Toán Lớp 12";
+    dbCourses[1].description = "Hệ thống toàn diện Giải tích 12, Ứng dụng đạo hàm, Khảo sát hàm số, Vectơ và Hình không gian Oxyz, Tích phân và Xác suất. Chinh phục kỳ thi Tốt nghiệp THPT và ĐGNL (HSA/APT).";
+    localStorage.setItem('db_courses', JSON.stringify(dbCourses));
+}
+
 let dbChapters = JSON.parse(localStorage.getItem('db_chapters')) || [
-    { id: 101, course_id: 1, title: "Chương 1: Đại số chuyên sâu & Hệ thức Vi-ét ôn thi vào 10", order_index: 1 },
-    { id: 102, course_id: 1, title: "Chương 2: Hình học phẳng & Tứ giác nội tiếp đường tròn", order_index: 2 },
-    { id: 103, course_id: 1, title: "Chương 3: Luyện đề thi thử & Chiến thuật tối ưu điểm số", order_index: 3 },
-    { id: 201, course_id: 2, title: "Chương 1: Khảo sát hàm số & Giải tích 12 chuyên sâu", order_index: 1 },
-    { id: 202, course_id: 2, title: "Chương 2: Tuyệt kỹ Casio & Phương pháp giải nhanh trắc nghiệm 30s", order_index: 2 },
-    { id: 203, course_id: 2, title: "Chương 3: Hình học không gian & Hình học tọa độ Oxyz", order_index: 3 },
+    { id: 101, course_id: 1, title: "Chương 1: Hàm số lượng giác và phương trình lượng giác", order_index: 1 },
+    { id: 102, course_id: 1, title: "Chương 2: Dãy số. Cấp số cộng và cấp số nhân", order_index: 2 },
+    { id: 103, course_id: 1, title: "Chương 3: Các số đặc trưng đo xu thế trung tâm của mẫu số liệu ghép nhóm", order_index: 3 },
+    { id: 104, course_id: 1, title: "Chương 4: Quan hệ song song trong không gian", order_index: 4 },
+    { id: 105, course_id: 1, title: "Chương 5: Giới hạn. Hàm số liên tục", order_index: 5 },
+    { id: 201, course_id: 2, title: "Chương 1: Ứng dụng đạo hàm để khảo sát và vẽ đồ thị của hàm số", order_index: 1 },
+    { id: 202, course_id: 2, title: "Chương 2: Vectơ và hệ trục tọa độ trong không gian", order_index: 2 },
+    { id: 203, course_id: 2, title: "Chương 3: Các số đặc trưng đo mức độ phân tán của mẫu số liệu ghép nhóm", order_index: 3 },
     { id: 301, course_id: 3, title: "Chương 1: Logic toán học & Kỹ năng phân tích bảng số liệu thực tế", order_index: 1 },
     { id: 302, course_id: 3, title: "Chương 2: Tổng ôn toán học phổ thông bám sát cấu trúc đề HSA/APT", order_index: 2 }
 ];
 
 let dbLessons = JSON.parse(localStorage.getItem('db_lessons')) || [
-    { id: 3006, chapter_id: 101, title: "Bài 0: Giới thiệu chương", order_index: 0 },
-    { id: 1001, chapter_id: 101, title: "Bài 1: Phương trình bậc hai & Hệ thức Vi-ét cơ bản", order_index: 1 },
-    { id: 1002, chapter_id: 101, title: "Bài 2: Phương pháp rút gọn biểu thức chứa căn thức bậc hai", order_index: 2 },
-    { id: 1003, chapter_id: 101, title: "Bài 3: Giải toán bằng cách lập phương trình, hệ phương trình", order_index: 3 },
-    { id: 1004, chapter_id: 101, title: "Bài 4: Các bài toán chứa tham số m liên quan đến cực trị Vi-ét", order_index: 4 },
-    { id: 1005, chapter_id: 102, title: "Bài 5: Định nghĩa & 4 phương pháp chứng minh Tứ giác nội tiếp", order_index: 1 },
-    { id: 1006, chapter_id: 102, title: "Bài 6: Các bài toán về tiếp tuyến đường tròn cực kỳ đặc sắc", order_index: 2 },
-    { id: 1007, chapter_id: 102, title: "Bài 7: Chứng minh ba điểm thẳng hàng, hai đường thẳng vuông góc", order_index: 3 },
-    { id: 1008, chapter_id: 103, title: "Bài 8: Giải đề thi thử bám sát cấu trúc sở GD&ĐT Hà Nội", order_index: 1 },
-    { id: 1009, chapter_id: 103, title: "Bài 9: Các lỗi sai ngớ ngẩn làm mất điểm Toán tự luận", order_index: 2 },
-    { id: 2001, chapter_id: 201, title: "Bài 1: Sự đồng biến, nghịch biến của hàm số chứa tham số m", order_index: 1 },
-    { id: 2002, chapter_id: 201, title: "Bài 2: Phương pháp cực trị hàm số liên kết đồ thị f'(x)", order_index: 2 },
-    { id: 2003, chapter_id: 201, title: "Bài 3: Nhận diện đồ thị hàm số và các bài toán biện luận nghiệm", order_index: 3 },
-    { id: 2004, chapter_id: 202, title: "Bài 4: Kỹ thuật Casio giải nhanh tích phân chống sai số nâng cao", order_index: 1 },
-    { id: 2005, chapter_id: 202, title: "Bài 5: Tối ưu thời gian giải toán số phức bằng máy tính Casio", order_index: 2 },
-    { id: 2006, chapter_id: 203, title: "Bài 6: Phương pháp ghép trục tọa độ Oxyz giải nhanh cực trị hình học", order_index: 1 },
-    { id: 2007, chapter_id: 203, title: "Bài 7: Góc và khoảng cách trong không gian - Giải nhanh trắc nghiệm", order_index: 2 },
+    // Chương 1 (Toán 11 - HK1)
+    { id: 1101, chapter_id: 101, title: "Bài 1.1: Giá trị lượng giác của góc lượng giác", order_index: 1 },
+    { id: 1102, chapter_id: 101, title: "Bài 1.2: Công thức lượng giác", order_index: 2 },
+    { id: 1103, chapter_id: 101, title: "Bài 1.3: Hàm số lượng giác", order_index: 3 },
+    { id: 1104, chapter_id: 101, title: "Bài 1.4: Phương trình lượng giác cơ bản", order_index: 4 },
+    { id: 1105, chapter_id: 101, title: "Bài 1.5: Ôn tập & Luyện đề cuối Chương 1", order_index: 5 },
+
+    // Chương 2
+    { id: 1201, chapter_id: 102, title: "Bài 2.1: Dãy số", order_index: 1 },
+    { id: 1202, chapter_id: 102, title: "Bài 2.2: Cấp số cộng", order_index: 2 },
+    { id: 1203, chapter_id: 102, title: "Bài 2.3: Cấp số nhân", order_index: 3 },
+    { id: 1204, chapter_id: 102, title: "Bài 2.4: Ôn tập & Luyện đề cuối Chương 2", order_index: 4 },
+
+    // Chương 3
+    { id: 1301, chapter_id: 103, title: "Bài 3.1: Mẫu số liệu ghép nhóm", order_index: 1 },
+    { id: 1302, chapter_id: 103, title: "Bài 3.2: Các số đặc trưng đo xu thế trung tâm", order_index: 2 },
+    { id: 1303, chapter_id: 103, title: "Bài 3.3: Ôn tập & Luyện đề cuối Chương 3", order_index: 3 },
+
+    // Chương 4
+    { id: 1401, chapter_id: 104, title: "Bài 4.1: Đường thẳng và mặt phẳng trong không gian", order_index: 1 },
+    { id: 1402, chapter_id: 104, title: "Bài 4.2: Hai đường thẳng song song", order_index: 2 },
+    { id: 1403, chapter_id: 104, title: "Bài 4.3: Đường thẳng và mặt phẳng song song", order_index: 3 },
+    { id: 1404, chapter_id: 104, title: "Bài 4.4: Hai mặt phẳng song song", order_index: 4 },
+    { id: 1405, chapter_id: 104, title: "Bài 4.5: Phép chiếu song song", order_index: 5 },
+    { id: 1406, chapter_id: 104, title: "Bài 4.6: Ôn tập & Luyện đề cuối Chương 4", order_index: 6 },
+
+    // Chương 5
+    { id: 1501, chapter_id: 105, title: "Bài 5.1: Giới hạn của dãy số", order_index: 1 },
+    { id: 1502, chapter_id: 105, title: "Bài 5.2: Giới hạn của hàm số", order_index: 2 },
+    { id: 1503, chapter_id: 105, title: "Bài 5.3: Hàm số liên tục", order_index: 3 },
+    { id: 1504, chapter_id: 105, title: "Bài 5.4: Ôn tập & Luyện đề cuối Chương 5", order_index: 4 },
+
+    // Chương 1 (Toán 12 - HK1)
+    { id: 2101, chapter_id: 201, title: "Bài 1.1: Tính đơn điệu và cực trị của hàm số", order_index: 1 },
+    { id: 2102, chapter_id: 201, title: "Bài 1.2: Giá trị lớn nhất và giá trị nhỏ nhất của hàm số", order_index: 2 },
+    { id: 2103, chapter_id: 201, title: "Bài 1.3: Đường tiệm cận của đồ thị hàm số", order_index: 3 },
+    { id: 2104, chapter_id: 201, title: "Bài 1.4: Khảo sát sự biến thiên và vẽ đồ thị của hàm số", order_index: 4 },
+    { id: 2105, chapter_id: 201, title: "Bài 1.5: Ứng dụng đạo hàm để giải quyết một số vấn đề liên quan đến thực tiễn", order_index: 5 },
+    { id: 2106, chapter_id: 201, title: "Bài 1.6: Ôn tập & Luyện đề cuối Chương 1", order_index: 6 },
+
+    // Chương 2
+    { id: 2201, chapter_id: 202, title: "Bài 2.1: Vectơ trong không gian", order_index: 1 },
+    { id: 2202, chapter_id: 202, title: "Bài 2.2: Hệ trục tọa độ trong không gian", order_index: 2 },
+    { id: 2203, chapter_id: 202, title: "Bài 2.3: Biểu thức tọa độ của các phép toán vectơ", order_index: 3 },
+    { id: 2204, chapter_id: 202, title: "Bài 2.4: Ôn tập & Luyện đề cuối Chương 2", order_index: 4 },
+
+    // Chương 3
+    { id: 2301, chapter_id: 203, title: "Bài 3.1: Khoảng biến thiên và khoảng tứ phân vị của mẫu số liệu ghép nhóm", order_index: 1 },
+    { id: 2302, chapter_id: 203, title: "Bài 3.2: Phương sai và độ lệch chuẩn của mẫu số liệu ghép nhóm", order_index: 2 },
+    { id: 2303, chapter_id: 203, title: "Bài 3.3: Ôn tập & Luyện đề cuối Chương 3", order_index: 3 },
+
+    // Khóa 3
     { id: 3001, chapter_id: 301, title: "Bài 1: Phương pháp đọc đề, phân tích bảng biểu thống kê phức tạp", order_index: 1 },
     { id: 3002, chapter_id: 301, title: "Bài 2: Các bài toán tư duy logic, suy luận toán học đặc sắc tuyển chọn", order_index: 2 },
     { id: 3003, chapter_id: 301, title: "Bài 3: Kỹ thuật loại trừ phương án nhiễu trong phần thi Định lượng", order_index: 3 },
@@ -107,6 +160,57 @@ let dbLessons = JSON.parse(localStorage.getItem('db_lessons')) || [
 ];
 
 let dbMaterials = JSON.parse(localStorage.getItem('db_materials')) || [];
+
+// Tự động đồng bộ các chương và bài học chuẩn SGK Kết nối tri thức Lớp 11 cho Khóa 1
+(function syncKNTT11Curriculum() {
+    const KNTT_G11_CHAPTERS = [
+        { id: 101, course_id: 1, title: "Chương 1: Hàm số lượng giác và phương trình lượng giác", order_index: 1 },
+        { id: 102, course_id: 1, title: "Chương 2: Dãy số. Cấp số cộng và cấp số nhân", order_index: 2 },
+        { id: 103, course_id: 1, title: "Chương 3: Các số đặc trưng đo xu thế trung tâm của mẫu số liệu ghép nhóm", order_index: 3 },
+        { id: 104, course_id: 1, title: "Chương 4: Quan hệ song song trong không gian", order_index: 4 },
+        { id: 105, course_id: 1, title: "Chương 5: Giới hạn. Hàm số liên tục", order_index: 5 }
+    ];
+
+    const KNTT_G11_LESSONS = [
+        { id: 1101, chapter_id: 101, title: "Bài 1.1: Giá trị lượng giác của góc lượng giác", order_index: 1 },
+        { id: 1102, chapter_id: 101, title: "Bài 1.2: Công thức lượng giác", order_index: 2 },
+        { id: 1103, chapter_id: 101, title: "Bài 1.3: Hàm số lượng giác", order_index: 3 },
+        { id: 1104, chapter_id: 101, title: "Bài 1.4: Phương trình lượng giác cơ bản", order_index: 4 },
+        { id: 1105, chapter_id: 101, title: "Bài 1.5: Ôn tập & Luyện đề cuối Chương 1", order_index: 5 },
+        { id: 1201, chapter_id: 102, title: "Bài 2.1: Dãy số", order_index: 1 },
+        { id: 1202, chapter_id: 102, title: "Bài 2.2: Cấp số cộng", order_index: 2 },
+        { id: 1203, chapter_id: 102, title: "Bài 2.3: Cấp số nhân", order_index: 3 },
+        { id: 1204, chapter_id: 102, title: "Bài 2.4: Ôn tập & Luyện đề cuối Chương 2", order_index: 4 },
+        { id: 1301, chapter_id: 103, title: "Bài 3.1: Mẫu số liệu ghép nhóm", order_index: 1 },
+        { id: 1302, chapter_id: 103, title: "Bài 3.2: Các số đặc trưng đo xu thế trung tâm", order_index: 2 },
+        { id: 1303, chapter_id: 103, title: "Bài 3.3: Ôn tập & Luyện đề cuối Chương 3", order_index: 3 },
+        { id: 1401, chapter_id: 104, title: "Bài 4.1: Đường thẳng và mặt phẳng trong không gian", order_index: 1 },
+        { id: 1402, chapter_id: 104, title: "Bài 4.2: Hai đường thẳng song song", order_index: 2 },
+        { id: 1403, chapter_id: 104, title: "Bài 4.3: Đường thẳng và mặt phẳng song song", order_index: 3 },
+        { id: 1404, chapter_id: 104, title: "Bài 4.4: Hai mặt phẳng song song", order_index: 4 },
+        { id: 1405, chapter_id: 104, title: "Bài 4.5: Phép chiếu song song", order_index: 5 },
+        { id: 1406, chapter_id: 104, title: "Bài 4.6: Ôn tập & Luyện đề cuối Chương 4", order_index: 6 },
+        { id: 1501, chapter_id: 105, title: "Bài 5.1: Giới hạn của dãy số", order_index: 1 },
+        { id: 1502, chapter_id: 105, title: "Bài 5.2: Giới hạn của hàm số", order_index: 2 },
+        { id: 1503, chapter_id: 105, title: "Bài 5.3: Hàm số liên tục", order_index: 3 },
+        { id: 1504, chapter_id: 105, title: "Bài 5.4: Ôn tập & Luyện đề cuối Chương 5", order_index: 4 }
+    ];
+
+    const needUpdateC1 = dbChapters.some(c => c.course_id === 1 && (c.title.includes("Vi-ét") || c.title.includes("vào 10"))) || !dbChapters.some(c => c.id === 105);
+    if (needUpdateC1) {
+        dbChapters = dbChapters.filter(c => c.course_id !== 1).concat(KNTT_G11_CHAPTERS);
+        localStorage.setItem('db_chapters', JSON.stringify(dbChapters));
+
+        const oldC1ChIds = [101, 102, 103, 104, 105];
+        dbLessons = dbLessons.filter(l => !oldC1ChIds.includes(l.chapter_id)).concat(KNTT_G11_LESSONS);
+        localStorage.setItem('db_lessons', JSON.stringify(dbLessons));
+
+        // Dọn sạch học liệu cũ của khóa 1 để các bài học mới sạch hoàn toàn
+        dbMaterials = dbMaterials.filter(m => !m.lesson_id || m.lesson_id >= 2000 || m.lesson_id < 1000);
+        localStorage.setItem('db_materials', JSON.stringify(dbMaterials));
+    }
+})();
+
 
 // Tự động di chuyển dữ liệu (Migration) từ cấu trúc bài học cũ sang học liệu con nếu cần
 migrateOfflineDataIfNeeded();
@@ -155,6 +259,7 @@ function migrateOfflineDataIfNeeded() {
     if (dbMaterials.length === 0) {
         // Tạo mặc định một số học liệu mẫu cho các bài học mock để dễ test
         dbLessons.forEach(l => {
+            if ((l.chapter_id >= 101 && l.chapter_id <= 105) || (l.chapter_id >= 201 && l.chapter_id <= 203)) return; // Không tự động tạo học liệu cho Khóa 1 & Khóa 2
             dbMaterials.push({
                 id: l.id * 10 + 1,
                 lesson_id: l.id,
@@ -572,8 +677,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function getTagLabel(tag) {
+        if (tag === 'grade11') return 'Toán Lớp 11';
+        if (tag === 'grade12' || tag === 'thpt') return 'Toán Lớp 12';
         if (tag === 'grade10') return 'Lớp 9 lên 10';
-        if (tag === 'thpt') return 'Lớp 12 ôn thi THPT';
         if (tag === 'dgnl') return 'Luyện ĐGNL HSA/APT';
         return 'Khóa học ôn thi';
     }

@@ -301,10 +301,283 @@
         }
 
         /* Modal styling */
+        .admin-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.45);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.25s ease-in-out;
+            padding: 20px;
+        }
+
+        .admin-modal.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
         .admin-modal-content {
+            background: #FFFFFF;
+            border: 1px solid #E2E8F0;
+            border-radius: 16px;
+            width: 100%;
             max-width: 750px;
             max-height: 90vh;
+            padding: 24px;
+            position: relative;
+            transform: scale(0.97);
+            transition: all 0.25s ease-in-out;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
             overflow-y: auto;
+        }
+
+        .admin-modal.active .admin-modal-content {
+            transform: scale(1);
+        }
+
+        .admin-modal-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            font-size: 1.25rem;
+            color: #64748B;
+            cursor: pointer;
+            transition: color 0.15s;
+        }
+
+        .admin-modal-close:hover {
+            color: #0F172A;
+        }
+
+        .admin-modal-title {
+            font-size: 1.35rem;
+            font-weight: 700;
+            margin: 0 0 16px 0;
+            color: #0F172A;
+        }
+
+        /* Dedicated Word Import Modal Styling */
+        .word-import-modal-content {
+            max-width: 1100px;
+            max-height: 94vh;
+            display: flex;
+            flex-direction: column;
+            padding: 24px 28px;
+        }
+
+        .word-modal-header {
+            margin-bottom: 16px;
+        }
+
+        .word-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .word-stat-card {
+            background: #F8FAFC;
+            border: 1px solid #E2E8F0;
+            border-radius: 12px;
+            padding: 12px 14px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .word-stat-card .stat-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .stat-total .stat-icon { background: #EEF2FF; color: #4F46E5; }
+        .stat-mc .stat-icon { background: #EFF6FF; color: #2563EB; }
+        .stat-tf .stat-icon { background: #F5F3FF; color: #7C3AED; }
+        .stat-sa .stat-icon { background: #FEF3C7; color: #D97706; }
+
+        .word-stat-card .stat-val {
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: #0F172A;
+            line-height: 1;
+            display: block;
+        }
+
+        .word-stat-card .stat-lbl {
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: #64748B;
+            text-transform: uppercase;
+            margin-top: 2px;
+            display: block;
+        }
+
+        .word-toolbar {
+            background: #F1F5F9;
+            border: 1px solid #E2E8F0;
+            border-radius: 10px;
+            padding: 10px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .word-questions-list {
+            flex: 1;
+            overflow-y: auto;
+            max-height: 52vh;
+            padding-right: 6px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .word-q-card {
+            background: #FFFFFF;
+            border: 1px solid #E2E8F0;
+            border-radius: 12px;
+            padding: 16px;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .word-q-card.excluded {
+            opacity: 0.55;
+            background: #F8FAFC;
+        }
+
+        .word-q-card:hover {
+            border-color: #CBD5E1;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
+        }
+
+        .word-q-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .word-q-type-badge {
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 6px;
+            text-transform: uppercase;
+        }
+
+        .type-mc { background: #DBEAFE; color: #1E40AF; }
+        .type-tf { background: #EDE9FE; color: #5B21B6; }
+        .type-sa { background: #FEF3C7; color: #92400E; }
+
+        .word-q-body {
+            font-size: 0.92rem;
+            line-height: 1.6;
+            color: #1E293B;
+            margin-bottom: 12px;
+        }
+
+        .word-q-options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .word-q-options-grid {
+                grid-template-columns: 1fr;
+            }
+            .word-stats-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .word-opt-box {
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid #E2E8F0;
+            background: #F8FAFC;
+            font-size: 0.88rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 6px;
+        }
+
+        .word-opt-box.is-correct {
+            border-color: #10B981;
+            background: #ECFDF5;
+            font-weight: 600;
+            color: #065F46;
+        }
+
+        .word-tf-item {
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid #E2E8F0;
+            background: #F8FAFC;
+            font-size: 0.88rem;
+            margin-bottom: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .tf-badge-true {
+            background: #D1FAE5;
+            color: #065F46;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+        }
+
+        .tf-badge-false {
+            background: #FEE2E2;
+            color: #991B1B;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+        }
+
+        .word-sa-box {
+            background: #EFF6FF;
+            border: 1.5px dashed #3B82F6;
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-size: 0.9rem;
+            color: #1E40AF;
+        }
+
+        .pinned-badge {
+            background: #FEF9C3;
+            color: #854D0E;
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
         }
 
         .modal-form-grid {
@@ -401,6 +674,10 @@
             </div>
             
             <div class="action-buttons">
+                <button class="btn btn-outline" id="importWordBtn" style="border: 1.5px solid #10B981; color: #059669; background: #ECFDF5; font-weight: 600; width: auto; display: inline-flex; align-items: center; gap: 8px;">
+                    <i class="fa-solid fa-file-word" style="font-size: 1.1rem; color: #10B981;"></i> Import file Word (.docx)
+                </button>
+                <input type="file" id="wordFileInput" accept=".docx" style="display: none;">
                 <button class="btn btn-primary" id="addQuestionBtn">
                     <i class="fa-solid fa-plus"></i> Tạo câu hỏi mới
                 </button>
@@ -536,6 +813,87 @@
         </div>
     </div>
 
+    <!-- Word Import Review & Preview Modal -->
+    <div class="admin-modal" id="importWordModal">
+        <div class="admin-modal-content word-import-modal-content">
+            <button class="admin-modal-close" onclick="closeWordImportModal()"><i class="fa-solid fa-xmark"></i></button>
+            
+            <div class="word-modal-header">
+                <h3 class="admin-modal-title" style="margin-bottom: 4px; display: flex; align-items: center; gap: 10px;">
+                    <i class="fa-solid fa-file-word" style="color: #10B981;"></i> Xem trước & Kiểm duyệt Đề thi từ Word
+                </h3>
+                <div style="font-size: 0.85rem; color: #64748B;" id="wordFileName">Tập tin: --</div>
+            </div>
+
+            <!-- Thống kê 3 phần đề thi -->
+            <div class="word-stats-grid">
+                <div class="word-stat-card stat-total">
+                    <div class="stat-icon"><i class="fa-solid fa-database"></i></div>
+                    <div class="stat-info">
+                        <span class="stat-val" id="wStatTotal">0</span>
+                        <span class="stat-lbl">Tổng số câu hỏi</span>
+                    </div>
+                </div>
+                <div class="word-stat-card stat-mc">
+                    <div class="stat-icon"><i class="fa-solid fa-list-check"></i></div>
+                    <div class="stat-info">
+                        <span class="stat-val" id="wStatMc">0</span>
+                        <span class="stat-lbl">Phần 1: Nhiều lựa chọn</span>
+                    </div>
+                </div>
+                <div class="word-stat-card stat-tf">
+                    <div class="stat-icon"><i class="fa-solid fa-check-double"></i></div>
+                    <div class="stat-info">
+                        <span class="stat-val" id="wStatTf">0</span>
+                        <span class="stat-lbl">Phần 2: Đúng / Sai</span>
+                    </div>
+                </div>
+                <div class="word-stat-card stat-sa">
+                    <div class="stat-icon"><i class="fa-solid fa-pen-to-square"></i></div>
+                    <div class="stat-info">
+                        <span class="stat-val" id="wStatSa">0</span>
+                        <span class="stat-lbl">Phần 3: Trả lời ngắn</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Thanh điều khiển duyệt -->
+            <div class="word-toolbar">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <label class="checkbox-container" style="font-weight: 600; margin: 0;">
+                        <input type="checkbox" id="wCheckAll" checked onchange="toggleSelectAllWordQuestions(this.checked)">
+                        <span>Chọn tất cả (<span id="wSelectedCount">0</span> câu)</span>
+                    </label>
+                </div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <label class="checkbox-container" style="font-weight: 500; font-size: 0.85rem; margin: 0; color: #047857;">
+                        <input type="checkbox" id="wAutoLinkMaterial" checked>
+                        <span>Gán ngay vào bài học hiện tại</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Danh sách câu hỏi xem trước -->
+            <div class="word-questions-list" id="wordQuestionsList">
+                <!-- Javascript will dynamically render preview cards here -->
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="modal-footer" style="margin-top: 16px; display: flex; justify-content: space-between; align-items: center;">
+                <div style="font-size: 0.88rem; color: #475569;">
+                    Đã chọn <strong id="wFooterSelectedCount" style="color: #059669;">0</strong> câu hỏi sẵn sàng nạp vào hệ thống
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button type="button" class="btn btn-secondary" onclick="closeWordImportModal()" style="width: auto;">Hủy bỏ</button>
+                    <button type="button" class="btn btn-primary" id="btnConfirmImportWord" onclick="confirmImportWordQuestions()" style="width: auto; background: #059669; border-color: #059669;">
+                        <i class="fa-solid fa-cloud-arrow-down" style="margin-right: 6px;"></i> Xác nhận Import
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
     <!-- CDNs and Libraries -->
     <!-- Supabase JS client -->
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
@@ -547,6 +905,10 @@
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
     
+    <!-- JSZip library for Word .docx unpacking -->
+    <script src="js/jszip.min.js"></script>
+    <script src="js/docx-math-parser.js"></script>
+
     <!-- Core config & Action Script -->
     <script src="js/config.js"></script>
     <script src="js/material-manage.js"></script>

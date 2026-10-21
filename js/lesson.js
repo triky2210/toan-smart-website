@@ -447,7 +447,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Render danh sách học liệu con
         materialsGrid.innerHTML = '';
         if (materials.length === 0) {
-            materialsGrid.innerHTML = `<div style="text-align: center; padding: 40px; color: var(--text-secondary); font-style: italic;">Bài học này hiện chưa được thầy tải lên học liệu nào.</div>`;
+            materialsGrid.innerHTML = `
+                <div style="text-align: center; padding: 48px 24px; color: var(--text-secondary); background: #FFFFFF; border-radius: 16px; border: 1.5px dashed var(--card-border);">
+                    <i class="fa-solid fa-folder-open" style="font-size: 2.4rem; color: #94A3B8; margin-bottom: 12px; display: block;"></i>
+                    <p style="font-size: 1.05rem; font-weight: 500; margin-bottom: 16px;">Bài học này hiện chưa có học liệu nào.</p>
+                    ${isAdminLoggedIn ? `<button id="btnEmptyAddMaterial" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 8px; margin: 0 auto; padding: 10px 22px; border-radius: 10px;"><i class="fa-solid fa-plus"></i> Thêm học liệu đầu tiên</button>` : '<p style="font-size: 0.9rem; color: var(--text-secondary);">Thầy Tùng Dương sẽ sớm cập nhật video và bài tập cho bài học này.</p>'}
+                </div>
+            `;
+            if (isAdminLoggedIn) {
+                const addBtn = document.getElementById('btnEmptyAddMaterial');
+                if (addBtn) addBtn.addEventListener('click', () => openLessonGearModal(currentLesson));
+            }
             return;
         }
 

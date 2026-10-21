@@ -135,6 +135,17 @@ document.addEventListener('DOMContentLoaded', async () => {
             loadSourceQuestions();
         });
 
+        // Nút Import file Word
+        const importWordBtn = document.getElementById('importWordBtn');
+        const wordFileInput = document.getElementById('wordFileInput');
+        if (importWordBtn && wordFileInput) {
+            importWordBtn.onclick = () => {
+                wordFileInput.value = '';
+                wordFileInput.click();
+            };
+            wordFileInput.onchange = handleWordFileSelect;
+        }
+
         // Nút Tạo câu hỏi mới
         addQuestionBtn.onclick = () => openQuestionModal();
 
@@ -326,20 +337,24 @@ document.addEventListener('DOMContentLoaded', async () => {
         sourceList.innerHTML = allQuestions.map(q => {
             const isAlreadySelected = selectedQuestions.some(sq => sq.id === q.id);
             const difficultyBadge = getDiffBadgeHTML(q.difficulty);
+            const typeBadge = getTypeBadgeHTML(q.question_type);
+            const skillBadge = q.skill_tag ? `<span style="background:#F1F5F9; color:#475569; font-size:0.7rem; padding:2px 6px; border-radius:4px; font-weight:600;"><i class="fa-solid fa-tag"></i> ${q.skill_tag}</span>` : '';
             
             return `
                 <div class="q-card ${isAlreadySelected ? 'selected-item' : ''}" id="source-q-${q.id}">
                     <div class="q-header">
-                        <span class="q-id">ID câu hỏi: #${q.id}</span>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <span class="q-id">ID câu hỏi: #${q.id}</span>
+                            ${typeBadge}
+                        </div>
+                        ${skillBadge}
                     </div>
                     <div class="q-text math-render">${q.question_text}</div>
                     
                     <!-- Dynamic rendering preview panel -->
                     <div id="expanded-preview-${q.id}" style="display:none;" class="q-preview-expanded-panel">
-                        <div style="font-weight:700; margin-bottom:6px; color:#475569;">Các phương án lựa chọn:</div>
-                        <ul style="list-style-type:none; padding-left:0; margin:0;">
-                            ${(q.options || []).map((o, idx) => `<li style="margin-bottom:4px; font-weight: ${idx === q.correct_option ? '700; color:#059669;' : '500;'}">${o} ${idx === q.correct_option ? '✓' : ''}</li>`).join('')}
-                        </ul>
+                        <div style="font-weight:700; margin-bottom:6px; color:#475569;">Nội dung phương án & đáp án:</div>
+                        ${renderQuestionOptionsHTML(q)}
                         ${q.explanation ? `<div style="margin-top:10px; border-top:1px dashed #CBD5E1; padding-top:8px; font-style:italic;"><span style="font-weight:700; color:#475569;">Lời giải:</span> ${q.explanation}</div>` : ''}
                     </div>
 
@@ -381,6 +396,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         selectedList.innerHTML = selectedQuestions.map((q, index) => {
             const difficultyBadge = getDiffBadgeHTML(q.difficulty);
+            const typeBadge = getTypeBadgeHTML(q.question_type);
+            const skillBadge = q.skill_tag ? `<span style="background:#F1F5F9; color:#475569; font-size:0.7rem; padding:2px 6px; border-radius:4px; font-weight:600;"><i class="fa-solid fa-tag"></i> ${q.skill_tag}</span>` : '';
 
             return `
                 <div class="q-card" data-qid="${q.id}">
@@ -388,16 +405,18 @@ document.addEventListener('DOMContentLoaded', async () => {
                         <div class="drag-handle"><i class="fa-solid fa-grip-vertical"></i></div>
                         <div style="flex-grow:1;">
                             <div class="q-header">
-                                <span class="q-id" style="color: #047857;">Câu ${index + 1} (ID: #${q.id})</span>
+                                <div style="display:flex; align-items:center; gap:8px;">
+                                    <span class="q-id" style="color: #047857;">Câu ${index + 1} (ID: #${q.id})</span>
+                                    ${typeBadge}
+                                </div>
+                                ${skillBadge}
                             </div>
                             <div class="q-text math-render">${q.question_text}</div>
                             
                             <!-- Dynamic preview for selected list -->
                             <div id="expanded-preview-sel-${q.id}" style="display:none;" class="q-preview-expanded-panel">
-                                <div style="font-weight:700; margin-bottom:6px; color:#475569;">Các phương án lựa chọn:</div>
-                                <ul style="list-style-type:none; padding-left:0; margin:0;">
-                                    ${(q.options || []).map((o, idx) => `<li style="margin-bottom:4px; font-weight: ${idx === q.correct_option ? '700; color:#059669;' : '500;'}">${o} ${idx === q.correct_option ? '✓' : ''}</li>`).join('')}
-                                </ul>
+                                <div style="font-weight:700; margin-bottom:6px; color:#475569;">Nội dung phương án & đáp án:</div>
+                                ${renderQuestionOptionsHTML(q)}
                                 ${q.explanation ? `<div style="margin-top:10px; border-top:1px dashed #CBD5E1; padding-top:8px; font-style:italic;"><span style="font-weight:700; color:#475569;">Lời giải:</span> ${q.explanation}</div>` : ''}
                             </div>
 
@@ -423,6 +442,68 @@ document.addEventListener('DOMContentLoaded', async () => {
                 { left: "\\(", right: "\\)", display: false }
             ]
         });
+    }
+
+    function renderQuestionOptionsHTML(q) {
+        if (q.question_type === 'true_false') {
+            const items = Array.isArray(q.options) ? q.options : [];
+            return `
+                <div style="margin-top:6px;">
+                    ${items.map(it => {
+                        const lbl = it.label || '';
+                        const txt = it.text || it;
+                        const isCor = it.is_correct === true || it.is_correct === 'true';
+                        const isPin = it.is_pinned === true || it.is_pinned === 'true';
+                        return `
+                            <div class="word-tf-item math-render" style="padding:6px 10px; margin-bottom:4px;">
+                                <div>
+                                    <strong>${lbl})</strong> ${txt}
+                                    ${isPin ? '<span class="pinned-badge" style="margin-left:4px;"><i class="fa-solid fa-thumbtack"></i> Cố định</span>' : ''}
+                                </div>
+                                <span class="${isCor ? 'tf-badge-true' : 'tf-badge-false'}">
+                                    ${isCor ? 'ĐÚNG' : 'SAI'}
+                                </span>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+        }
+
+        if (q.question_type === 'short_answer') {
+            const ans = Array.isArray(q.options) && q.options.length > 0 ? q.options[0] : (q.correct_option || '');
+            return `
+                <div class="word-sa-box" style="margin-top:6px; padding:8px 12px;">
+                    <i class="fa-solid fa-circle-check" style="color:#2563EB; margin-right:6px;"></i>
+                    <strong>Đáp án chuẩn:</strong> <span style="font-weight:700; color:#1E3A8A; background:#DBEAFE; padding:2px 8px; border-radius:4px;">${ans}</span>
+                    <span style="font-size:0.75rem; color:#64748B; margin-left:6px;">(Chuẩn hóa cả dấu phẩy và dấu chấm)</span>
+                </div>
+            `;
+        }
+
+        // multiple_choice
+        const opts = Array.isArray(q.options) ? q.options : [];
+        return `
+            <ul style="list-style-type:none; padding-left:0; margin:0;">
+                ${opts.map((o, idx) => {
+                    const optText = (typeof o === 'object') ? o.text : o;
+                    const isCorrect = (typeof o === 'object') ? o.is_correct : (idx === q.correct_option);
+                    const isPinned = (typeof o === 'object') ? o.is_pinned : false;
+                    return `
+                        <li style="margin-bottom:4px; font-weight: ${isCorrect ? '700; color:#059669;' : '500;'}">
+                            ${optText} ${isCorrect ? '<span style="color:#059669;">✓ (Đúng)</span>' : ''}
+                            ${isPinned ? '<span class="pinned-badge"><i class="fa-solid fa-thumbtack"></i> Cố định</span>' : ''}
+                        </li>
+                    `;
+                }).join('')}
+            </ul>
+        `;
+    }
+
+    function getTypeBadgeHTML(type) {
+        if (type === 'true_false') return '<span class="word-q-type-badge type-tf"><i class="fa-solid fa-check-double"></i> Đúng / Sai</span>';
+        if (type === 'short_answer') return '<span class="word-q-type-badge type-sa"><i class="fa-solid fa-pen-to-square"></i> Trả lời ngắn</span>';
+        return '<span class="word-q-type-badge type-mc"><i class="fa-solid fa-list-check"></i> 4 Lựa chọn</span>';
     }
 
     function getDiffBadgeHTML(difficulty) {
@@ -752,5 +833,302 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Trigger live preview
         updateQuestionPreview();
     }
+
+    // =============================================
+    // XỬ LÝ IMPORT FILE WORD (.DOCX) - ĐỀ THI 3 PHẦN
+    // =============================================
+    let parsedWordQuestions = [];
+
+    async function handleWordFileSelect(e) {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+
+        if (!file.name.toLowerCase().endsWith('.docx')) {
+            alert("Vui lòng chọn tệp tin định dạng Word (.docx)!");
+            return;
+        }
+
+        const importWordBtn = document.getElementById('importWordBtn');
+        const origHTML = importWordBtn ? importWordBtn.innerHTML : '';
+        if (importWordBtn) {
+            importWordBtn.disabled = true;
+            importWordBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang đọc file Word...';
+        }
+
+        try {
+            const parseResult = await DocxMathParser.parseFile(file);
+            console.log("Kết quả parse Word:", parseResult);
+
+            if (!parseResult.questions || parseResult.questions.length === 0) {
+                alert("Không tìm thấy câu hỏi nào trong file Word. Vui lòng kiểm tra định dạng câu hỏi (Ví dụ: 'Câu 1.', 'Câu 2.'...)");
+                return;
+            }
+
+            parsedWordQuestions = parseResult.questions.map((q, idx) => ({
+                ...q,
+                importIndex: idx,
+                isIncluded: true
+            }));
+
+            renderWordPreviewModal(parsedWordQuestions, parseResult.stats, file.name);
+            document.getElementById('importWordModal').classList.add('active');
+
+        } catch (err) {
+            console.error("Lỗi parse file Word:", err);
+            alert("Lỗi khi đọc file Word: " + (err.message || err));
+        } finally {
+            if (importWordBtn) {
+                importWordBtn.disabled = false;
+                importWordBtn.innerHTML = origHTML;
+            }
+        }
+    }
+
+    function renderWordPreviewModal(questions, stats, fileName) {
+        document.getElementById('wordFileName').textContent = `Tập tin: ${fileName} • Phát hiện ${stats.total} câu hỏi`;
+        document.getElementById('wStatTotal').textContent = stats.total;
+        document.getElementById('wStatMc').textContent = stats.multiple_choice;
+        document.getElementById('wStatTf').textContent = stats.true_false;
+        document.getElementById('wStatSa').textContent = stats.short_answer;
+
+        updateWordCounts();
+        renderWordQuestionCards();
+    }
+
+    function updateWordCounts() {
+        const includedCount = parsedWordQuestions.filter(q => q.isIncluded).length;
+        const totalCount = parsedWordQuestions.length;
+        document.getElementById('wSelectedCount').textContent = includedCount;
+        document.getElementById('wFooterSelectedCount').textContent = includedCount;
+        const checkAll = document.getElementById('wCheckAll');
+        if (checkAll) {
+            checkAll.checked = (includedCount === totalCount && totalCount > 0);
+        }
+    }
+
+    function renderWordQuestionCards() {
+        const container = document.getElementById('wordQuestionsList');
+        if (!container) return;
+
+        container.innerHTML = parsedWordQuestions.map((q, idx) => {
+            const typeClass = q.type === 'multiple_choice' ? 'type-mc' : (q.type === 'true_false' ? 'type-tf' : 'type-sa');
+            const typeLabel = q.type === 'multiple_choice' ? 'Phần 1: Nhiều lựa chọn' : (q.type === 'true_false' ? 'Phần 2: Đúng / Sai' : 'Phần 3: Trả lời ngắn');
+
+            return `
+                <div class="word-q-card ${q.isIncluded ? '' : 'excluded'}" id="word-card-${idx}">
+                    <div class="word-q-top">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <input type="checkbox" ${q.isIncluded ? 'checked' : ''} onchange="toggleWordQuestion(${idx}, this.checked)" style="width: 18px; height: 18px; cursor: pointer; accent-color: #059669;">
+                            <strong style="color: #0F172A; font-size: 0.95rem;">Câu ${q.number || (idx + 1)}</strong>
+                            <span class="word-q-type-badge ${typeClass}">${typeLabel}</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <select class="form-control" style="font-size: 0.78rem; padding: 4px 8px; width: auto; font-weight: 600;" onchange="updateWordQuestionDiff(${idx}, this.value)">
+                                <option value="NB" ${q.difficulty === 'NB' ? 'selected' : ''}>Nhận biết [NB]</option>
+                                <option value="TH" ${q.difficulty === 'TH' ? 'selected' : ''}>Thông hiểu [TH]</option>
+                                <option value="VD" ${q.difficulty === 'VD' ? 'selected' : ''}>Vận dụng [VD]</option>
+                                <option value="VDC" ${q.difficulty === 'VDC' ? 'selected' : ''}>Vận dụng cao [VDC]</option>
+                            </select>
+                            <input type="text" class="form-control" placeholder="Dạng bài / Chuyên đề..." value="${q.skill_tag || ''}" style="font-size: 0.78rem; padding: 4px 8px; width: 170px;" onchange="updateWordQuestionSkill(${idx}, this.value)">
+                        </div>
+                    </div>
+
+                    <!-- Question Content -->
+                    <div class="word-q-body math-render">${q.question_text}</div>
+
+                    <!-- Options / Sub-items based on type -->
+                    ${renderWordCardOptions(q)}
+
+                    <!-- Explanation -->
+                    ${q.explanation ? `
+                        <div style="margin-top: 10px; background: #FFFBEB; border-left: 3px solid #F59E0B; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; color: #92400E;" class="math-render">
+                            <strong><i class="fa-solid fa-lightbulb"></i> Lời giải:</strong> ${q.explanation}
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }).join('');
+
+        // Tự động render KaTeX cho danh sách xem trước
+        renderMathInElement(container, {
+            delimiters: [
+                { left: "$$", right: "$$", display: true },
+                { left: "$", right: "$", display: false },
+                { left: "\\(", right: "\\)", display: false }
+            ]
+        });
+    }
+
+    function renderWordCardOptions(q) {
+        if (q.type === 'multiple_choice') {
+            const meta = q.options_meta || (q.options || []).map((o, i) => ({ letter: String.fromCharCode(65 + i), text: o, is_correct: i === q.correct_option, is_pinned: false }));
+            return `
+                <div class="word-q-options-grid">
+                    ${meta.map(opt => `
+                        <div class="word-opt-box ${opt.is_correct ? 'is-correct' : ''} math-render">
+                            <strong style="color: ${opt.is_correct ? '#059669' : '#1E293B'};">${opt.letter}.</strong>
+                            <div style="flex: 1;">${opt.text}</div>
+                            ${opt.is_correct ? '<span style="color: #059669; font-weight: 700; font-size: 0.8rem;"><i class="fa-solid fa-circle-check"></i> ĐÚNG</span>' : ''}
+                            ${opt.is_pinned ? '<span class="pinned-badge"><i class="fa-solid fa-thumbtack"></i> Cố định</span>' : ''}
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        } else if (q.type === 'true_false') {
+            const items = q.sub_items && q.sub_items.length > 0 ? q.sub_items : (q.options || []).map((o, i) => ({ label: String.fromCharCode(97 + i), text: o, is_correct: false, is_pinned: false }));
+            return `
+                <div style="margin-top: 8px;">
+                    ${items.map(it => `
+                        <div class="word-tf-item math-render">
+                            <div style="flex: 1; padding-right: 12px;">
+                                <strong style="color: #1E293B; margin-right: 4px;">${it.label})</strong>
+                                ${it.text}
+                                ${it.is_pinned ? '<span class="pinned-badge" style="margin-left: 6px;"><i class="fa-solid fa-thumbtack"></i> Cố định</span>' : ''}
+                            </div>
+                            <span class="${it.is_correct ? 'tf-badge-true' : 'tf-badge-false'}">
+                                ${it.is_correct ? '<i class="fa-solid fa-check"></i> ĐÚNG' : '<i class="fa-solid fa-xmark"></i> SAI'}
+                            </span>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        } else if (q.type === 'short_answer') {
+            return `
+                <div class="word-sa-box">
+                    <i class="fa-solid fa-circle-check" style="color: #2563EB; margin-right: 6px;"></i>
+                    <strong>Đáp án được công nhận:</strong>
+                    <span style="font-weight: 800; font-size: 1.05rem; background: #FFFFFF; padding: 2px 10px; border-radius: 6px; border: 1px solid #BFDBFE; color: #1D4ED8; margin: 0 4px;">
+                        ${q.short_answer || '(Chưa có)'}
+                    </span>
+                    <span style="font-size: 0.78rem; color: #64748B;">(Tự động hỗ trợ cả dấu phẩy ',' và dấu chấm '.')</span>
+                </div>
+            `;
+        }
+        return '';
+    }
+
+    window.toggleWordQuestion = function (idx, checked) {
+        if (parsedWordQuestions[idx]) {
+            parsedWordQuestions[idx].isIncluded = checked;
+            const card = document.getElementById(`word-card-${idx}`);
+            if (card) {
+                if (checked) card.classList.remove('excluded');
+                else card.classList.add('excluded');
+            }
+            updateWordCounts();
+        }
+    };
+
+    window.toggleSelectAllWordQuestions = function (checked) {
+        parsedWordQuestions.forEach((q, idx) => {
+            q.isIncluded = checked;
+            const card = document.getElementById(`word-card-${idx}`);
+            if (card) {
+                if (checked) card.classList.remove('excluded');
+                else card.classList.add('excluded');
+            }
+        });
+        updateWordCounts();
+    };
+
+    window.updateWordQuestionDiff = function (idx, diff) {
+        if (parsedWordQuestions[idx]) {
+            parsedWordQuestions[idx].difficulty = diff;
+        }
+    };
+
+    window.updateWordQuestionSkill = function (idx, skill) {
+        if (parsedWordQuestions[idx]) {
+            parsedWordQuestions[idx].skill_tag = (skill || '').trim();
+        }
+    };
+
+    window.closeWordImportModal = function () {
+        document.getElementById('importWordModal').classList.remove('active');
+    };
+
+    window.confirmImportWordQuestions = async function () {
+        const toImport = parsedWordQuestions.filter(q => q.isIncluded);
+        if (toImport.length === 0) {
+            alert("Vui lòng chọn ít nhất 1 câu hỏi để import!");
+            return;
+        }
+
+        const confirmBtn = document.getElementById('btnConfirmImportWord');
+        const origHTML = confirmBtn ? confirmBtn.innerHTML : '';
+        if (confirmBtn) {
+            confirmBtn.disabled = true;
+            confirmBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang nạp dữ liệu...';
+        }
+
+        try {
+            const lesson = cachedLessons.find(l => l.id == lessonId);
+            const chapter = lesson ? cachedChapters.find(ch => ch.id == lesson.chapter_id) : null;
+            const autoLink = document.getElementById('wAutoLinkMaterial') ? document.getElementById('wAutoLinkMaterial').checked : true;
+
+            let successCount = 0;
+            for (let i = 0; i < toImport.length; i++) {
+                const q = toImport[i];
+
+                let optionsPayload = [];
+                let correctOpt = 0;
+
+                if (q.type === 'multiple_choice') {
+                    optionsPayload = q.options || [];
+                    correctOpt = (typeof q.correct_option === 'number') ? q.correct_option : 0;
+                } else if (q.type === 'true_false') {
+                    optionsPayload = q.sub_items || [];
+                    correctOpt = 0;
+                } else if (q.type === 'short_answer') {
+                    optionsPayload = [q.short_answer || ''];
+                    correctOpt = 0;
+                }
+
+                const questionRecord = {
+                    course_id: courseId,
+                    chapter_id: chapter ? chapter.id : null,
+                    lesson_id: lessonId,
+                    material_id: currentMaterialId,
+                    question_type: q.type,
+                    difficulty: q.difficulty || 'NB',
+                    question_text: q.question_text,
+                    options: optionsPayload,
+                    correct_option: correctOpt,
+                    explanation: q.explanation || null,
+                    updated_at: new Date().toISOString()
+                };
+
+                const insertRes = await supabaseClient.from('questions').insert(questionRecord).select();
+                if (insertRes.error) {
+                    console.error("Lỗi khi lưu câu hỏi:", insertRes.error);
+                    continue;
+                }
+
+                const savedQ = insertRes.data && insertRes.data[0];
+                if (savedQ && autoLink) {
+                    const newOrder = selectedQuestions.length + successCount + 1;
+                    await supabaseClient.from('material_questions').insert({
+                        material_id: currentMaterialId,
+                        question_id: savedQ.id,
+                        order_index: newOrder
+                    });
+                }
+                successCount++;
+            }
+
+            closeWordImportModal();
+            await reloadAll();
+            alert(`🎉 Đã import thành công ${successCount} / ${toImport.length} câu hỏi vào hệ thống!`);
+
+        } catch (e) {
+            console.error("Lỗi import Word:", e);
+            alert("Đã xảy ra lỗi trong quá trình import: " + e.message);
+        } finally {
+            if (confirmBtn) {
+                confirmBtn.disabled = false;
+                confirmBtn.innerHTML = origHTML;
+            }
+        }
+    };
 
 });
