@@ -1027,17 +1027,18 @@ footer {
 /* ---------------------------------------------------- */
 
 .course-detail-layout {
-    display: grid;
-    grid-template-columns: 1.4fr 0.6fr;
-    gap: 48px;
-    align-items: start;
-    padding-top: 120px;
+    display: block !important;
+    max-width: 960px;
+    margin: 0 auto;
+    padding-top: 100px;
+    padding-bottom: 60px;
 }
 
 .course-detail-main {
+    width: 100%;
     display: flex;
     flex-direction: column;
-    gap: 40px;
+    gap: 24px;
 }
 
 .course-intro-box h1 {
@@ -3040,3 +3041,116 @@ math-field:focus-within {
 
 
 
+
+/* ---------------------------------------------------- */
+/* MINIMAL COURSE CARDS (Trang Chủ Đơn Giản: Toán 11, Toán 12) */
+/* ---------------------------------------------------- */
+.featured-courses-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 32px;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.simple-course-card {
+    background: #FFFFFF;
+    border: 1.5px solid var(--card-border);
+    border-radius: 24px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+}
+
+.simple-course-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(99, 102, 241, 0.2);
+}
+
+.simple-card-header {
+    padding: 60px 24px;
+    text-align: center;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 220px;
+    border-radius: 22px 22px 0 0;
+}
+
+.simple-card-big-title {
+    font-size: 5rem !important;
+    font-weight: 900 !important;
+    color: #FFFFFF !important;
+    -webkit-text-fill-color: #FFFFFF !important;
+    background: none !important;
+    letter-spacing: -2px !important;
+    line-height: 1 !important;
+    margin: 0 !important;
+    text-shadow: 0 4px 24px rgba(0, 0, 0, 0.4) !important;
+    user-select: none;
+}
+
+.simple-card-footer {
+    padding: 24px;
+    background: #FFFFFF;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-top: 1px solid #F1F5F9;
+}
+
+.simple-course-btn {
+    width: 100%;
+    padding: 14px 28px;
+    font-size: 1.05rem;
+    font-weight: 700;
+    border-radius: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    color: #FFFFFF;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.simple-course-card:hover .simple-course-btn {
+    transform: scale(1.02);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
+}
+
+@media (max-width: 768px) {
+    .featured-courses-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    .simple-card-header {
+        padding: 40px 20px 32px;
+        min-height: 180px;
+    }
+    .simple-card-big-title {
+        font-size: 3.2rem;
+    }
+}
+
+/* Bảng biểu hiển thị trong câu hỏi toán học (Table Responsive & Inline Table) */
+.table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 12px 0;
+}
+.q-inline-table {
+    border-collapse: collapse;
+    margin: 8px auto;
+    text-align: center;
+}
+.q-inline-table td, .q-inline-table th {
+    box-sizing: border-box;
+}

@@ -2738,7 +2738,7 @@ function populateAdminWordTargets() {
 
 function renderAdminWordPreviewModal(questions, stats, fileName) {
 
-    document.getElementById('adminWordFileName').textContent = `Tập tin: ${fileName} • Phát hiện ${stats.total} câu hỏi`;
+    document.getElementById('adminWordFileName').textContent = `Tập tin: ${fileName} • Phát hiện ${stats.total} câu hỏi` + (stats.with_explanation ? ` (${stats.with_explanation} câu có HDG)` : '');
 
     document.getElementById('adminWStatTotal').textContent = stats.total;
 
@@ -2809,6 +2809,7 @@ function renderAdminWordCards() {
                         <strong style="color: #0F172A; font-size: 0.95rem;">Câu ${q.number || (idx + 1)}</strong>
 
                         <span class="word-q-type-badge ${typeClass}">${typeLabel}</span>
+                        ${q.explanation ? `<span class="word-q-type-badge" style="background: #ECFDF5; color: #059669; border-color: #A7F3D0; font-size: 0.68rem; padding: 2px 6px;"><i class="fa-solid fa-lightbulb"></i> Có HDG</span>` : ''}
 
                     </div>
 
@@ -2852,7 +2853,7 @@ function renderAdminWordCards() {
 
                     <div style="margin-top: 10px; background: #FFFBEB; border-left: 3px solid #F59E0B; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; color: #92400E;" class="math-render">
 
-                        <strong><i class="fa-solid fa-lightbulb"></i> Lời giải:</strong> ${q.explanation}
+                        <strong><i class="fa-solid fa-lightbulb"></i> Hướng dẫn giải:</strong> ${q.explanation}
 
                     </div>
 

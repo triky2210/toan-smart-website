@@ -87,69 +87,124 @@ if (dbCourses[1] && dbCourses[1].id === 2 && (dbCourses[1].tag === "thpt" || dbC
 }
 
 let dbChapters = JSON.parse(localStorage.getItem('db_chapters')) || [
+    // TOÁN 11 (GDPT 2018 - Đủ 9 chương HK1 & HK2)
     { id: 101, course_id: 1, title: "Chương 1: Hàm số lượng giác và phương trình lượng giác", order_index: 1 },
     { id: 102, course_id: 1, title: "Chương 2: Dãy số. Cấp số cộng và cấp số nhân", order_index: 2 },
     { id: 103, course_id: 1, title: "Chương 3: Các số đặc trưng đo xu thế trung tâm của mẫu số liệu ghép nhóm", order_index: 3 },
     { id: 104, course_id: 1, title: "Chương 4: Quan hệ song song trong không gian", order_index: 4 },
     { id: 105, course_id: 1, title: "Chương 5: Giới hạn. Hàm số liên tục", order_index: 5 },
+    { id: 106, course_id: 1, title: "Chương 6: Hàm số mũ và hàm số lôgarit", order_index: 6 },
+    { id: 107, course_id: 1, title: "Chương 7: Quan hệ vuông góc trong không gian", order_index: 7 },
+    { id: 108, course_id: 1, title: "Chương 8: Các quy tắc tính xác suất", order_index: 8 },
+    { id: 109, course_id: 1, title: "Chương 9: Đạo hàm", order_index: 9 },
+
+    // TOÁN 12 (GDPT 2018 - Đủ 6 chương HK1 & HK2)
     { id: 201, course_id: 2, title: "Chương 1: Ứng dụng đạo hàm để khảo sát và vẽ đồ thị của hàm số", order_index: 1 },
     { id: 202, course_id: 2, title: "Chương 2: Vectơ và hệ trục tọa độ trong không gian", order_index: 2 },
     { id: 203, course_id: 2, title: "Chương 3: Các số đặc trưng đo mức độ phân tán của mẫu số liệu ghép nhóm", order_index: 3 },
+    { id: 204, course_id: 2, title: "Chương 4: Nguyên hàm và Tích phân", order_index: 4 },
+    { id: 205, course_id: 2, title: "Chương 5: Phương pháp tọa độ trong không gian (Hình học Oxyz)", order_index: 5 },
+    { id: 206, course_id: 2, title: "Chương 6: Xác suất có điều kiện", order_index: 6 },
+
+    // KHÓA 3: LUYỆN THI ĐGNL
     { id: 301, course_id: 3, title: "Chương 1: Logic toán học & Kỹ năng phân tích bảng số liệu thực tế", order_index: 1 },
     { id: 302, course_id: 3, title: "Chương 2: Tổng ôn toán học phổ thông bám sát cấu trúc đề HSA/APT", order_index: 2 }
 ];
 
 let dbLessons = JSON.parse(localStorage.getItem('db_lessons')) || [
-    // Chương 1 (Toán 11 - HK1)
+    // TOÁN 11 - Chương 1
     { id: 1101, chapter_id: 101, title: "Bài 1.1: Giá trị lượng giác của góc lượng giác", order_index: 1 },
     { id: 1102, chapter_id: 101, title: "Bài 1.2: Công thức lượng giác", order_index: 2 },
     { id: 1103, chapter_id: 101, title: "Bài 1.3: Hàm số lượng giác", order_index: 3 },
     { id: 1104, chapter_id: 101, title: "Bài 1.4: Phương trình lượng giác cơ bản", order_index: 4 },
     { id: 1105, chapter_id: 101, title: "Bài 1.5: Ôn tập & Luyện đề cuối Chương 1", order_index: 5 },
 
-    // Chương 2
+    // TOÁN 11 - Chương 2
     { id: 1201, chapter_id: 102, title: "Bài 2.1: Dãy số", order_index: 1 },
     { id: 1202, chapter_id: 102, title: "Bài 2.2: Cấp số cộng", order_index: 2 },
     { id: 1203, chapter_id: 102, title: "Bài 2.3: Cấp số nhân", order_index: 3 },
     { id: 1204, chapter_id: 102, title: "Bài 2.4: Ôn tập & Luyện đề cuối Chương 2", order_index: 4 },
 
-    // Chương 3
+    // TOÁN 11 - Chương 3
     { id: 1301, chapter_id: 103, title: "Bài 3.1: Mẫu số liệu ghép nhóm", order_index: 1 },
     { id: 1302, chapter_id: 103, title: "Bài 3.2: Các số đặc trưng đo xu thế trung tâm", order_index: 2 },
     { id: 1303, chapter_id: 103, title: "Bài 3.3: Ôn tập & Luyện đề cuối Chương 3", order_index: 3 },
 
-    // Chương 4
-    { id: 1401, chapter_id: 104, title: "Bài 4.1: Đường thẳng và mặt phẳng trong không gian", order_index: 1 },
-    { id: 1402, chapter_id: 104, title: "Bài 4.2: Hai đường thẳng song song", order_index: 2 },
+    // TOÁN 11 - Chương 4
+    { id: 1401, chapter_id: 104, title: "Bài 4.1: Điểm, đường thẳng và mặt phẳng trong không gian", order_index: 1 },
+    { id: 1402, chapter_id: 104, title: "Bài 4.2: Hai đường thẳng song song trong không gian", order_index: 2 },
     { id: 1403, chapter_id: 104, title: "Bài 4.3: Đường thẳng và mặt phẳng song song", order_index: 3 },
     { id: 1404, chapter_id: 104, title: "Bài 4.4: Hai mặt phẳng song song", order_index: 4 },
-    { id: 1405, chapter_id: 104, title: "Bài 4.5: Phép chiếu song song", order_index: 5 },
+    { id: 1405, chapter_id: 104, title: "Bài 4.5: Phép chiếu song song. Hình biểu diễn của một hình không gian", order_index: 5 },
     { id: 1406, chapter_id: 104, title: "Bài 4.6: Ôn tập & Luyện đề cuối Chương 4", order_index: 6 },
 
-    // Chương 5
+    // TOÁN 11 - Chương 5
     { id: 1501, chapter_id: 105, title: "Bài 5.1: Giới hạn của dãy số", order_index: 1 },
     { id: 1502, chapter_id: 105, title: "Bài 5.2: Giới hạn của hàm số", order_index: 2 },
     { id: 1503, chapter_id: 105, title: "Bài 5.3: Hàm số liên tục", order_index: 3 },
     { id: 1504, chapter_id: 105, title: "Bài 5.4: Ôn tập & Luyện đề cuối Chương 5", order_index: 4 },
 
-    // Chương 1 (Toán 12 - HK1)
+    // TOÁN 11 - Chương 6 (HK2)
+    { id: 1601, chapter_id: 106, title: "Bài 6.1: Phép tính lũy thừa với số mũ thực", order_index: 1 },
+    { id: 1602, chapter_id: 106, title: "Bài 6.2: Phép tính lôgarit", order_index: 2 },
+    { id: 1603, chapter_id: 106, title: "Bài 6.3: Hàm số mũ và hàm số lôgarit", order_index: 3 },
+    { id: 1604, chapter_id: 106, title: "Bài 6.4: Phương trình và bất phương trình mũ, lôgarit", order_index: 4 },
+    { id: 1605, chapter_id: 106, title: "Bài 6.5: Ôn tập & Luyện đề cuối Chương 6", order_index: 5 },
+
+    // TOÁN 11 - Chương 7 (HK2)
+    { id: 1701, chapter_id: 107, title: "Bài 7.1: Hai đường thẳng vuông góc", order_index: 1 },
+    { id: 1702, chapter_id: 107, title: "Bài 7.2: Đường thẳng vuông góc với mặt phẳng", order_index: 2 },
+    { id: 1703, chapter_id: 107, title: "Bài 7.3: Hai mặt phẳng vuông góc", order_index: 3 },
+    { id: 1704, chapter_id: 107, title: "Bài 7.4: Khoảng cách trong không gian", order_index: 4 },
+    { id: 1705, chapter_id: 107, title: "Bài 7.5: Góc giữa đường thẳng và mặt phẳng. Góc nhị diện", order_index: 5 },
+    { id: 1706, chapter_id: 107, title: "Bài 7.6: Thể tích một số khối đa diện", order_index: 6 },
+    { id: 1707, chapter_id: 107, title: "Bài 7.7: Ôn tập & Luyện đề cuối Chương 7", order_index: 7 },
+
+    // TOÁN 11 - Chương 8 (HK2)
+    { id: 1801, chapter_id: 108, title: "Bài 8.1: Biến cố giao và quy tắc nhân xác suất", order_index: 1 },
+    { id: 1802, chapter_id: 108, title: "Bài 8.2: Biến cố hợp và quy tắc cộng xác suất", order_index: 2 },
+    { id: 1803, chapter_id: 108, title: "Bài 8.3: Ôn tập & Luyện đề cuối Chương 8", order_index: 3 },
+
+    // TOÁN 11 - Chương 9 (HK2)
+    { id: 1901, chapter_id: 109, title: "Bài 9.1: Định nghĩa và ý nghĩa của đạo hàm", order_index: 1 },
+    { id: 1902, chapter_id: 109, title: "Bài 9.2: Các quy tắc tính đạo hàm", order_index: 2 },
+    { id: 1903, chapter_id: 109, title: "Bài 9.3: Đạo hàm cấp hai", order_index: 3 },
+    { id: 1904, chapter_id: 109, title: "Bài 9.4: Ôn tập & Luyện đề cuối Chương 9", order_index: 4 },
+
+    // TOÁN 12 - Chương 1
     { id: 2101, chapter_id: 201, title: "Bài 1.1: Tính đơn điệu và cực trị của hàm số", order_index: 1 },
     { id: 2102, chapter_id: 201, title: "Bài 1.2: Giá trị lớn nhất và giá trị nhỏ nhất của hàm số", order_index: 2 },
     { id: 2103, chapter_id: 201, title: "Bài 1.3: Đường tiệm cận của đồ thị hàm số", order_index: 3 },
     { id: 2104, chapter_id: 201, title: "Bài 1.4: Khảo sát sự biến thiên và vẽ đồ thị của hàm số", order_index: 4 },
-    { id: 2105, chapter_id: 201, title: "Bài 1.5: Ứng dụng đạo hàm để giải quyết một số vấn đề liên quan đến thực tiễn", order_index: 5 },
-    { id: 2106, chapter_id: 201, title: "Bài 1.6: Ôn tập & Luyện đề cuối Chương 1", order_index: 6 },
 
-    // Chương 2
+    // TOÁN 12 - Chương 2
     { id: 2201, chapter_id: 202, title: "Bài 2.1: Vectơ trong không gian", order_index: 1 },
     { id: 2202, chapter_id: 202, title: "Bài 2.2: Hệ trục tọa độ trong không gian", order_index: 2 },
     { id: 2203, chapter_id: 202, title: "Bài 2.3: Biểu thức tọa độ của các phép toán vectơ", order_index: 3 },
     { id: 2204, chapter_id: 202, title: "Bài 2.4: Ôn tập & Luyện đề cuối Chương 2", order_index: 4 },
 
-    // Chương 3
+    // TOÁN 12 - Chương 3
     { id: 2301, chapter_id: 203, title: "Bài 3.1: Khoảng biến thiên và khoảng tứ phân vị của mẫu số liệu ghép nhóm", order_index: 1 },
     { id: 2302, chapter_id: 203, title: "Bài 3.2: Phương sai và độ lệch chuẩn của mẫu số liệu ghép nhóm", order_index: 2 },
     { id: 2303, chapter_id: 203, title: "Bài 3.3: Ôn tập & Luyện đề cuối Chương 3", order_index: 3 },
+
+    // TOÁN 12 - Chương 4 (HK2)
+    { id: 2401, chapter_id: 204, title: "Bài 4.1: Nguyên hàm", order_index: 1 },
+    { id: 2402, chapter_id: 204, title: "Bài 4.2: Tích phân", order_index: 2 },
+    { id: 2403, chapter_id: 204, title: "Bài 4.3: Ứng dụng hình học của tích phân trong thực tiễn", order_index: 3 },
+    { id: 2404, chapter_id: 204, title: "Bài 4.4: Ôn tập & Luyện đề cuối Chương 4", order_index: 4 },
+
+    // TOÁN 12 - Chương 5 (HK2)
+    { id: 2501, chapter_id: 205, title: "Bài 5.1: Phương trình mặt phẳng trong không gian Oxyz", order_index: 1 },
+    { id: 2502, chapter_id: 205, title: "Bài 5.2: Phương trình đường thẳng trong không gian Oxyz", order_index: 2 },
+    { id: 2503, chapter_id: 205, title: "Bài 5.3: Phương trình mặt cầu", order_index: 3 },
+    { id: 2504, chapter_id: 205, title: "Bài 5.4: Vị trí tương đối và các bài toán khoảng cách, góc trong không gian Oxyz", order_index: 4 },
+    { id: 2505, chapter_id: 205, title: "Bài 5.5: Ôn tập & Luyện đề cuối Chương 5", order_index: 5 },
+
+    // TOÁN 12 - Chương 6 (HK2)
+    { id: 2601, chapter_id: 206, title: "Bài 6.1: Xác suất có điều kiện", order_index: 1 },
+    { id: 2602, chapter_id: 206, title: "Bài 6.2: Công thức xác suất toàn phần và công thức Bayes", order_index: 2 },
+    { id: 2603, chapter_id: 206, title: "Bài 6.3: Ôn tập & Luyện đề cuối Chương 6", order_index: 3 },
 
     // Khóa 3
     { id: 3001, chapter_id: 301, title: "Bài 1: Phương pháp đọc đề, phân tích bảng biểu thống kê phức tạp", order_index: 1 },
@@ -161,58 +216,16 @@ let dbLessons = JSON.parse(localStorage.getItem('db_lessons')) || [
 
 let dbMaterials = JSON.parse(localStorage.getItem('db_materials')) || [];
 
-// Tự động đồng bộ các chương và bài học chuẩn SGK Kết nối tri thức Lớp 11 cho Khóa 1
-(function syncKNTT11Curriculum() {
-    const KNTT_G11_CHAPTERS = [
-        { id: 101, course_id: 1, title: "Chương 1: Hàm số lượng giác và phương trình lượng giác", order_index: 1 },
-        { id: 102, course_id: 1, title: "Chương 2: Dãy số. Cấp số cộng và cấp số nhân", order_index: 2 },
-        { id: 103, course_id: 1, title: "Chương 3: Các số đặc trưng đo xu thế trung tâm của mẫu số liệu ghép nhóm", order_index: 3 },
-        { id: 104, course_id: 1, title: "Chương 4: Quan hệ song song trong không gian", order_index: 4 },
-        { id: 105, course_id: 1, title: "Chương 5: Giới hạn. Hàm số liên tục", order_index: 5 }
-    ];
-
-    const KNTT_G11_LESSONS = [
-        { id: 1101, chapter_id: 101, title: "Bài 1.1: Giá trị lượng giác của góc lượng giác", order_index: 1 },
-        { id: 1102, chapter_id: 101, title: "Bài 1.2: Công thức lượng giác", order_index: 2 },
-        { id: 1103, chapter_id: 101, title: "Bài 1.3: Hàm số lượng giác", order_index: 3 },
-        { id: 1104, chapter_id: 101, title: "Bài 1.4: Phương trình lượng giác cơ bản", order_index: 4 },
-        { id: 1105, chapter_id: 101, title: "Bài 1.5: Ôn tập & Luyện đề cuối Chương 1", order_index: 5 },
-        { id: 1201, chapter_id: 102, title: "Bài 2.1: Dãy số", order_index: 1 },
-        { id: 1202, chapter_id: 102, title: "Bài 2.2: Cấp số cộng", order_index: 2 },
-        { id: 1203, chapter_id: 102, title: "Bài 2.3: Cấp số nhân", order_index: 3 },
-        { id: 1204, chapter_id: 102, title: "Bài 2.4: Ôn tập & Luyện đề cuối Chương 2", order_index: 4 },
-        { id: 1301, chapter_id: 103, title: "Bài 3.1: Mẫu số liệu ghép nhóm", order_index: 1 },
-        { id: 1302, chapter_id: 103, title: "Bài 3.2: Các số đặc trưng đo xu thế trung tâm", order_index: 2 },
-        { id: 1303, chapter_id: 103, title: "Bài 3.3: Ôn tập & Luyện đề cuối Chương 3", order_index: 3 },
-        { id: 1401, chapter_id: 104, title: "Bài 4.1: Đường thẳng và mặt phẳng trong không gian", order_index: 1 },
-        { id: 1402, chapter_id: 104, title: "Bài 4.2: Hai đường thẳng song song", order_index: 2 },
-        { id: 1403, chapter_id: 104, title: "Bài 4.3: Đường thẳng và mặt phẳng song song", order_index: 3 },
-        { id: 1404, chapter_id: 104, title: "Bài 4.4: Hai mặt phẳng song song", order_index: 4 },
-        { id: 1405, chapter_id: 104, title: "Bài 4.5: Phép chiếu song song", order_index: 5 },
-        { id: 1406, chapter_id: 104, title: "Bài 4.6: Ôn tập & Luyện đề cuối Chương 4", order_index: 6 },
-        { id: 1501, chapter_id: 105, title: "Bài 5.1: Giới hạn của dãy số", order_index: 1 },
-        { id: 1502, chapter_id: 105, title: "Bài 5.2: Giới hạn của hàm số", order_index: 2 },
-        { id: 1503, chapter_id: 105, title: "Bài 5.3: Hàm số liên tục", order_index: 3 },
-        { id: 1504, chapter_id: 105, title: "Bài 5.4: Ôn tập & Luyện đề cuối Chương 5", order_index: 4 }
-    ];
-
-    const needUpdateC1 = dbChapters.some(c => c.course_id === 1 && (c.title.includes("Vi-ét") || c.title.includes("vào 10"))) || !dbChapters.some(c => c.id === 105);
-    if (needUpdateC1) {
-        dbChapters = dbChapters.filter(c => c.course_id !== 1).concat(KNTT_G11_CHAPTERS);
+// Tự động đồng bộ các chương và bài học chuẩn SGK Kết nối tri thức Lớp 11 và Lớp 12
+(function syncFullCurriculum() {
+    const needUpdate = !dbChapters.some(c => c.id === 109) || !dbChapters.some(c => c.id === 206) || dbChapters.some(c => c.title && c.title.includes("vào 10"));
+    if (needUpdate) {
+        // Cập nhật lại db_chapters và db_lessons vào localStorage
         localStorage.setItem('db_chapters', JSON.stringify(dbChapters));
-
-        const oldC1ChIds = [101, 102, 103, 104, 105];
-        dbLessons = dbLessons.filter(l => !oldC1ChIds.includes(l.chapter_id)).concat(KNTT_G11_LESSONS);
         localStorage.setItem('db_lessons', JSON.stringify(dbLessons));
-
-        // Dọn sạch học liệu cũ của khóa 1 để các bài học mới sạch hoàn toàn
-        dbMaterials = dbMaterials.filter(m => !m.lesson_id || m.lesson_id >= 2000 || m.lesson_id < 1000);
-        localStorage.setItem('db_materials', JSON.stringify(dbMaterials));
     }
 })();
 
-
-// Tự động di chuyển dữ liệu (Migration) từ cấu trúc bài học cũ sang học liệu con nếu cần
 migrateOfflineDataIfNeeded();
 
 function migrateOfflineDataIfNeeded() {
@@ -323,10 +336,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 1. Kiểm tra đăng nhập
     await checkAdminAuth();
 
+    function callWithTimeout(promise, ms = 2000) {
+        return Promise.race([
+            promise,
+            new Promise((_, reject) => setTimeout(() => reject(new Error("Supabase timeout")), ms))
+        ]);
+    }
+
     async function checkAdminAuth() {
         if (isOnline) {
             try {
-                const { data: { session } } = await supabaseClient.auth.getSession();
+                const { data: { session } } = await callWithTimeout(supabaseClient.auth.getSession(), 1500);
                 if (session && session.user) {
                     isUserLoggedIn = true;
                     loggedInUser = {
@@ -516,22 +536,20 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if (isOnline) {
             try {
-                // Tải khóa học
-                const { data: courseData, error: courseError } = await supabaseClient
-                    .from('courses')
-                    .select('*')
-                    .eq('id', id)
-                    .single();
+                // Tải khóa học với timeout an toàn
+                const { data: courseData, error: courseError } = await callWithTimeout(
+                    supabaseClient.from('courses').select('*').eq('id', id).single(),
+                    2000
+                );
 
                 if (courseError) throw courseError;
                 currentCourse = courseData;
 
                 // Tải chương (Sắp xếp theo order_index)
-                const { data: chaptersData, error: chaptersError } = await supabaseClient
-                    .from('chapters')
-                    .select('*')
-                    .eq('course_id', id)
-                    .order('order_index', { ascending: true });
+                const { data: chaptersData, error: chaptersError } = await callWithTimeout(
+                    supabaseClient.from('chapters').select('*').eq('course_id', id).order('order_index', { ascending: true }),
+                    2000
+                );
 
                 if (chaptersError) throw chaptersError;
                 currentChapters = chaptersData;
@@ -539,11 +557,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 // Tải bài giảng (Sắp xếp theo order_index)
                 const chapterIds = currentChapters.map(c => c.id);
                 if (chapterIds.length > 0) {
-                    const { data: lessonsData, error: lessonsError } = await supabaseClient
-                        .from('lessons')
-                        .select('*')
-                        .in('chapter_id', chapterIds)
-                        .order('order_index', { ascending: true });
+                    const { data: lessonsData, error: lessonsError } = await callWithTimeout(
+                        supabaseClient.from('lessons').select('*').in('chapter_id', chapterIds).order('order_index', { ascending: true }),
+                        2000
+                    );
 
                     if (lessonsError) throw lessonsError;
 
@@ -558,11 +575,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                     // Tải học liệu của các bài giảng (Sắp xếp theo order_index)
                     if (lessonIds.length > 0) {
-                        const { data: materialsData, error: materialsError } = await supabaseClient
-                            .from('materials')
-                            .select('*')
-                            .in('lesson_id', lessonIds)
-                            .order('order_index', { ascending: true });
+                        const { data: materialsData, error: materialsError } = await callWithTimeout(
+                            supabaseClient.from('materials').select('*').in('lesson_id', lessonIds).order('order_index', { ascending: true }),
+                            2000
+                        );
 
                         if (materialsError) throw materialsError;
 
@@ -575,7 +591,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     }
                 }
             } catch (err) {
-                console.error("Supabase error, loading offline database:", err);
+                console.warn("Supabase không phản hồi hoặc dự án đang bị Tạm dừng, tự động tải dữ liệu Offline:", err);
                 loadOfflineData(id);
             }
         } else {
@@ -619,26 +635,24 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Render thông tin khóa học
     function renderCourseIntro(course) {
         const introBox = document.getElementById('courseIntroBox');
-        if (!introBox) return;
 
         const courseGearHTML = isEditModeActive
-            ? `<button class="gear-btn course-gear-btn" data-course-id="${course.id}" style="display: inline-flex;" title="Sửa thông tin khóa học"><i class="fa-solid fa-gear" style="font-size: 1.4rem;"></i></button>`
+            ? `<button class="gear-btn course-gear-btn" data-course-id="${course.id}" style="display: inline-flex; margin-left: 8px;" title="Sửa thông tin khóa học"><i class="fa-solid fa-gear" style="font-size: 1.2rem;"></i></button>`
             : '';
 
-        introBox.innerHTML = `
-            <span class="course-tag">${course.tag_label || getTagLabel(course.tag)}</span>
-            <h1 style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 16px;">
-                ${course.title}
-                ${courseGearHTML}
-            </h1>
-            <p class="course-desc-large">${course.description}</p>
-        `;
+        const syllabusTitleEl = document.getElementById('syllabusCourseTitle');
+        if (syllabusTitleEl) {
+            syllabusTitleEl.innerHTML = `${course.title || 'Nội Dung Khóa Học'} ${courseGearHTML}`;
+            const courseGear = syllabusTitleEl.querySelector('.course-gear-btn');
+            if (courseGear) {
+                courseGear.addEventListener('click', () => {
+                    openQuickEditCourseModal(course.id);
+                });
+            }
+        }
 
-        const courseGear = introBox.querySelector('.course-gear-btn');
-        if (courseGear) {
-            courseGear.addEventListener('click', () => {
-                openQuickEditCourseModal(course.id);
-            });
+        if (introBox) {
+            introBox.innerHTML = '';
         }
     }
 

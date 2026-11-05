@@ -11,6 +11,21 @@ if (SUPABASE_URL !== "YOUR_SUPABASE_URL" && SUPABASE_KEY !== "YOUR_SUPABASE_ANON
         // Cần tải thư viện Supabase JS SDK trước khi file này chạy
         if (typeof supabase !== 'undefined') {
             supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+            
+            // Bọc bảo vệ hàm getSession() với Timeout 1.5s để tránh làm treo ứng dụng khi Supabase bị Pause hoặc mất mạng
+            if (supabaseClient && supabaseClient.auth) {
+                const origGetSession = supabaseClient.auth.getSession.bind(supabaseClient.auth);
+                supabaseClient.auth.getSession = function() {
+                    return Promise.race([
+                        origGetSession(),
+                        new Promise((_, reject) => setTimeout(() => reject(new Error("Supabase auth timeout")), 1500))
+                    ]).catch(err => {
+                        console.warn("Supabase auth timeout hoặc mất kết nối:", err.message);
+                        return { data: { session: null }, error: err };
+                    });
+                };
+            }
+
             console.log("Đã kết nối thành công tới Supabase Database!");
         } else {
             console.error("Supabase SDK chưa được tải. Vui lòng thêm thư viện script Supabase.");

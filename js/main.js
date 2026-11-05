@@ -3,33 +3,15 @@
 const FEATURED_COURSES = [
     {
         id: 1,
-        title: "Toán Học Lớp 11 - Nền Tảng & Chuyên Sâu",
-        grade: "Toán Lớp 11",
-        tag: "grade11",
-        badge: "Chương trình mới GDPT 2018",
-        badge_icon: "fa-sparkles",
-        description: "Bứt phá toàn bộ kiến thức Hàm số lượng giác, Dãy số, Cấp số cộng - Cấp số nhân, Giới hạn, Đạo hàm, Xác suất và Hình học không gian 11 bám sát chương trình mới GDPT 2018.",
-        features: [
-            "Trọn bộ video bài giảng bản chất & sơ đồ tư duy",
-            "Ngân hàng bài tập & đề trắc nghiệm chấm điểm tự động",
-            "Rèn luyện kỹ năng Casio & mẹo giải nhanh toán 11"
-        ],
-        image_url: "assets/images/course-10.png"
+        title: "Toán 11",
+        gradient: "linear-gradient(135deg, #3730A3 0%, #4F46E5 50%, #6366F1 100%)",
+        btnGradient: "linear-gradient(135deg, #4338CA 0%, #4F46E5 100%)"
     },
     {
         id: 2,
-        title: "Toán Học Lớp 12 - Luyện Thi THPT & ĐGNL",
-        grade: "Toán Lớp 12",
-        tag: "grade12",
-        badge: "Luyện thi THPT & ĐGNL 9+",
-        badge_icon: "fa-fire",
-        description: "Hệ thống toàn diện Giải tích 12, Ứng dụng đạo hàm, Khảo sát hàm số, Vectơ và Hình không gian Oxyz, Tích phân và Xác suất. Chinh phục kỳ thi Tốt nghiệp THPT và ĐGNL (HSA/APT).",
-        features: [
-            "Luyện chuyên sâu cấu trúc đề thi THPT Quốc Gia & HSA/APT",
-            "Kho đề thi thử tuyển chọn chuẩn format kèm lời giải chi tiết",
-            "Tuyệt kỹ Casio giải nhanh trắc nghiệm 30s tối ưu thời gian"
-        ],
-        image_url: "assets/images/course-thpt.png"
+        title: "Toán 12",
+        gradient: "linear-gradient(135deg, #0369A1 0%, #0284C7 50%, #38BDF8 100%)",
+        btnGradient: "linear-gradient(135deg, #0369A1 0%, #0284C7 100%)"
     }
 ];
 
@@ -104,23 +86,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!grid) return;
 
         grid.innerHTML = FEATURED_COURSES.map(course => `
-            <div class="featured-course-card" onclick="window.location.href='course-detail.html?id=${course.id}'">
-                <div class="featured-course-image-wrapper">
-                    <span class="featured-course-grade-badge"><i class="fa-solid fa-graduation-cap"></i> ${course.grade}</span>
-                    <span class="featured-course-highlight-badge"><i class="fa-solid ${course.badge_icon}"></i> ${course.badge}</span>
-                    <img src="${course.image_url}" alt="${course.title}" class="featured-course-img">
+            <div class="featured-course-card simple-course-card" onclick="window.location.href='course-detail.html?id=${course.id}'">
+                <div class="simple-card-header" style="background: ${course.gradient};">
+                    <div class="simple-card-big-title">${course.title}</div>
                 </div>
-                <div class="featured-course-body">
-                    <h3 class="featured-course-title">${course.title}</h3>
-                    <p class="featured-course-desc">${course.description}</p>
-                    <ul class="featured-course-features">
-                        ${course.features.map(f => `<li class="featured-course-feature-item"><i class="fa-solid fa-circle-check"></i> ${f}</li>`).join('')}
-                    </ul>
-                    <div class="featured-course-footer">
-                        <a href="course-detail.html?id=${course.id}" class="btn btn-primary featured-course-btn" onclick="event.stopPropagation();">
-                            Vào học ngay <i class="fa-solid fa-arrow-right"></i>
-                        </a>
-                    </div>
+                <div class="simple-card-footer">
+                    <span class="btn btn-primary simple-course-btn" style="background: ${course.btnGradient}; color: #FFFFFF !important;">
+                        Vào học ngay <i class="fa-solid fa-arrow-right"></i>
+                    </span>
                 </div>
             </div>
         `).join('');

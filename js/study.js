@@ -2514,7 +2514,7 @@ function renderCurrentQuizQuestion() {
 
                     const userVal = currentAnswers[idx];
 
-                    const expectedVal = (it.is_correct === true || it.is_correct === 'true');
+                    const expectedVal = (typeof it === 'object' && it !== null && it.is_correct !== undefined) ? (it.is_correct === true || it.is_correct === 'true') : (Array.isArray(q.correct_option) ? (q.correct_option[idx] === 1 || q.correct_option[idx] === true) : false);
 
                     const isItemCorrect = (userVal === expectedVal);
 
@@ -3064,7 +3064,7 @@ function submitQuizQuestion() {
 
         }
 
-        isCorrect = items.every((it, idx) => answers[idx] === (it.is_correct === true || it.is_correct === 'true'));
+        isCorrect = items.every((it, idx) => { const exp = (typeof it === 'object' && it !== null && it.is_correct !== undefined) ? (it.is_correct === true || it.is_correct === 'true') : (Array.isArray(q.correct_option) ? (q.correct_option[idx] === 1 || q.correct_option[idx] === true) : false); return answers[idx] === exp; });
 
     } else if (q.question_type === 'short_answer') {
 

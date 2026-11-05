@@ -8,7 +8,108 @@
     <!-- FontAwesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Custom CSS stylesheet -->
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/style.css?v=2.2">
+    <style>
+        .featured-courses-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 32px;
+            max-width: 920px;
+            margin: 0 auto;
+        }
+        .simple-course-card {
+            background: #FFFFFF;
+            border: 1.5px solid #E2E8F0;
+            border-radius: 24px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .simple-course-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(99, 102, 241, 0.22);
+            border-color: #6366F1;
+        }
+        .simple-card-header {
+            padding: 52px 24px 44px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 220px;
+        }
+        .simple-card-badge {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            background: rgba(255, 255, 255, 0.25) !important;
+            backdrop-filter: blur(10px) !important;
+            color: #FFFFFF !important;
+            font-size: 0.9rem !important;
+            font-weight: 700 !important;
+            padding: 6px 18px !important;
+            border-radius: 999px !important;
+            margin-bottom: 14px !important;
+            border: 1px solid rgba(255, 255, 255, 0.4) !important;
+        }
+        .simple-card-header {
+            padding: 60px 24px !important;
+            min-height: 220px !important;
+        }
+        .simple-card-big-title {
+            font-size: 5.2rem !important;
+            font-weight: 900 !important;
+            color: #FFFFFF !important;
+            -webkit-text-fill-color: #FFFFFF !important;
+            background: none !important;
+            letter-spacing: -2px !important;
+            line-height: 1 !important;
+            margin: 0 !important;
+            text-shadow: 0 4px 24px rgba(0, 0, 0, 0.4) !important;
+            user-select: none;
+        }
+        .simple-card-footer {
+            padding: 22px 24px;
+            background: #FFFFFF;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-top: 1px solid #F1F5F9;
+        }
+        .simple-course-btn {
+            width: 100% !important;
+            padding: 14px 28px !important;
+            font-size: 1.05rem !important;
+            font-weight: 700 !important;
+            border-radius: 14px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 10px !important;
+            color: #FFFFFF !important;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12) !important;
+            transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+            border: none !important;
+        }
+        .simple-course-card:hover .simple-course-btn {
+            transform: scale(1.02);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2) !important;
+        }
+        @media (max-width: 768px) {
+            .featured-courses-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            .simple-card-big-title {
+                font-size: 3.4rem !important;
+            }
+        }
+    </style>
 </head>
 <body>
 
@@ -42,55 +143,28 @@
     <!-- Course Catalog Section (Đặt ở ngay đầu trang) -->
     <section class="courses courses-top-section" id="courses">
         <div class="container">
-            <div class="section-header">
-                <h2>Chương Trình Khóa Học Trọng Tâm</h2>
-                <p>Học Toán từ bản chất cùng Thầy Tùng Dương. Chọn khóa học để vào học video bài giảng và rèn luyện đề thi ngay lập tức.</p>
-            </div>
-            
             <div class="featured-courses-grid">
                 <!-- Khóa 1: Toán Lớp 11 -->
-                <div class="featured-course-card" onclick="window.location.href='course-detail.html?id=1'">
-                    <div class="featured-course-image-wrapper">
-                        <span class="featured-course-grade-badge"><i class="fa-solid fa-graduation-cap"></i> Toán Lớp 11</span>
-                        <span class="featured-course-highlight-badge"><i class="fa-solid fa-sparkles"></i> Chương trình mới GDPT 2018</span>
-                        <img src="assets/images/course-10.png" alt="Khóa Học Toán Lớp 11" class="featured-course-img">
+                <div class="featured-course-card simple-course-card" onclick="window.location.href='course-detail.html?id=1'">
+                    <div class="simple-card-header" style="background: linear-gradient(135deg, #3730A3 0%, #4F46E5 50%, #6366F1 100%);">
+                        <div class="simple-card-big-title">Toán 11</div>
                     </div>
-                    <div class="featured-course-body">
-                        <h3 class="featured-course-title">Toán Học Lớp 11 - Nền Tảng & Chuyên Sâu</h3>
-                        <p class="featured-course-desc">Bứt phá toàn bộ kiến thức Hàm số lượng giác, Dãy số, Cấp số cộng - Cấp số nhân, Giới hạn, Đạo hàm, Xác suất và Hình học không gian 11 bám sát chương trình mới GDPT 2018.</p>
-                        <ul class="featured-course-features">
-                            <li class="featured-course-feature-item"><i class="fa-solid fa-circle-check"></i> Trọn bộ video bài giảng bản chất & sơ đồ tư duy</li>
-                            <li class="featured-course-feature-item"><i class="fa-solid fa-circle-check"></i> Ngân hàng bài tập & đề trắc nghiệm chấm điểm tự động</li>
-                            <li class="featured-course-feature-item"><i class="fa-solid fa-circle-check"></i> Rèn luyện kỹ năng Casio & mẹo giải nhanh toán 11</li>
-                        </ul>
-                        <div class="featured-course-footer">
-                            <a href="course-detail.html?id=1" class="btn btn-primary featured-course-btn" onclick="event.stopPropagation();">
-                                Vào học ngay <i class="fa-solid fa-arrow-right"></i>
-                            </a>
-                        </div>
+                    <div class="simple-card-footer">
+                        <span class="btn btn-primary simple-course-btn" style="background: linear-gradient(135deg, #4338CA 0%, #4F46E5 100%); color: #FFFFFF !important;">
+                            Vào học ngay <i class="fa-solid fa-arrow-right"></i>
+                        </span>
                     </div>
                 </div>
 
                 <!-- Khóa 2: Toán Lớp 12 -->
-                <div class="featured-course-card" onclick="window.location.href='course-detail.html?id=2'">
-                    <div class="featured-course-image-wrapper">
-                        <span class="featured-course-grade-badge"><i class="fa-solid fa-graduation-cap"></i> Toán Lớp 12</span>
-                        <span class="featured-course-highlight-badge"><i class="fa-solid fa-fire"></i> Luyện thi THPT & ĐGNL 9+</span>
-                        <img src="assets/images/course-thpt.png" alt="Khóa Học Toán Lớp 12" class="featured-course-img">
+                <div class="featured-course-card simple-course-card" onclick="window.location.href='course-detail.html?id=2'">
+                    <div class="simple-card-header" style="background: linear-gradient(135deg, #0369A1 0%, #0284C7 50%, #38BDF8 100%);">
+                        <div class="simple-card-big-title">Toán 12</div>
                     </div>
-                    <div class="featured-course-body">
-                        <h3 class="featured-course-title">Toán Học Lớp 12 - Luyện Thi THPT & ĐGNL</h3>
-                        <p class="featured-course-desc">Hệ thống toàn diện Giải tích 12, Ứng dụng đạo hàm, Khảo sát hàm số, Vectơ và Hình không gian Oxyz, Tích phân và Xác suất. Chinh phục kỳ thi Tốt nghiệp THPT và ĐGNL (HSA/APT).</p>
-                        <ul class="featured-course-features">
-                            <li class="featured-course-feature-item"><i class="fa-solid fa-circle-check"></i> Luyện chuyên sâu cấu trúc đề thi THPT Quốc Gia & HSA/APT</li>
-                            <li class="featured-course-feature-item"><i class="fa-solid fa-circle-check"></i> Kho đề thi thử tuyển chọn chuẩn format kèm lời giải chi tiết</li>
-                            <li class="featured-course-feature-item"><i class="fa-solid fa-circle-check"></i> Tuyệt kỹ Casio giải nhanh trắc nghiệm 30s tối ưu thời gian</li>
-                        </ul>
-                        <div class="featured-course-footer">
-                            <a href="course-detail.html?id=2" class="btn btn-primary featured-course-btn" onclick="event.stopPropagation();">
-                                Vào học ngay <i class="fa-solid fa-arrow-right"></i>
-                            </a>
-                        </div>
+                    <div class="simple-card-footer">
+                        <span class="btn btn-primary simple-course-btn" style="background: linear-gradient(135deg, #0369A1 0%, #0284C7 100%); color: #FFFFFF !important;">
+                            Vào học ngay <i class="fa-solid fa-arrow-right"></i>
+                        </span>
                     </div>
                 </div>
             </div>

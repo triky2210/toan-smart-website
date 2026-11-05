@@ -5,3 +5,4 @@ tmp/
 .git/
 .DS_Store
 Thumbs.db
+*.mp4
