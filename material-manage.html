@@ -1073,6 +1073,67 @@
             cursor: pointer;
             background: none;
         }
+    
+        /* Full Quiz Preview Modal Styles */
+        #fullQuizModal.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        #fullQuizModalContent.hide-answers-solutions .quiz-preview-correct-badge,
+        #fullQuizModalContent.hide-answers-solutions .quiz-preview-exp-box,
+        #fullQuizModalContent.hide-answers-solutions .quiz-preview-tf-badge {
+            display: none !important;
+        }
+        #fullQuizModalContent.hide-answers-solutions .quiz-preview-opt.correct-opt {
+            border-color: #E2E8F0 !important;
+            background: #FFFFFF !important;
+            color: #1E293B !important;
+            font-weight: normal !important;
+        }
+        #fullQuizModalContent.hide-answers-solutions .quiz-preview-opt.correct-opt .opt-letter {
+            background: #E2E8F0 !important;
+            color: #475569 !important;
+        }
+        #fullQuizModalContent.hide-answers-solutions .quiz-preview-tf-item {
+            border-color: #E2E8F0 !important;
+            background: #F8FAFC !important;
+        }
+        #fullQuizModalContent.hide-answers-solutions .quiz-preview-sa-ans {
+            display: none !important;
+        }
+
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #fullQuizModal, #fullQuizModal * {
+                visibility: visible;
+            }
+            #fullQuizModal {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                background: white;
+                padding: 0;
+            }
+            #fullQuizModalContent {
+                max-width: 100% !important;
+                max-height: none !important;
+                box-shadow: none !important;
+                border: none !important;
+            }
+            .modal-fixed-header button, .modal-fixed-footer {
+                display: none !important;
+            }
+            .full-quiz-q-card {
+                page-break-inside: avoid;
+                box-shadow: none !important;
+                border: 1px solid #CBD5E1 !important;
+            }
+        }
+
     </style>
 </head>
 <body>
@@ -1087,9 +1148,17 @@
                     Đang tải thông tin học liệu...
                 </div>
             </div>
-            <a href="javascript:void(0)" id="manageBackBtn" class="btn btn-secondary" style="width: auto; padding: 10px 20px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; text-decoration: none;">
-                <i class="fa-solid fa-arrow-left"></i> Quay lại
-            </a>
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <button type="button" class="btn" id="previewFullQuizBtn" onclick="openFullQuizModal()" style="width: auto; padding: 10px 18px; font-weight: 700; display: inline-flex; align-items: center; gap: 8px; background: #EEF2FF; color: var(--accent-color); border: 1.5px solid var(--accent-color); border-radius: 10px; cursor: pointer; transition: all 0.2s;" title="Xem nhanh toàn bộ đề thi kèm đáp án đúng và hướng dẫn giải">
+                    <i class="fa-solid fa-eye"></i> Xem thử
+                </button>
+                <button type="button" class="btn btn-primary" id="viewStudentModeBtn" onclick="openStudentStudyTab()" style="width: auto; padding: 10px 18px; font-weight: 700; display: inline-flex; align-items: center; gap: 8px; border-radius: 10px; cursor: pointer;" title="Mở trang giao diện học sinh của học liệu này trong tab mới">
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i> Xem nội dung
+                </button>
+                <a href="javascript:void(0)" id="manageBackBtn" class="btn btn-secondary" style="width: auto; padding: 10px 20px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; text-decoration: none;">
+                    <i class="fa-solid fa-arrow-left"></i> Quay lại
+                </a>
+            </div>
         </div>
 
         <!-- Filters & Action Toolbar (Cho phép đổi nhanh bài/học liệu) -->
@@ -1121,10 +1190,15 @@
                 <button class="btn btn-primary" id="addQuestionBtn">
                     <i class="fa-solid fa-plus"></i> Tạo câu hỏi mới
                 </button>
+                <button type="button" class="btn btn-outline" id="actionPreviewFullQuizBtn" onclick="openFullQuizModal()" style="border: 1.5px solid var(--accent-color); color: var(--accent-color); background: #EEF2FF; font-weight: 600; width: auto; display: inline-flex; align-items: center; gap: 8px;">
+                    <i class="fa-solid fa-eye"></i> Xem thử
+                </button>
+                <button type="button" class="btn" id="actionViewStudentModeBtn" onclick="openStudentStudyTab()" style="background: #0284C7; color: #FFFFFF; border: 1.5px solid #0284C7; font-weight: 600; width: auto; display: inline-flex; align-items: center; gap: 8px;">
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i> Xem nội dung
+                </button>
                 <button class="btn btn-secondary" id="clearAllBtn" style="color: #EF4444; border-color: #FCA5A5; background: #FFF5F5;">
                     <i class="fa-solid fa-trash-can"></i> Xóa tất cả trong học liệu này
                 </button>
-
             </div>
         </div>
 
@@ -1223,6 +1297,12 @@
                         <span>Chỉ lọc câu hỏi thuộc bài học hiện tại</span>
                     </label>
                     <div class="action-buttons">
+                        <button type="button" class="btn btn-outline" onclick="openFullQuizModal()" style="border: 1.5px solid var(--accent-color); color: var(--accent-color); background: #EEF2FF; font-weight: 600; width: auto; display: inline-flex; align-items: center; gap: 8px;">
+                            <i class="fa-solid fa-eye"></i> Xem thử
+                        </button>
+                        <button type="button" class="btn" onclick="openStudentStudyTab()" style="background: #0284C7; color: #FFFFFF; border: 1.5px solid #0284C7; font-weight: 600; width: auto; display: inline-flex; align-items: center; gap: 8px;">
+                            <i class="fa-solid fa-arrow-up-right-from-square"></i> Xem nội dung
+                        </button>
                         <button class="btn btn-primary" id="addQuestionBtn" onclick="openQuestionModal()">
                             <i class="fa-solid fa-plus"></i> Soạn câu hỏi mới (WYSIWYG Math)
                         </button>
@@ -1697,8 +1777,49 @@
             <div id="previewQExplanation" style="margin-top: 20px; display: none;"></div>
         </div>
     </div>
+
+    <!-- Full Quiz Preview Modal (Xem thử toàn bộ đề thi / bài tập) -->
+    <div class="admin-modal" id="fullQuizModal">
+        <div class="admin-modal-content fixed-layout" id="fullQuizModalContent" style="max-width: 980px; width: 95%; max-height: 90vh; border-radius: 20px; display: flex; flex-direction: column; padding: 0;">
+            <!-- Fixed Header -->
+            <div class="modal-fixed-header" style="padding: 20px 24px; border-bottom: 1px solid #E2E8F0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; background: #FFFFFF; border-radius: 20px 20px 0 0;">
+                <div>
+                    <h3 class="admin-modal-title" style="margin: 0; font-size: 1.3rem; display: flex; align-items: center; gap: 10px;">
+                        <i class="fa-solid fa-square-check" style="color: var(--accent-color);"></i> Xem Thử Đề Thi: <span id="fullQuizModalTitle" style="color: var(--accent-color);">Quiz 0</span>
+                    </h3>
+                    <div id="fullQuizModalStats" style="margin-top: 6px; font-size: 0.86rem; color: #64748B; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                        Đang tải danh sách câu hỏi...
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <button type="button" class="btn btn-outline" id="toggleExpBtn" onclick="toggleFullQuizExplanations()" style="padding: 7px 14px; font-size: 0.85rem; border-radius: 8px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; border: 1.5px solid #10B981; color: #059669; background: #ECFDF5; cursor: pointer;">
+                        <i class="fa-solid fa-lightbulb"></i> <span id="toggleExpBtnText">Ẩn đáp án & HDG</span>
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="printFullQuiz()" style="padding: 7px 14px; font-size: 0.85rem; border-radius: 8px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; cursor: pointer;">
+                        <i class="fa-solid fa-print"></i> In đề thi
+                    </button>
+                    <button type="button" class="admin-modal-close" onclick="closeFullQuizModal()" style="position: static; font-size: 1.3rem; color: #64748B; background: none; border: none; cursor: pointer; padding: 4px 8px;"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+            </div>
+
+            <!-- Scrollable Body with all questions -->
+            <div class="modal-fixed-body" id="fullQuizModalBody" style="padding: 24px; overflow-y: auto; flex: 1; background: #F8FAFC;">
+                <!-- Dynamic questions list -->
+            </div>
+
+            <!-- Fixed Footer -->
+            <div class="modal-fixed-footer" style="padding: 16px 24px; border-top: 1px solid #E2E8F0; display: flex; justify-content: space-between; align-items: center; background: #FFFFFF; border-radius: 0 0 20px 20px;">
+                <span id="fullQuizModalFooterCount" style="font-size: 0.9rem; color: #64748B; font-weight: 600;">Tổng cộng 0 câu hỏi</span>
+                <div style="display: flex; gap: 12px; align-items: center;">
+                    <button type="button" class="btn btn-secondary" onclick="closeFullQuizModal()" style="width: auto; padding: 10px 20px; font-weight: 600;">Đóng</button>
+                    <button type="button" class="btn btn-primary" onclick="openStudentStudyTab()" style="width: auto; padding: 10px 22px; font-weight: 700; display: inline-flex; align-items: center; gap: 8px;">
+                        <i class="fa-solid fa-arrow-up-right-from-square"></i> Xem giao diện học sinh
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
+
 
     <!-- External Libraries -->
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>

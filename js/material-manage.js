@@ -232,6 +232,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const type = currentMaterial.type || 'quiz';
 
+        // Cập nhật trạng thái hiển thị của các nút Xem thử và Xem nội dung
+        const isQuizType = (type === 'quiz' || type === 'exercise');
+        document.querySelectorAll('#previewFullQuizBtn, #actionPreviewFullQuizBtn').forEach(btn => {
+            btn.style.display = isQuizType ? 'inline-flex' : 'none';
+        });
+        document.querySelectorAll('#viewStudentModeBtn, #actionViewStudentModeBtn').forEach(btn => {
+            btn.style.display = 'inline-flex';
+        });
+
         if (type === 'video') {
             manageTitle.innerHTML = `<i class="fa-solid fa-circle-play" style="color: #0EA5E9;"></i> Quản Lý Video Bài Giảng: ${currentMaterial.title}`;
             if (videoSection) videoSection.style.display = 'block';
@@ -1431,15 +1440,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function renderQuestionHtml(rawHtml) {
-        // Render $...$ → KaTeX inline cho danh sách câu hỏi
         if (!rawHtml) return '';
-        return rawHtml.replace(/\$([^$]+)\$/g, (match, latex) => {
+        if (typeof katex === 'undefined') return rawHtml;
+        // 1. Render display math $$...$$
+        let res = rawHtml.replace(/\$\$([^$]+)\$\$/g, (match, latex) => {
             try {
-                return katex.renderToString(latex, { throwOnError: false });
+                return katex.renderToString(latex, { displayMode: true, throwOnError: false });
             } catch (e) {
                 return match;
             }
         });
+        // 2. Render inline math $...$
+        res = res.replace(/\$([^$]+)\$/g, (match, latex) => {
+            try {
+                return katex.renderToString(latex, { displayMode: false, throwOnError: false });
+            } catch (e) {
+                return match;
+            }
+        });
+        return res;
     }
 
     function getQuestionTypeBadgeHtml(q) {
@@ -2555,4 +2574,277 @@ let parsedWordQuestions = [];
             }
         }
     };
+
+    // ==========================================================
+    // TÍNH NĂNG XEM THỬ TOÀN BỘ ĐỀ THI & XEM GIAO DIỆN HỌC SINH
+    // ==========================================================
+
+    // 1. Chuyển sang giao diện học sinh trong Tab mới
+    window.openStudentStudyTab = function() {
+        if (!currentMaterialId) {
+            alert("Vui lòng chọn hoặc tạo học liệu trước khi xem giao diện học sinh.");
+            return;
+        }
+        const lesson = cachedLessons.find(l => l.id == currentLessonId);
+        const chapter = lesson ? cachedChapters.find(ch => ch.id == lesson.chapter_id) : null;
+        const courseId = chapter ? chapter.course_id : (currentCourseId || 1);
+        const targetUrl = `study.html?id=${courseId}&lesson_id=${currentLessonId || ''}&material_id=${currentMaterialId}`;
+        window.open(targetUrl, '_blank');
+    };
+
+    // 2. Mở Pop-up xem nhanh toàn bộ nội dung đề thi (kèm đáp án đúng và hướng dẫn giải)
+    let isFullQuizExpVisible = true;
+
+    window.openFullQuizModal = function() {
+        const modal = document.getElementById('fullQuizModal');
+        if (!modal) return;
+
+        const modalTitle = document.getElementById('fullQuizModalTitle');
+        if (modalTitle) modalTitle.textContent = currentMaterial ? currentMaterial.title : 'Đề thi trắc nghiệm';
+
+        const modalStats = document.getElementById('fullQuizModalStats');
+        const footerCount = document.getElementById('fullQuizModalFooterCount');
+        const body = document.getElementById('fullQuizModalBody');
+
+        const total = selectedQuestions.length;
+        const mcCount = selectedQuestions.filter(q => !q.question_type || q.question_type === 'multiple_choice').length;
+        const tfCount = selectedQuestions.filter(q => q.question_type === 'true_false').length;
+        const saCount = selectedQuestions.filter(q => q.question_type === 'short_answer').length;
+        const expCount = selectedQuestions.filter(q => q.explanation && q.explanation.trim()).length;
+
+        if (modalStats) {
+            modalStats.innerHTML = `
+                <span style="font-weight: 700; color: #1E293B;">${total} câu hỏi</span>
+                <span>•</span>
+                <span style="background: #E0F2FE; color: #0369A1; padding: 2px 8px; border-radius: 6px; font-weight: 600; font-size: 0.78rem;">Trắc nghiệm: ${mcCount}</span>
+                <span style="background: #F3E8FF; color: #7E22CE; padding: 2px 8px; border-radius: 6px; font-weight: 600; font-size: 0.78rem;">Đúng/Sai: ${tfCount}</span>
+                <span style="background: #FEF3C7; color: #B45309; padding: 2px 8px; border-radius: 6px; font-weight: 600; font-size: 0.78rem;">Trả lời ngắn: ${saCount}</span>
+                <span style="background: #ECFDF5; color: #059669; padding: 2px 8px; border-radius: 6px; font-weight: 600; font-size: 0.78rem;">Có HDG: ${expCount}/${total}</span>
+            `;
+        }
+
+        if (footerCount) {
+            footerCount.textContent = `Tổng cộng: ${total} câu hỏi trong đề thi này`;
+        }
+
+        if (!body) return;
+
+        if (total === 0) {
+            body.innerHTML = `
+                <div style="text-align: center; padding: 60px 20px; color: #64748B;">
+                    <div style="width: 72px; height: 72px; border-radius: 50%; background: #EEF2FF; color: var(--accent-color); display: flex; align-items: center; justify-content: center; font-size: 2rem; margin: 0 auto 16px;">
+                        <i class="fa-solid fa-clipboard-question"></i>
+                    </div>
+                    <h4 style="font-size: 1.2rem; color: #1E293B; margin-bottom: 8px;">Đề thi chưa có câu hỏi nào</h4>
+                    <p style="font-size: 0.95rem; max-width: 480px; margin: 0 auto 20px; line-height: 1.6;">
+                        Hãy chọn các câu hỏi từ <strong>Ngân Hàng Câu Hỏi Nguồn</strong> ở cột bên trái hoặc sử dụng tính năng <strong>Import file Word (.docx)</strong> để thêm câu hỏi vào đề thi.
+                    </p>
+                    <button type="button" class="btn btn-primary" onclick="closeFullQuizModal()" style="width: auto; padding: 10px 24px; font-weight: 600;">
+                        <i class="fa-solid fa-arrow-left"></i> Quay lại chọn câu hỏi
+                    </button>
+                </div>
+            `;
+        } else {
+            body.innerHTML = selectedQuestions.map((q, idx) => {
+                const qType = q.question_type || 'multiple_choice';
+                const diff = (q.difficulty || 'NB').toUpperCase();
+                const hasExp = !!(q.explanation && q.explanation.trim());
+
+                let optionsHtml = '';
+
+                if (qType === 'multiple_choice') {
+                    const letters = ['A', 'B', 'C', 'D'];
+                    let opts = q.options;
+                    if (typeof opts === 'string') {
+                        try { opts = JSON.parse(opts); } catch(e) { opts = []; }
+                    }
+                    if (!Array.isArray(opts) || opts.length === 0) {
+                        opts = ['Phương án A', 'Phương án B', 'Phương án C', 'Phương án D'];
+                    }
+
+                    let correctIdx = 0;
+                    if (typeof q.correct_option === 'number') {
+                        correctIdx = q.correct_option;
+                    } else if (typeof q.correct_option === 'string') {
+                        const upper = q.correct_option.trim().toUpperCase();
+                        if (['A', 'B', 'C', 'D'].includes(upper)) {
+                            correctIdx = ['A', 'B', 'C', 'D'].indexOf(upper);
+                        } else {
+                            correctIdx = parseInt(q.correct_option) || 0;
+                        }
+                    }
+
+                    optionsHtml = `
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 10px; margin-top: 12px;">
+                            ${opts.map((optText, oIdx) => {
+                                const isCorrect = (oIdx === correctIdx);
+                                const cleanOpt = String(optText || '').replace(/^#?\s*([A-D])[\.\:\)]\s*/i, '').trim();
+                                return `
+                                    <div class="quiz-preview-opt ${isCorrect ? 'correct-opt' : ''}" style="padding: 10px 14px; border-radius: 10px; border: ${isCorrect ? '2px solid #10B981' : '1px solid #CBD5E1'}; background: ${isCorrect ? '#ECFDF5' : '#FFFFFF'}; display: flex; align-items: flex-start; gap: 10px; transition: all 0.2s;">
+                                        <span class="opt-letter" style="background: ${isCorrect ? '#10B981' : '#E2E8F0'}; color: ${isCorrect ? '#FFFFFF' : '#475569'}; font-weight: 800; font-size: 0.82rem; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px;">${letters[oIdx] || ''}</span>
+                                        <div class="math-render" style="color: ${isCorrect ? '#065F46' : '#1E293B'}; font-weight: ${isCorrect ? '600' : 'normal'}; line-height: 1.55; flex: 1; word-break: break-word;">${renderQuestionHtml(cleanOpt)}</div>
+                                        ${isCorrect ? `<span class="quiz-preview-correct-badge" style="background: #10B981; color: #FFFFFF; font-size: 0.72rem; padding: 2px 8px; border-radius: 6px; font-weight: 700; white-space: nowrap; margin-left: auto;"><i class="fa-solid fa-check"></i> ĐÚNG</span>` : ''}
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    `;
+                } else if (qType === 'true_false') {
+                    const labels = ['a', 'b', 'c', 'd'];
+                    let stmts = q.options;
+                    if (typeof stmts === 'string') {
+                        try { stmts = JSON.parse(stmts); } catch(e) { stmts = []; }
+                    }
+                    if (!Array.isArray(stmts) || stmts.length === 0) {
+                        stmts = ['Ý a', 'Ý b', 'Ý c', 'Ý d'];
+                    }
+
+                    let correctArr = [1, 0, 1, 0];
+                    if (Array.isArray(q.correct_option)) {
+                        correctArr = q.correct_option;
+                    } else if (typeof q.correct_option === 'string') {
+                        try {
+                            const parsed = JSON.parse(q.correct_option);
+                            if (Array.isArray(parsed)) correctArr = parsed;
+                            else if (typeof parsed === 'object') correctArr = [parsed.a, parsed.b, parsed.c, parsed.d];
+                        } catch(e) {
+                            if (q.correct_option.includes('|')) {
+                                correctArr = q.correct_option.split('|').map(s => s.trim().toUpperCase().includes('Đ') ? 1 : 0);
+                            }
+                        }
+                    }
+
+                    optionsHtml = `
+                        <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 12px;">
+                            ${stmts.map((stmt, sIdx) => {
+                                const stmtIsCorrect = (typeof stmt === 'object' && stmt !== null && stmt.is_correct !== undefined) ? (stmt.is_correct ? true : false) : null;
+                                const isTrue = stmtIsCorrect !== null ? stmtIsCorrect : (correctArr[sIdx] == 1 || correctArr[sIdx] === true || correctArr[sIdx] === 'true');
+                                const rawStmt = (typeof stmt === 'object' && stmt !== null) ? (stmt.text || '') : (stmt || '');
+                                const cleanStmt = String(rawStmt).replace(/^#?\s*([a-d])[\)\.\:]\s*/i, '').trim();
+                                return `
+                                    <div class="quiz-preview-tf-item" style="padding: 10px 14px; border-radius: 10px; border: 1px solid ${isTrue ? '#A7F3D0' : '#FECDD3'}; background: ${isTrue ? '#F0FDF4' : '#FFF1F2'}; display: flex; justify-content: space-between; align-items: center; gap: 14px;">
+                                        <div style="display: flex; gap: 10px; align-items: flex-start; flex: 1;">
+                                            <span style="font-weight: 800; color: ${isTrue ? '#065F46' : '#991B1B'}; font-size: 0.95rem;">${labels[sIdx]})</span>
+                                            <div class="math-render" style="color: #1E293B; line-height: 1.55; word-break: break-word;">${renderQuestionHtml(cleanStmt)}</div>
+                                        </div>
+                                        <span class="quiz-preview-tf-badge" style="background: ${isTrue ? '#10B981' : '#EF4444'}; color: #FFFFFF; font-size: 0.75rem; padding: 4px 10px; border-radius: 6px; font-weight: 800; white-space: nowrap; flex-shrink: 0;">
+                                            ${isTrue ? '<i class="fa-solid fa-check"></i> ĐÚNG' : '<i class="fa-solid fa-xmark"></i> SAI'}
+                                        </span>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    `;
+                } else if (qType === 'short_answer') {
+                    const ansText = q.correct_option || q.short_answer || 'Chưa thiết lập';
+                    optionsHtml = `
+                        <div class="quiz-preview-sa-item" style="margin-top: 12px; padding: 12px 18px; border-radius: 10px; border: 1.5px solid #86EFAC; background: #F0FDF4; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                            <span style="font-weight: 700; color: #166534; display: flex; align-items: center; gap: 6px; font-size: 0.92rem;"><i class="fa-solid fa-key" style="color: #10B981;"></i> Đáp án chính xác:</span>
+                            <span class="quiz-preview-sa-ans math-render" style="font-size: 1.15rem; font-weight: 800; color: #059669; background: #FFFFFF; padding: 4px 16px; border-radius: 8px; border: 1px solid #A7F3D0; box-shadow: 0 1px 3px rgba(16,185,129,0.1);">${renderQuestionHtml(ansText)}</span>
+                        </div>
+                    `;
+                }
+
+                // Hướng dẫn giải chi tiết
+                let expHtml = '';
+                if (hasExp) {
+                    expHtml = `
+                        <div class="quiz-preview-exp-box" style="margin-top: 14px; background: #F0FDF4; border: 1.5px dashed #86EFAC; border-radius: 10px; padding: 14px 18px;">
+                            <div style="font-weight: 700; color: #166534; font-size: 0.9rem; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+                                <i class="fa-solid fa-lightbulb" style="color: #F59E0B;"></i> Hướng dẫn giải chi tiết:
+                            </div>
+                            <div class="math-render" style="color: #1F2937; line-height: 1.65; font-size: 0.94rem; word-break: break-word;">${renderQuestionHtml(q.explanation)}</div>
+                        </div>
+                    `;
+                } else {
+                    expHtml = `
+                        <div class="quiz-preview-exp-box" style="margin-top: 10px; font-size: 0.82rem; color: #94A3B8; font-style: italic; display: flex; align-items: center; gap: 6px;">
+                            <i class="fa-regular fa-circle-question"></i> Chưa có hướng dẫn giải chi tiết cho câu hỏi này.
+                        </div>
+                    `;
+                }
+
+                return `
+                    <div class="full-quiz-q-card" style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 14px; padding: 20px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(15, 23, 42, 0.03);">
+                        <!-- Header -->
+                        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #F1F5F9; padding-bottom: 10px; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span style="font-weight: 800; font-size: 1.05rem; color: #0F172A;">Câu ${idx + 1}</span>
+                                <span style="font-size: 0.78rem; color: #94A3B8; font-weight: 600;">(ID: #${q.id})</span>
+                            </div>
+                            <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+                                ${getQuestionTypeBadgeHtml(q)}
+                                <span class="diff-badge diff-${diff.toLowerCase()}">${diff}</span>
+                                ${q.skill_tag ? `<span class="badge" style="background:#F1F5F9; color:#475569; font-size:0.75rem; padding: 2px 8px; border-radius: 6px;"><i class="fa-solid fa-tag"></i> ${q.skill_tag}</span>` : ''}
+                                ${hasExp ? `<span class="badge" style="background:#ECFDF5; color:#059669; font-size:0.75rem; padding: 2px 8px; border-radius: 6px; font-weight: 600;"><i class="fa-solid fa-circle-check"></i> Có HDG</span>` : ''}
+                            </div>
+                        </div>
+
+                        <!-- Question Body -->
+                        <div class="math-render q-text" style="font-size: 0.98rem; line-height: 1.7; color: #1E293B; margin-bottom: 14px;">
+                            ${renderQuestionHtml(q.question_text || '')}
+                        </div>
+
+                        <!-- Options & Answers -->
+                        ${optionsHtml}
+
+                        <!-- Explanation -->
+                        ${expHtml}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        modal.classList.add('active');
+
+        // Kích hoạt render KaTeX
+        if (window.renderMathInElement) {
+            renderMathInElement(body, {
+                delimiters: [
+                    { left: "$$", right: "$$", display: true },
+                    { left: "$", right: "$", display: false },
+                    { left: "\\(", right: "\\)", display: false }
+                ]
+            });
+        }
+
+        modal.onclick = function(e) {
+            if (e.target === modal) closeFullQuizModal();
+        };
+    };
+
+    window.closeFullQuizModal = function() {
+        const modal = document.getElementById('fullQuizModal');
+        if (modal) modal.classList.remove('active');
+    };
+
+    window.toggleFullQuizExplanations = function() {
+        isFullQuizExpVisible = !isFullQuizExpVisible;
+        const modalContent = document.getElementById('fullQuizModalContent');
+        const btnText = document.getElementById('toggleExpBtnText');
+        const toggleBtn = document.getElementById('toggleExpBtn');
+
+        if (isFullQuizExpVisible) {
+            if (modalContent) modalContent.classList.remove('hide-answers-solutions');
+            if (btnText) btnText.textContent = 'Ẩn đáp án & HDG';
+            if (toggleBtn) {
+                toggleBtn.style.background = '#ECFDF5';
+                toggleBtn.style.color = '#059669';
+                toggleBtn.style.borderColor = '#10B981';
+            }
+        } else {
+            if (modalContent) modalContent.classList.add('hide-answers-solutions');
+            if (btnText) btnText.textContent = 'Hiện đáp án & HDG';
+            if (toggleBtn) {
+                toggleBtn.style.background = '#F1F5F9';
+                toggleBtn.style.color = '#475569';
+                toggleBtn.style.borderColor = '#CBD5E1';
+            }
+        }
+    };
+
+    window.printFullQuiz = function() {
+        window.print();
+    };
+
 });
