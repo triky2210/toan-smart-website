@@ -2062,7 +2062,11 @@ async function initQuizEngine(material) {
 
                         question_type: mq.questions.question_type || 'multiple_choice',
 
-                        skill_tag: mq.questions.skill_tag || ''
+                        skill_tag: mq.questions.skill_tag || '',
+
+                        tikz_code: mq.questions.tikz_code || '',
+
+                        fallback_image_url: mq.questions.fallback_image_url || ''
 
                     }));
 
@@ -2889,6 +2893,9 @@ function renderCurrentQuizQuestion() {
             <div class="quiz-question-box">
 
                 <div class="quiz-question-text">${q.question}</div>
+
+                ${(typeof TikZRenderer !== 'undefined' && (q.tikz_code || q.fallback_image_url)) ? 
+                    TikZRenderer.render({ tikzCode: q.tikz_code, fallbackUrl: q.fallback_image_url, showToggle: false }) : ''}
 
                 <div class="quiz-options-list">
 

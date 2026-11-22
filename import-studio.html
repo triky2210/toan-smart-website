@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Ingestion & Staging Studio - Toán Smart</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- KaTeX CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/style.css">
+    
+    <style>
+        :root {
+            --primary-color: #4F46E5;
+            --primary-hover: #4338CA;
+            --accent-color: #0284C7;
+            --success-color: #10B981;
+            --warning-color: #F59E0B;
+            --danger-color: #EF4444;
+            --bg-color: #F8FAFC;
+            --card-bg: #FFFFFF;
+            --border-color: #E2E8F0;
+            --text-dark: #0F172A;
+            --text-muted: #64748B;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: #1E293B;
+            font-family: 'Be Vietnam Pro', sans-serif;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+
+        .studio-wrapper {
+            max-width: 1440px;
+            margin: 30px auto;
+            padding: 0 24px;
+        }
+
+        /* Top Header */
+        .studio-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #FFFFFF;
+            padding: 22px 28px;
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 20px rgba(15, 23, 42, 0.03);
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .studio-header h1 {
+            margin: 0;
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: var(--text-dark);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .studio-breadcrumb {
+            font-size: 0.88rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        /* Ingestion Panel */
+        .ingestion-card {
+            background: #FFFFFF;
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            padding: 24px;
+            box-shadow: 0 4px 20px rgba(15, 23, 42, 0.03);
+            margin-bottom: 24px;
+        }
+
+        .source-tabs {
+            display: flex;
+            gap: 8px;
+            border-bottom: 1.5px solid #F1F5F9;
+            padding-bottom: 12px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+        }
+
+        .source-tab-btn {
+            background: none;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 12px;
+            font-family: inherit;
+            font-size: 0.92rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .source-tab-btn:hover {
+            background: #F1F5F9;
+            color: var(--text-dark);
+        }
+
+        .source-tab-btn.active {
+            background: #EEF2FF;
+            color: var(--primary-color);
+            font-weight: 700;
+        }
+
+        .upload-dropzone {
+            border: 2px dashed #CBD5E1;
+            border-radius: 16px;
+            padding: 36px 20px;
+            text-align: center;
+            background: #F8FAFC;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .upload-dropzone:hover, .upload-dropzone.dragover {
+            border-color: var(--primary-color);
+            background: #EEF2FF;
+        }
+
+        .upload-icon {
+            font-size: 2.5rem;
+            color: var(--primary-color);
+            margin-bottom: 12px;
+        }
+
+        /* Progress Steps */
+        .ai-pipeline-tracker {
+            display: none;
+            background: #F8FAFC;
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 16px 20px;
+            margin-top: 18px;
+        }
+
+        .tracker-steps {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .tracker-step {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #94A3B8;
+        }
+
+        .tracker-step.active {
+            color: var(--primary-color);
+        }
+
+        .tracker-step.completed {
+            color: var(--success-color);
+        }
+
+        /* Staging Review Section */
+        .staging-header-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .stat-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 700;
+        }
+
+        .stat-valid { background: #ECFDF5; color: #059669; }
+        .stat-warning { background: #FEF3C7; color: #D97706; }
+        .stat-error { background: #FEF2F2; color: #DC2626; }
+        .stat-total { background: #EEF2FF; color: var(--primary-color); }
+
+        /* Question Cards */
+        .q-card {
+            background: #FFFFFF;
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            padding: 22px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 10px rgba(15, 23, 42, 0.03);
+            transition: all 0.2s;
+        }
+
+        .q-card:hover {
+            box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+            border-color: #CBD5E1;
+        }
+
+        .q-card.status-warning {
+            border-left: 5px solid var(--warning-color);
+        }
+
+        .q-card.status-error {
+            border-left: 5px solid var(--danger-color);
+        }
+
+        .q-card.status-valid {
+            border-left: 5px solid var(--success-color);
+        }
+
+        .badge-type {
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 8px;
+        }
+
+        .badge-mc { background: #E0F2FE; color: #0369A1; }
+        .badge-tf { background: #F3E8FF; color: #7E22CE; }
+        .badge-sa { background: #FEF3C7; color: #B45309; }
+
+        .diff-tag {
+            font-size: 0.72rem;
+            font-weight: 800;
+            padding: 2px 8px;
+            border-radius: 6px;
+        }
+        .diff-nb { background: #DCFCE7; color: #166534; }
+        .diff-th { background: #E0F2FE; color: #075985; }
+        .diff-vd { background: #FEF3C7; color: #92400E; }
+        .diff-vdc { background: #FEE2E2; color: #991B1B; }
+
+        /* Option items */
+        .option-item {
+            padding: 10px 14px;
+            border-radius: 10px;
+            border: 1px solid #E2E8F0;
+            background: #FFFFFF;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .option-item.correct {
+            border-color: #86EFAC;
+            background: #F0FDF4;
+        }
+
+        /* Target Destination Action Bar */
+        .commit-sticky-bar {
+            position: sticky;
+            bottom: 20px;
+            background: #FFFFFF;
+            border: 1.5px solid var(--border-color);
+            border-radius: 16px;
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.1);
+            z-index: 100;
+            flex-wrap: wrap;
+            gap: 14px;
+        }
+
+        /* Modal Edit */
+        .admin-modal {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15, 23, 42, 0.6);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .admin-modal.active { display: flex; }
+        
+        .admin-modal-content {
+            background: #FFFFFF;
+            border-radius: 20px;
+            max-width: 860px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 28px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="studio-wrapper">
+        <!-- Top Navigation Header -->
+        <div class="studio-header">
+            <div>
+                <h1><i class="fa-solid fa-wand-magic-sparkles" style="color: var(--primary-color);"></i> AI Ingestion & Staging Studio</h1>
+                <div class="studio-breadcrumb">
+                    <a href="admin.html" style="color: var(--primary-color); text-decoration: none; font-weight: 600;">Quản trị</a> 
+                    <i class="fa-solid fa-chevron-right" style="font-size: 0.7rem; margin: 0 6px;"></i> 
+                    <a href="material-manage.html" style="color: var(--primary-color); text-decoration: none; font-weight: 600;">Học liệu & Đề thi</a>
+                    <i class="fa-solid fa-chevron-right" style="font-size: 0.7rem; margin: 0 6px;"></i> 
+                    <span>Vùng đệm nạp tài liệu thông minh</span>
+                </div>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <a href="material-manage.html" class="btn btn-secondary" style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 10px; font-weight: 600; text-decoration: none; background: #FFFFFF; border: 1px solid var(--border-color); color: var(--text-dark);">
+                    <i class="fa-solid fa-arrow-left"></i> Về Quản lý đề thi
+                </a>
+                <button type="button" class="btn btn-primary" onclick="loadSampleQuestions()" style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 10px; font-weight: 700; background: var(--primary-color); color: #FFFFFF; border: none; cursor: pointer;">
+                    <i class="fa-solid fa-bolt"></i> Nạp đề mẫu 2025
+                </button>
+            </div>
+        </div>
+
+        <!-- 1. MULTI-SOURCE INGESTION CARD -->
+        <div class="ingestion-card">
+            <h3 style="margin-top: 0; margin-bottom: 14px; font-size: 1.15rem; font-weight: 800; color: var(--text-dark); display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-cloud-arrow-up" style="color: var(--accent-color);"></i> Bước 1: Tiếp Nhận Tài Liệu Đa Nguồn
+            </h3>
+
+            <!-- Source Tabs -->
+            <div class="source-tabs">
+                <button type="button" class="source-tab-btn active" data-tab="tab-word" onclick="switchSourceTab('tab-word')">
+                    <i class="fa-solid fa-file-word" style="color: #2563EB;"></i> File Word (.docx)
+                </button>
+                <button type="button" class="source-tab-btn" data-tab="tab-pdf-img" onclick="switchSourceTab('tab-pdf-img')">
+                    <i class="fa-solid fa-file-pdf" style="color: #DC2626;"></i> PDF Scan & Ảnh Đề Thi
+                </button>
+                <button type="button" class="source-tab-btn" data-tab="tab-web" onclick="switchSourceTab('tab-web')">
+                    <i class="fa-solid fa-globe" style="color: #059669;"></i> Link Web & HTML
+                </button>
+                <button type="button" class="source-tab-btn" data-tab="tab-text" onclick="switchSourceTab('tab-text')">
+                    <i class="fa-solid fa-paste" style="color: #7C3AED;"></i> Văn Bản Thô (Copy-Paste)
+                </button>
+            </div>
+
+            <!-- Tab 1: Word -->
+            <div id="tab-word" class="source-tab-content">
+                <div class="upload-dropzone" onclick="document.getElementById('fileWord').click()">
+                    <i class="fa-solid fa-file-arrow-up upload-icon"></i>
+                    <h4 style="margin: 0 0 6px 0; font-size: 1.05rem; font-weight: 700;">Kéo & Thả file Word (.docx) vào đây</h4>
+                    <p style="margin: 0; font-size: 0.88rem; color: var(--text-muted);">Hỗ trợ tự động trích xuất bảng biểu, công thức toán học và hướng dẫn giải.</p>
+                    <input type="file" id="fileWord" accept=".docx" style="display: none;" onchange="handleWordUpload(this.files)">
+                </div>
+            </div>
+
+            <!-- Tab 2: PDF & Images -->
+            <div id="tab-pdf-img" class="source-tab-content" style="display: none;">
+                <div class="upload-dropzone" onclick="document.getElementById('fileImages').click()">
+                    <i class="fa-solid fa-images upload-icon" style="color: #DC2626;"></i>
+                    <h4 style="margin: 0 0 6px 0; font-size: 1.05rem; font-weight: 700;">Tải lên ảnh chụp đề thi hoặc PDF scan</h4>
+                    <p style="margin: 0; font-size: 0.88rem; color: var(--text-muted);">Mẹo: Bạn có thể chụp màn hình và nhấn <b>Ctrl + V</b> trực tiếp trên trang để dán ảnh!</p>
+                    <input type="file" id="fileImages" accept="image/*,.pdf" multiple style="display: none;" onchange="handleImageUpload(this.files)">
+                </div>
+            </div>
+
+            <!-- Tab 3: Web URL -->
+            <div id="tab-web" class="source-tab-content" style="display: none;">
+                <div style="display: flex; gap: 12px; margin-bottom: 14px;">
+                    <input type="url" id="webUrlInput" placeholder="Dán link bài viết trắc nghiệm (VietJack, OLM, Tuyensinh247...)" style="flex: 1; padding: 12px 18px; border: 1.5px solid var(--border-color); border-radius: 12px; font-family: inherit; font-size: 0.95rem;">
+                    <button type="button" class="btn btn-primary" onclick="handleWebScrape()" style="padding: 12px 24px; border-radius: 12px; font-weight: 700; background: var(--accent-color); color: #FFFFFF; border: none; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                        <i class="fa-solid fa-spider"></i> Bóc tách từ Web
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tab 4: Raw Text -->
+            <div id="tab-text" class="source-tab-content" style="display: none;">
+                <textarea id="rawTextInput" placeholder="Dán nội dung câu hỏi dạng văn bản vào đây... Ví dụ:
+Câu 1. Cho hàm số y = f(x) có bảng biến thiên...
+A. Đồng biến trên (0; 2)
+B. Nghịch biến trên (0; 2)
+C. Cực tiểu bằng 3
+D. Cực đại bằng 5
+Hướng dẫn giải:
+Dựa vào bảng biến thiên ta thấy..." style="width: 100%; height: 160px; padding: 14px; border: 1.5px solid var(--border-color); border-radius: 12px; font-family: inherit; font-size: 0.92rem; box-sizing: border-box;"></textarea>
+                <div style="text-align: right; margin-top: 10px;">
+                    <button type="button" class="btn btn-primary" onclick="handleRawTextProcess()" style="padding: 10px 24px; border-radius: 10px; font-weight: 700; background: var(--primary-color); color: #FFFFFF; border: none; cursor: pointer;">
+                        <i class="fa-solid fa-play"></i> Bắt đầu xử lý văn bản
+                    </button>
+                </div>
+            </div>
+
+            <!-- AI Pipeline Step Tracker -->
+            <div id="aiTracker" class="ai-pipeline-tracker">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <div style="font-weight: 700; font-size: 0.95rem; color: var(--text-dark); display: flex; align-items: center; gap: 8px;">
+                        <i class="fa-solid fa-circle-notch fa-spin" style="color: var(--primary-color);"></i> Trợ lý AI đang điều phối quy trình...
+                    </div>
+                    <span id="trackerPercent" style="font-weight: 800; color: var(--primary-color); font-size: 0.95rem;">25%</span>
+                </div>
+                <div class="tracker-steps">
+                    <div class="tracker-step active" id="step1"><i class="fa-solid fa-file-lines"></i> 1. Thu thập dữ liệu</div>
+                    <i class="fa-solid fa-arrow-right" style="color: #CBD5E1; font-size: 0.75rem;"></i>
+                    <div class="tracker-step" id="step2"><i class="fa-solid fa-bezier-curve"></i> 2. Tái tạo TikZ & KaTeX</div>
+                    <i class="fa-solid fa-arrow-right" style="color: #CBD5E1; font-size: 0.75rem;"></i>
+                    <div class="tracker-step" id="step3"><i class="fa-solid fa-layer-group"></i> 3. Chuẩn hóa Cấu trúc 2025</div>
+                    <i class="fa-solid fa-arrow-right" style="color: #CBD5E1; font-size: 0.75rem;"></i>
+                    <div class="tracker-step" id="step4"><i class="fa-solid fa-shield-check"></i> 4. Kiểm định & Chống trùng</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. STAGING REVIEW DASHBOARD -->
+        <div class="staging-header-bar">
+            <div>
+                <h3 style="margin: 0; font-size: 1.25rem; font-weight: 800; color: var(--text-dark); display: flex; align-items: center; gap: 8px;">
+                    <i class="fa-solid fa-clipboard-check" style="color: var(--success-color);"></i> Bước 2: Vùng Đệm Kiểm Duyệt (Staging Area)
+                </h3>
+                <span style="font-size: 0.88rem; color: var(--text-muted);">Xem lại đồ thị TikZ vector, công thức KaTeX, đáp án và lời giải trước khi lưu.</span>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                <span class="stat-badge stat-total" id="statTotal"><i class="fa-solid fa-list-check"></i> Tổng: 0</span>
+                <span class="stat-badge stat-valid" id="statValid"><i class="fa-solid fa-check"></i> Hợp lệ: 0</span>
+                <span class="stat-badge stat-warning" id="statWarning"><i class="fa-solid fa-triangle-exclamation"></i> Cảnh báo: 0</span>
+                <span class="stat-badge stat-error" id="statError" style="display: none;"><i class="fa-solid fa-xmark"></i> Lỗi: 0</span>
+            </div>
+        </div>
+
+        <!-- Staging Question List Container -->
+        <div id="stagingQuestionsList">
+            <div style="background: #FFFFFF; border: 1px dashed var(--border-color); border-radius: 16px; padding: 48px; text-align: center; color: var(--text-muted);">
+                <i class="fa-solid fa-inbox" style="font-size: 3rem; color: #CBD5E1; margin-bottom: 14px;"></i>
+                <h4 style="margin: 0 0 6px 0; font-size: 1.1rem; color: var(--text-dark);">Vùng đệm hiện đang trống</h4>
+                <p style="margin: 0; font-size: 0.9rem;">Hãy tải lên file Word, ảnh chụp hoặc nhấn <b>"Nạp đề mẫu 2025"</b> ở góc phải phía trên để trải nghiệm!</p>
+            </div>
+        </div>
+
+        <!-- 3. STICKY TARGET DESTINATION & COMMIT ACTION BAR -->
+        <div class="commit-sticky-bar" id="commitStickyBar" style="display: none;">
+            <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
+                <div style="display: flex; align-items: center; gap: 6px; font-weight: 700; color: var(--text-dark); font-size: 0.95rem;">
+                    <i class="fa-solid fa-folder-tree" style="color: var(--primary-color);"></i> Đích nạp vào:
+                </div>
+                <select id="targetCourse" style="padding: 9px 14px; border: 1.5px solid var(--border-color); border-radius: 10px; font-family: inherit; font-size: 0.88rem;" onchange="onTargetCourseChange()">
+                    <option value="">-- Chọn Khóa học --</option>
+                </select>
+                <select id="targetChapter" style="padding: 9px 14px; border: 1.5px solid var(--border-color); border-radius: 10px; font-family: inherit; font-size: 0.88rem;" onchange="onTargetChapterChange()">
+                    <option value="">-- Tất cả chương --</option>
+                </select>
+                <select id="targetLesson" style="padding: 9px 14px; border: 1.5px solid var(--border-color); border-radius: 10px; font-family: inherit; font-size: 0.88rem;">
+                    <option value="">-- Tất cả bài học --</option>
+                </select>
+            </div>
+
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <button type="button" class="btn btn-secondary" onclick="clearStaging()" style="padding: 10px 18px; border-radius: 10px; font-weight: 600; border: 1px solid var(--border-color); background: #FFFFFF; cursor: pointer; color: var(--danger-color);">
+                    <i class="fa-solid fa-trash-can"></i> Xóa tất cả
+                </button>
+                <button type="button" class="btn btn-primary" onclick="commitStagingToQuestionBank()" style="padding: 10px 24px; border-radius: 10px; font-weight: 800; background: var(--success-color); color: #FFFFFF; border: none; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> Nạp Toàn Bộ Vào Ngân Hàng (<span id="commitCount">0</span> câu)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. MODAL QUICK EDIT TIKZ & QUESTION -->
+    <div class="admin-modal" id="editModal">
+        <div class="admin-modal-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 14px; margin-bottom: 18px;">
+                <h3 style="margin: 0; font-size: 1.2rem; font-weight: 800;"><i class="fa-solid fa-pen-to-square" style="color: var(--primary-color);"></i> Chỉnh Sửa Câu Hỏi & Mã TikZ</h3>
+                <button type="button" onclick="closeEditModal()" style="border: none; background: none; font-size: 1.3rem; cursor: pointer; color: var(--text-muted);"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <div style="margin-bottom: 14px;">
+                <label style="display: block; font-weight: 700; margin-bottom: 6px; font-size: 0.88rem;">Đề bài (Hỗ trợ KaTeX $...$):</label>
+                <textarea id="editQuestionText" style="width: 100%; height: 90px; padding: 10px; border: 1.5px solid var(--border-color); border-radius: 10px; font-family: inherit; font-size: 0.9rem; box-sizing: border-box;"></textarea>
+            </div>
+
+            <div style="margin-bottom: 14px;">
+                <label style="display: block; font-weight: 700; margin-bottom: 6px; font-size: 0.88rem;">Mã nguồn TikZ (Đồ thị / Bảng biến thiên):</label>
+                <textarea id="editTikzCode" style="width: 100%; height: 110px; padding: 10px; border: 1.5px solid var(--border-color); border-radius: 10px; font-family: monospace; font-size: 0.85rem; box-sizing: border-box; background: #F8FAFC;"></textarea>
+            </div>
+
+            <div style="margin-bottom: 14px;">
+                <label style="display: block; font-weight: 700; margin-bottom: 6px; font-size: 0.88rem;">URL Ảnh gốc dự phòng (Fallback):</label>
+                <input type="text" id="editFallbackUrl" style="width: 100%; padding: 10px; border: 1.5px solid var(--border-color); border-radius: 10px; font-family: inherit; font-size: 0.9rem; box-sizing: border-box;">
+            </div>
+
+            <div style="margin-bottom: 18px;">
+                <label style="display: block; font-weight: 700; margin-bottom: 6px; font-size: 0.88rem;">Hướng dẫn giải chi tiết (HDG):</label>
+                <textarea id="editExplanation" style="width: 100%; height: 90px; padding: 10px; border: 1.5px solid var(--border-color); border-radius: 10px; font-family: inherit; font-size: 0.9rem; box-sizing: border-box;"></textarea>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                <button type="button" class="btn btn-secondary" onclick="closeEditModal()" style="padding: 10px 20px; border-radius: 10px; border: 1px solid var(--border-color); background: #FFFFFF; font-weight: 600; cursor: pointer;">Hủy bỏ</button>
+                <button type="button" class="btn btn-primary" onclick="saveEditModal()" style="padding: 10px 24px; border-radius: 10px; background: var(--primary-color); color: #FFFFFF; border: none; font-weight: 700; cursor: pointer;">Lưu Thay Đổi</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- External Libs -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+    <script src="js/jszip.min.js"></script>
+
+    <!-- App Configuration & Engine -->
+    <script src="js/config.js"></script>
+    <script src="js/tikz-renderer.js"></script>
+    <script src="js/ai-ingestion-agent.js"></script>
+    <script src="js/import-studio.js"></script>
+</body>
+</html>

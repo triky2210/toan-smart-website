@@ -1964,7 +1964,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (badgeContainer) badgeContainer.innerHTML = getQuestionTypeBadgeHtml(q);
 
         const qTextEl = document.getElementById('previewQText');
-        if (qTextEl) qTextEl.innerHTML = renderQuestionHtml(q.question_text || '');
+        if (qTextEl) {
+            let qHtml = renderQuestionHtml(q.question_text || '');
+            if (typeof TikZRenderer !== 'undefined' && (q.tikz_code || q.fallback_image_url)) {
+                qHtml += TikZRenderer.render({ tikzCode: q.tikz_code, fallbackUrl: q.fallback_image_url });
+            }
+            qTextEl.innerHTML = qHtml;
+        }
 
         renderPreviewOptions();
 
@@ -2784,6 +2790,10 @@ let parsedWordQuestions = [];
                         <div class="math-render q-text" style="font-size: 0.98rem; line-height: 1.7; color: #1E293B; margin-bottom: 14px;">
                             ${renderQuestionHtml(q.question_text || '')}
                         </div>
+
+                        <!-- Diagram / TikZ Vector Graph (nếu có) -->
+                        ${(typeof TikZRenderer !== 'undefined' && (q.tikz_code || q.fallback_image_url)) ? 
+                            TikZRenderer.render({ tikzCode: q.tikz_code, fallbackUrl: q.fallback_image_url }) : ''}
 
                         <!-- Options & Answers -->
                         ${optionsHtml}
