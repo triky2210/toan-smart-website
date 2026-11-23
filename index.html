@@ -124,8 +124,10 @@
             </button>
             <ul class="nav-menu">
                 <li><a href="#courses" class="nav-link active">Khóa học</a></li>
+                <li><a href="course-detail.html?id=1200" class="nav-link" style="color: #4F46E5; font-weight: 700;"><i class="fa-solid fa-vault"></i> Ngân hàng câu hỏi</a></li>
+                <li><a href="import-studio.html" class="nav-link"><i class="fa-solid fa-wand-magic-sparkles"></i> AI Import Studio</a></li>
                 <li><a href="#resources" class="nav-link">Tài liệu ôn tập</a></li>
-                <li><a href="#about" class="nav-link">Giới thiệu</a></li>
+                <li><a href="admin.html" class="nav-link">Quản trị</a></li>
                 <li id="headerAuthContainer"><a href="login.html" class="btn btn-primary" style="padding: 8px 20px;"><i class="fa-solid fa-user-lock" style="margin-right: 6px;"></i> Đăng nhập</a></li>
             </ul>
         </div>
@@ -164,6 +166,19 @@
                     <div class="simple-card-footer">
                         <span class="btn btn-primary simple-course-btn" style="background: linear-gradient(135deg, #0369A1 0%, #0284C7 100%); color: #FFFFFF !important;">
                             Vào học ngay <i class="fa-solid fa-arrow-right"></i>
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Khóa 1200: Ngân Hàng Câu Hỏi Toán 12 -->
+                <div class="featured-course-card simple-course-card" onclick="window.location.href='course-detail.html?id=1200'" style="border: 2px solid #818CF8; box-shadow: 0 4px 14px rgba(79, 70, 229, 0.15);">
+                    <div class="simple-card-header" style="background: linear-gradient(135deg, #3730A3 0%, #4F46E5 50%, #7C3AED 100%);">
+                        <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.8px; font-weight: 800; color: #E0E7FF; margin-bottom: 4px;"><i class="fa-solid fa-vault"></i> DÀNH CHO GIÁO VIÊN</div>
+                        <div class="simple-card-big-title" style="font-size: 1.85rem;">NHCH Toán 12</div>
+                    </div>
+                    <div class="simple-card-footer" style="background: #F5F3FF;">
+                        <span class="btn simple-course-btn" style="background: linear-gradient(135deg, #6D28D9 0%, #4F46E5 100%); color: #FFFFFF !important; font-weight: 700;">
+                            Mở Ngân Hàng <i class="fa-solid fa-arrow-right"></i>
                         </span>
                     </div>
                 </div>
@@ -388,6 +403,7 @@
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <!-- Configuration -->
     <script src="js/config.js"></script>
+    <script src="js/question-bank-seed.js"></script>
     <!-- Main JavaScript File -->
     <script src="js/main.js"></script>
 </body>

@@ -89,6 +89,40 @@
             margin-bottom: 16px;
         }
 
+        /* Section labels for filter areas */
+        .filter-section-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid;
+        }
+        .filter-section-label.material-nav {
+            color: #1E40AF;
+            border-color: #93C5FD;
+        }
+        .filter-section-label.source-filter {
+            color: #047857;
+            border-color: #6EE7B7;
+        }
+
+        /* Source filter bar inside quiz section */
+        .source-filter-bar {
+            background: #F0FDF4;
+            padding: 14px 18px;
+            border-radius: 12px;
+            border: 1.5px solid #A7F3D0;
+            margin-bottom: 16px;
+        }
+        .source-filter-bar .config-filters {
+            margin-bottom: 0;
+        }
+
         .config-select {
             flex: 1;
             min-width: 200px;
@@ -1161,46 +1195,54 @@
             </div>
         </div>
 
-        <!-- Filters & Action Toolbar (Cho phép đổi nhanh bài/học liệu) -->
-        <div class="config-bar">
-            <div class="config-filters">
-                <select class="config-select" id="qbFilterCourse">
-                    <option value="">Tất cả khóa học</option>
-                </select>
-                <select class="config-select" id="qbFilterChapter">
-                    <option value="">Tất cả chương</option>
-                </select>
-                <select class="config-select" id="qbFilterLesson">
-                    <option value="">Tất cả bài học</option>
-                </select>
-                <select class="config-select" id="qbFilterMaterial">
-                    <option value="">Tất cả học liệu</option>
-                </select>
-                <label class="checkbox-container">
-                    <input type="checkbox" id="qbFilterChdc">
-                    <span>Lấy theo CHDC</span>
-                </label>
+        <!-- SECTION 1: Định vị & Đổi nhanh Học liệu đang soạn -->
+        <div class="config-bar" style="background: #FFFFFF; border-left: 4px solid #6366F1;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 14px;">
+                <div class="filter-section-label material-nav" style="margin-bottom: 0; padding-bottom: 0; border-bottom: none;">
+                    <i class="fa-solid fa-folder-tree" style="color: #6366F1;"></i> 
+                    <span>Học liệu đang biên soạn:</span>
+                    <span id="currentMaterialBadge" class="badge" style="background: #EEF2FF; color: #4338CA; border: 1px solid #C7D2FE; font-size: 0.85rem; padding: 4px 12px; border-radius: 8px; margin-left: 6px; font-weight: 700;">
+                        <!-- Đang tải... -->
+                    </span>
+                </div>
+                
+                <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                    <span style="font-size: 0.8rem; color: #64748B; font-weight: 600;"><i class="fa-solid fa-repeat"></i> Chuyển nhanh:</span>
+                    <select class="config-select" id="qbFilterCourse" style="min-width: 150px; padding: 6px 10px; font-size: 0.82rem;">
+                        <option value="">Khóa học</option>
+                    </select>
+                    <select class="config-select" id="qbFilterChapter" style="min-width: 150px; padding: 6px 10px; font-size: 0.82rem;">
+                        <option value="">Chương học</option>
+                    </select>
+                    <select class="config-select" id="qbFilterLesson" style="min-width: 150px; padding: 6px 10px; font-size: 0.82rem;">
+                        <option value="">Bài học</option>
+                    </select>
+                    <select class="config-select" id="qbFilterMaterial" style="min-width: 220px; padding: 6px 10px; font-size: 0.82rem; border-color: #6366F1; font-weight: 600; color: #4338CA;">
+                        <option value="">Dạng toán / Học liệu</option>
+                    </select>
+                </div>
             </div>
-            
-            <div class="action-buttons">
-                <a href="import-studio.html" class="btn" id="openImportStudioBtn" style="border: 1.5px solid #6366F1; color: #4F46E5; background: #EEF2FF; font-weight: 700; width: auto; display: inline-flex; align-items: center; gap: 8px; text-decoration: none; padding: 10px 18px; border-radius: 10px;" title="Mở Studio nạp tài liệu đa nguồn (PDF, Word, Ảnh, Web)">
+
+            <!-- Hàng nút công cụ tạo & nạp câu hỏi -->
+            <div class="action-buttons" style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center; padding-top: 12px; border-top: 1px solid #F1F5F9;">
+                <a href="import-studio.html" class="btn" id="openImportStudioBtn" style="border: 1.5px solid #6366F1; color: #4F46E5; background: #EEF2FF; font-weight: 700; width: auto; display: inline-flex; align-items: center; gap: 8px; text-decoration: none; padding: 8px 16px; border-radius: 8px; font-size: 0.85rem;" title="Mở Studio nạp tài liệu đa nguồn (PDF, Word, Ảnh, Web)">
                     <i class="fa-solid fa-wand-magic-sparkles" style="color: #6366F1;"></i> AI Import Studio
                 </a>
-                <button class="btn btn-outline" id="importWordBtn" style="border: 1.5px solid #10B981; color: #059669; background: #ECFDF5; font-weight: 600; width: auto; display: inline-flex; align-items: center; gap: 8px;">
-                    <i class="fa-solid fa-file-word" style="font-size: 1.1rem; color: #10B981;"></i> Import file Word (.docx)
+                <button class="btn btn-outline" id="importWordBtn" style="border: 1.5px solid #10B981; color: #059669; background: #ECFDF5; font-weight: 600; width: auto; display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; border-radius: 8px; font-size: 0.85rem;">
+                    <i class="fa-solid fa-file-word" style="font-size: 1rem; color: #10B981;"></i> Import file Word (.docx)
                 </button>
                 <input type="file" id="wordFileInput" accept=".docx" style="display: none;">
-                <button class="btn btn-primary" id="addQuestionBtn">
-                    <i class="fa-solid fa-plus"></i> Tạo câu hỏi mới
+                <button class="btn btn-primary" id="addQuestionBtn" onclick="openQuestionModal()" style="width: auto; padding: 8px 16px; border-radius: 8px; font-size: 0.85rem;">
+                    <i class="fa-solid fa-plus"></i> Soạn câu hỏi mới
                 </button>
-                <button type="button" class="btn btn-outline" id="actionPreviewFullQuizBtn" onclick="openFullQuizModal()" style="border: 1.5px solid var(--accent-color); color: var(--accent-color); background: #EEF2FF; font-weight: 600; width: auto; display: inline-flex; align-items: center; gap: 8px;">
-                    <i class="fa-solid fa-eye"></i> Xem thử
+                <button type="button" class="btn" id="borrowFromBankBtn" onclick="openBorrowFromBankModal()" style="border: 1.5px solid #8B5CF6; color: #6D28D9; background: #F5F3FF; font-weight: 700; width: auto; display: inline-flex; align-items: center; gap: 8px; border-radius: 8px; padding: 8px 16px; font-size: 0.85rem;" title="Mở cây Ngân hàng câu hỏi Toán 12 để bốc câu hỏi vào đề này">
+                    <i class="fa-solid fa-boxes-packing" style="color: #8B5CF6;"></i> Bốc câu hỏi từ NHCH
                 </button>
-                <button type="button" class="btn" id="actionViewStudentModeBtn" onclick="openStudentStudyTab()" style="background: #0284C7; color: #FFFFFF; border: 1.5px solid #0284C7; font-weight: 600; width: auto; display: inline-flex; align-items: center; gap: 8px;">
-                    <i class="fa-solid fa-arrow-up-right-from-square"></i> Xem nội dung
+                <button type="button" class="btn btn-outline" id="actionPreviewFullQuizBtn" onclick="openFullQuizModal()" style="border: 1.5px solid var(--accent-color); color: var(--accent-color); background: #EEF2FF; font-weight: 600; width: auto; display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; border-radius: 8px; font-size: 0.85rem;">
+                    <i class="fa-solid fa-eye"></i> Xem thử đề
                 </button>
-                <button class="btn btn-secondary" id="clearAllBtn" style="color: #EF4444; border-color: #FCA5A5; background: #FFF5F5;">
-                    <i class="fa-solid fa-trash-can"></i> Xóa tất cả trong học liệu này
+                <button type="button" class="btn" id="actionViewStudentModeBtn" onclick="openStudentStudyTab()" style="background: #0284C7; color: #FFFFFF; border: 1.5px solid #0284C7; font-weight: 600; width: auto; display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; border-radius: 8px; font-size: 0.85rem;">
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i> Giao diện học sinh
                 </button>
             </div>
         </div>
@@ -1293,48 +1335,96 @@
 
         <!-- 3. QUIZ MANAGER SECTION (Dành cho type = 'quiz' / 'exercise') -->
         <div id="quizManagerSection" style="display: none;">
-            <div class="config-bar" style="margin-bottom: 16px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
-                    <label class="checkbox-container">
-                        <input type="checkbox" id="qbFilterChdc">
-                        <span>Chỉ lọc câu hỏi thuộc bài học hiện tại</span>
-                    </label>
-                    <div class="action-buttons">
-                        <button type="button" class="btn btn-outline" onclick="openFullQuizModal()" style="border: 1.5px solid var(--accent-color); color: var(--accent-color); background: #EEF2FF; font-weight: 600; width: auto; display: inline-flex; align-items: center; gap: 8px;">
-                            <i class="fa-solid fa-eye"></i> Xem thử
-                        </button>
-                        <button type="button" class="btn" onclick="openStudentStudyTab()" style="background: #0284C7; color: #FFFFFF; border: 1.5px solid #0284C7; font-weight: 600; width: auto; display: inline-flex; align-items: center; gap: 8px;">
-                            <i class="fa-solid fa-arrow-up-right-from-square"></i> Xem nội dung
-                        </button>
-                        <button class="btn btn-primary" id="addQuestionBtn" onclick="openQuestionModal()">
-                            <i class="fa-solid fa-plus"></i> Soạn câu hỏi mới (WYSIWYG Math)
-                        </button>
-                        <button class="btn btn-secondary" id="clearAllBtn" style="color: #EF4444; border-color: #FCA5A5; background: #FFF5F5;">
-                            <i class="fa-solid fa-trash-can"></i> Xóa tất cả câu hỏi trong học liệu này
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 2 Columns Source / Selected -->
+            <!-- 2 Columns Source Bank (Left) / Selected Quiz Questions (Right) -->
             <div class="columns-grid">
-                <!-- Left Column: Source Bank -->
-                <div class="column-card">
-                    <h3>
-                        <span><i class="fa-solid fa-database" style="color: var(--accent-color);"></i> Ngân Hàng Câu Hỏi Nguồn</span>
-                        <span class="badge" id="sourceCount">0 câu hỏi</span>
-                    </h3>
+                <!-- Left Column: Source Bank with integrated filter -->
+                <div class="column-card" style="border-top: 4px solid var(--accent-color);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #E2E8F0;">
+                        <div>
+                            <h3 style="margin: 0; font-size: 1.05rem; color: #1E293B;">
+                                <i class="fa-solid fa-database" style="color: var(--accent-color);"></i> Ngân Hàng Câu Hỏi Nguồn
+                            </h3>
+                            <div style="font-size: 0.78rem; color: #64748B; margin-top: 2px;">Bốc câu hỏi từ kho nguồn vào đề thi dạng toán này</div>
+                        </div>
+                        <span class="badge" id="sourceCount" style="font-size: 0.82rem; padding: 4px 10px; background: #EEF2FF; color: var(--accent-color); font-weight: 700;">0 câu hỏi</span>
+                    </div>
+
+                    <!-- BỘ LỌC CÂU HỎI NGUỒN CHUYÊN BIỆT CHO CỘT TRÁI -->
+                    <div class="source-filter-box" style="background: #F8FAFC; border: 1.5px solid #E2E8F0; border-radius: 12px; padding: 12px; margin-bottom: 16px;">
+                        <div style="display: grid; grid-template-columns: 1fr 1.3fr; gap: 8px; margin-bottom: 8px;">
+                            <div>
+                                <label style="display: block; font-size: 0.73rem; font-weight: 700; color: #475569; margin-bottom: 3px;">
+                                    <i class="fa-solid fa-book-bookmark" style="color: #6366F1;"></i> Chuyên đề:
+                                </label>
+                                <select class="config-select" id="qbFilterChuyenDe" style="width: 100%; padding: 6px 8px; font-size: 0.8rem; border-color: #CBD5E1; border-radius: 8px; background: #FFFFFF;">
+                                    <option value="">Tất cả chuyên đề (1-19)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="display: block; font-size: 0.73rem; font-weight: 700; color: #475569; margin-bottom: 3px;">
+                                    <i class="fa-solid fa-shapes" style="color: #10B981;"></i> Dạng bài toán:
+                                </label>
+                                <select class="config-select" id="qbFilterTopic" style="width: 100%; padding: 6px 8px; font-size: 0.8rem; border-color: #CBD5E1; border-radius: 8px; background: #FFFFFF;">
+                                    <option value="">Tất cả dạng bài toán</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Hàng bộ lọc phụ: Độ khó + Dạng thức + Nút đồng bộ -->
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px; padding-top: 8px; border-top: 1px dashed #E2E8F0;">
+                            <button type="button" id="btnSyncCurrentTopic" class="btn" style="width: auto; padding: 4px 10px; font-size: 0.73rem; font-weight: 700; background: #EEF2FF; color: #4F46E5; border: 1px solid #C7D2FE; border-radius: 6px; cursor: pointer;" title="Đặt lại bộ lọc về đúng Dạng toán của học liệu đang soạn">
+                                <i class="fa-solid fa-bullseye"></i> Dạng học liệu này
+                            </button>
+                            <div style="display: flex; gap: 6px; align-items: center;">
+                                <select id="qbFilterDifficulty" style="padding: 4px 6px; font-size: 0.75rem; border-radius: 6px; border: 1px solid #CBD5E1; background: #FFFFFF; font-weight: 600; color: #475569;">
+                                    <option value="">Mọi độ khó</option>
+                                    <option value="NB">NB (Nhận biết)</option>
+                                    <option value="TH">TH (Thông hiểu)</option>
+                                    <option value="VD">VD (Vận dụng)</option>
+                                    <option value="VDC">VDC (Vận dụng cao)</option>
+                                </select>
+                                <select id="qbFilterType" style="padding: 4px 6px; font-size: 0.75rem; border-radius: 6px; border: 1px solid #CBD5E1; background: #FFFFFF; font-weight: 600; color: #475569;">
+                                    <option value="">Mọi dạng thức</option>
+                                    <option value="multiple_choice">Trắc nghiệm 4PA</option>
+                                    <option value="true_false">Đúng / Sai</option>
+                                    <option value="short_answer">Trả lời ngắn</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="questions-list-container" id="sourceList">
                         <!-- Dynamic question items -->
                     </div>
                 </div>
 
                 <!-- Right Column: Selected list for current Quiz -->
-                <div class="column-card" style="border-color: #A7F3D0;">
-                    <h3>
-                        <span style="color: #065F46;"><i class="fa-solid fa-square-check"></i> Câu Hỏi Đã Chọn Trong Đề Thi</span>
-                        <span class="badge" style="background: #D1FAE5; color: #047857;" id="selectedCount">0 câu hỏi</span>
-                    </h3>
+                <div class="column-card" style="border-top: 4px solid #10B981; border-color: #A7F3D0;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #E2E8F0;">
+                        <div>
+                            <h3 style="margin: 0; font-size: 1.05rem; color: #065F46;">
+                                <i class="fa-solid fa-square-check"></i> Đề Thi Dạng Toán Này
+                            </h3>
+                            <div style="font-size: 0.78rem; color: #047857; margin-top: 2px;">Các câu hỏi trong đề luyện tập của dạng toán này</div>
+                        </div>
+                        <span class="badge" style="background: #D1FAE5; color: #047857; font-size: 0.82rem; padding: 4px 10px; font-weight: 700;" id="selectedCount">0 câu hỏi</span>
+                    </div>
+
+                    <!-- Thanh thống kê & Hành động đề thi -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: #ECFDF5; border: 1px solid #A7F3D0; border-radius: 10px; padding: 8px 12px; margin-bottom: 16px;">
+                        <div id="selectedStats" style="font-size: 0.78rem; font-weight: 600; color: #065F46;">
+                            Đang tải câu hỏi trong đề...
+                        </div>
+                        <div style="display: flex; gap: 6px;">
+                            <button type="button" class="btn btn-outline" onclick="openFullQuizModal()" style="width: auto; padding: 4px 10px; font-size: 0.75rem; font-weight: 700; border-color: #10B981; color: #059669; background: #FFFFFF;" title="Xem trước toàn bộ đề thi">
+                                <i class="fa-solid fa-eye"></i> Xem đề
+                            </button>
+                            <button type="button" class="btn btn-secondary" id="clearAllBtn" style="width: auto; padding: 4px 10px; font-size: 0.75rem; font-weight: 700; color: #EF4444; border-color: #FCA5A5; background: #FFF5F5;" title="Xóa tất cả câu hỏi đã chọn trong học liệu này">
+                                <i class="fa-solid fa-trash-can"></i> Xóa hết
+                            </button>
+                        </div>
+                    </div>
+
                     <div class="questions-list-container" id="selectedList">
                         <!-- Dynamic linked items with drag handles -->
                     </div>
@@ -1607,26 +1697,6 @@
         </div>
     </div>
 
-    <!-- CDNs and Libraries -->
-    <!-- Supabase JS client -->
-    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-    
-    <!-- SortableJS drag drop -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
-    
-    <!-- KaTeX library -->
-    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
-    
-    <!-- JSZip library for Word .docx unpacking -->
-    <script src="js/jszip.min.js"></script>
-    <script src="js/docx-math-parser.js"></script>
-
-    <!-- Core config & Action Script -->
-    <script src="js/config.js"></script>
-    <script src="js/material-manage.js"></script>
-
-
     <!-- Independent Multi-tab Image Insert Modal -->
     <div class="math-insert-modal" id="imageInsertModal">
         <div class="math-insert-content" style="max-width: 580px;">
@@ -1823,16 +1893,132 @@
         </div>
     </div>
 
+    <!-- Question Family Modal (Quản lý cụm biến thể câu hỏi) -->
+    <div class="admin-modal" id="questionFamilyModal">
+        <div class="admin-modal-content" style="max-width: 960px; width: 95%; max-height: 90vh; border-radius: 20px; display: flex; flex-direction: column; padding: 0;">
+            <!-- Header -->
+            <div style="padding: 20px 24px; border-bottom: 1px solid #E2E8F0; display: flex; justify-content: space-between; align-items: center; background: #FFFFFF; border-radius: 20px 20px 0 0;">
+                <div>
+                    <h3 style="margin: 0; font-size: 1.25rem; font-weight: 800; color: #0F172A; display: flex; align-items: center; gap: 10px;">
+                        <i class="fa-solid fa-layer-group" style="color: #4F46E5;"></i> Quản Lý Question Family: Câu Hỏi #<span id="qfMasterId"></span>
+                    </h3>
+                    <div style="font-size: 0.86rem; color: #64748B; margin-top: 4px;" id="qfMasterSub">
+                        Tập hợp các câu hỏi cùng dạng toán, phương pháp giải và các biến thể thay số rèn luyện chống học vẹt
+                    </div>
+                </div>
+                <button type="button" onclick="closeQuestionFamilyModal()" style="background: none; border: none; font-size: 1.3rem; color: #64748B; cursor: pointer; padding: 4px 8px;"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <!-- Body -->
+            <div style="padding: 24px; overflow-y: auto; flex: 1; background: #F8FAFC;" id="qfModalBody">
+                <!-- Câu gốc Master Card -->
+                <div style="background: #EEF2FF; border: 1.5px solid #C7D2FE; border-radius: 14px; padding: 18px 20px; margin-bottom: 22px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <span style="font-weight: 800; color: #4338CA; font-size: 0.95rem;"><i class="fa-solid fa-star"></i> CÂU HỎI GỐC (MASTER) - ĐẠI DIỆN DẠNG BÀI</span>
+                        <div style="display: flex; gap: 6px; align-items: center;" id="qfMasterBadge"></div>
+                    </div>
+                    <div id="qfMasterText" class="math-render" style="font-size: 0.98rem; line-height: 1.7; color: #1E293B;"></div>
+                    <div id="qfMasterDiagram"></div>
+                    <div id="qfMasterOptions"></div>
+                    <div id="qfMasterExp"></div>
+                </div>
+
+                <!-- Danh sách biến thể Header -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
+                    <h4 style="margin: 0; font-size: 1.05rem; font-weight: 800; color: #0F172A; display: flex; align-items: center; gap: 8px;">
+                        <i class="fa-solid fa-clone" style="color: #10B981;"></i> Danh Sách Biến Thể Thay Số (<span id="qfVariantCountBadge">0</span> câu)
+                    </h4>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <button type="button" class="btn" id="btnModalAdd1Variant" onclick="generateMoreVariantsFromModal(1)" style="padding: 7px 14px; font-size: 0.82rem; font-weight: 700; background: #ECFDF5; color: #059669; border: 1.5px solid #86EFAC; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                            <i class="fa-solid fa-plus"></i> +1 Biến thể
+                        </button>
+                        <button type="button" class="btn btn-primary" id="btnModalAdd3Variants" onclick="generateMoreVariantsFromModal(3)" style="padding: 7px 18px; font-size: 0.82rem; font-weight: 700; background: #4F46E5; color: #FFFFFF; border: none; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 8px rgba(79, 70, 229, 0.25);">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> AI Sinh +3 Biến thể
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Container danh sách biến thể -->
+                <div id="qfVariantsContainer">
+                    <!-- Dynamic variant cards -->
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div style="padding: 14px 24px; border-top: 1px solid #E2E8F0; display: flex; justify-content: flex-end; background: #FFFFFF; border-radius: 0 0 20px 20px;">
+                <button type="button" class="btn btn-secondary" onclick="closeQuestionFamilyModal()" style="padding: 10px 24px; font-weight: 600; border-radius: 10px;">Đóng</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Borrow Questions From Question Bank Modal -->
+    <div class="admin-modal" id="borrowFromBankModal">
+        <div class="admin-modal-content" style="max-width: 1100px; width: 95%; max-height: 90vh; border-radius: 20px; display: flex; flex-direction: column; padding: 0;">
+            <!-- Header -->
+            <div style="padding: 18px 24px; border-bottom: 1px solid #E2E8F0; display: flex; justify-content: space-between; align-items: center; background: #FFFFFF; border-radius: 20px 20px 0 0;">
+                <div>
+                    <h3 style="margin: 0; font-size: 1.25rem; font-weight: 800; color: #1E1B4B; display: flex; align-items: center; gap: 10px;">
+                        <i class="fa-solid fa-boxes-packing" style="color: #8B5CF6;"></i> Bốc Câu Hỏi Từ NHCH Toán 12
+                    </h3>
+                    <div style="font-size: 0.85rem; color: #64748B; margin-top: 4px;">
+                        Chọn Chương ➔ Bài ➔ Dạng toán để bốc câu hỏi vào đề thi hiện tại (<strong id="borrowTargetTitle" style="color: #4F46E5;">Học liệu hiện tại</strong>)
+                    </div>
+                </div>
+                <button type="button" onclick="closeBorrowFromBankModal()" style="background: none; border: none; font-size: 1.3rem; color: #64748B; cursor: pointer; padding: 4px 8px;"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <!-- Body (2-Column Layout) -->
+            <div style="display: flex; flex: 1; overflow: hidden; background: #F8FAFC;">
+                <!-- Left: Bank Tree (Chương -> Bài -> Dạng toán) -->
+                <div style="width: 380px; border-right: 1px solid #E2E8F0; background: #FFFFFF; overflow-y: auto; padding: 16px;">
+                    <div style="font-weight: 800; font-size: 0.85rem; color: #4338CA; text-transform: uppercase; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+                        <i class="fa-solid fa-sitemap"></i> Cây Dạng Toán Chuẩn KNTT
+                    </div>
+                    <div id="borrowBankTreeContainer" style="display: flex; flex-direction: column; gap: 10px;">
+                        <!-- Dynamic bank tree -->
+                    </div>
+                </div>
+
+                <!-- Right: Questions list of selected topic -->
+                <div style="flex: 1; overflow-y: auto; padding: 20px;" id="borrowQuestionsContainer">
+                    <div style="text-align: center; padding: 60px 20px; color: #64748B;">
+                        <i class="fa-solid fa-hand-pointer" style="font-size: 2.2rem; color: #CBD5E1; margin-bottom: 12px;"></i>
+                        <h5 style="margin: 0 0 6px 0; font-size: 1.05rem; color: #1E293B;">Chọn một dạng toán ở cột bên trái</h5>
+                        <p style="margin: 0; font-size: 0.88rem;">Hệ thống sẽ nạp danh sách câu hỏi và các biến thể của dạng đó để Thầy chọn.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div style="padding: 14px 24px; border-top: 1px solid #E2E8F0; display: flex; justify-content: space-between; align-items: center; background: #FFFFFF; border-radius: 0 0 20px 20px;">
+                <div style="font-size: 0.9rem; font-weight: 700; color: #1E293B;">
+                    Đã chọn: <span id="borrowSelectedCount" style="color: #8B5CF6; font-size: 1.15rem; font-weight: 800;">0</span> câu hỏi
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button type="button" class="btn btn-secondary" onclick="closeBorrowFromBankModal()" style="padding: 9px 20px; font-weight: 600; border-radius: 10px;">Đóng</button>
+                    <button type="button" class="btn btn-primary" id="btnCommitBorrow" onclick="commitBorrowQuestions()" style="padding: 9px 24px; font-weight: 700; background: #8B5CF6; border: none; border-radius: 10px; color: #FFFFFF; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(139, 92, 246, 0.25);">
+                        <i class="fa-solid fa-cloud-arrow-down"></i> Nạp vào đề thi hiện tại
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 
     <!-- External Libraries -->
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <script src="js/jszip.min.js"></script>
+    <script src="js/docx-math-parser.js"></script>
 
     <!-- Configuration & Application Logic -->
     <script src="js/config.js"></script>
+    <script src="js/question-bank-seed.js"></script>
     <script src="js/tikz-renderer.js"></script>
-    <script src="js/material-manage.js?v=toansmart-v1.3.0"></script>
+    <script src="js/math-topics-data.js"></script>
+    <script src="js/question-family-engine.js"></script>
+    <script src="js/material-manage.js?v=toansmart-v1.3.1"></script>
 </body>
 </html>

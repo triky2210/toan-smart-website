@@ -41,6 +41,61 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 2. Tải dữ liệu ban đầu
     await initMaterialManager();
 
+    function mergeLocalAndQuestionBankData() {
+        // 1. Luôn đồng bộ Khóa học NHCH 1200, Chương, Bài, Học liệu Dạng toán từ QuestionBankSeed
+        if (typeof QuestionBankSeed !== 'undefined') {
+            const bankCourse = QuestionBankSeed.getBankCourse();
+            if (bankCourse && !cachedCourses.some(c => c.id == bankCourse.id)) {
+                cachedCourses.push(bankCourse);
+            }
+            QuestionBankSeed.getBankChapters().forEach(ch => {
+                if (!cachedChapters.some(c => c.id == ch.id)) {
+                    cachedChapters.push(ch);
+                }
+            });
+            QuestionBankSeed.getBankLessons().forEach(l => {
+                if (!cachedLessons.some(item => item.id == l.id)) {
+                    cachedLessons.push(l);
+                }
+            });
+            QuestionBankSeed.getBankMaterials().forEach(m => {
+                const existingIdx = cachedMaterials.findIndex(item => item.id == m.id);
+                if (existingIdx !== -1) {
+                    cachedMaterials[existingIdx] = { ...cachedMaterials[existingIdx], ...m };
+                } else {
+                    cachedMaterials.push(m);
+                }
+            });
+        }
+
+        // 2. Bổ sung từ LocalStorage nếu có
+        try {
+            const localCourses = JSON.parse(localStorage.getItem('db_courses')) || [];
+            localCourses.forEach(c => {
+                if (!cachedCourses.some(item => item.id == c.id)) cachedCourses.push(c);
+            });
+            const localChapters = JSON.parse(localStorage.getItem('db_chapters')) || [];
+            localChapters.forEach(ch => {
+                if (!cachedChapters.some(item => item.id == ch.id)) cachedChapters.push(ch);
+            });
+            const localLessons = JSON.parse(localStorage.getItem('db_lessons')) || [];
+            localLessons.forEach(l => {
+                if (!cachedLessons.some(item => item.id == l.id)) cachedLessons.push(l);
+            });
+            const localMaterials = JSON.parse(localStorage.getItem('db_materials')) || [];
+            localMaterials.forEach(m => {
+                const existingIdx = cachedMaterials.findIndex(item => item.id == m.id);
+                if (existingIdx !== -1) {
+                    cachedMaterials[existingIdx] = { ...cachedMaterials[existingIdx], ...m };
+                } else {
+                    cachedMaterials.push(m);
+                }
+            });
+        } catch (e) {
+            console.warn("Lỗi đồng bộ local cache vào material-manage:", e);
+        }
+    }
+
     async function initMaterialManager() {
         if (isOnline) {
             try {
@@ -63,6 +118,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             loadOfflineCache();
         }
 
+        // Luôn bổ sung NHCH Toán 12 và LocalStorage vào cache
+        mergeLocalAndQuestionBankData();
+
         // Nếu chưa chỉ định material_id hoặc không tìm thấy, tự động chọn học liệu Quiz đầu tiên
         if (!currentMaterialId && cachedMaterials.length > 0) {
             const defaultQuiz = cachedMaterials.find(m => m.type === 'quiz' || m.type === 'exercise') || cachedMaterials[0];
@@ -73,6 +131,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if (currentMaterialId) {
             currentMaterial = cachedMaterials.find(m => m.id == currentMaterialId);
+            if (!currentMaterial && typeof QuestionBankSeed !== 'undefined') {
+                currentMaterial = QuestionBankSeed.getBankMaterials().find(m => m.id == currentMaterialId);
+                if (currentMaterial) cachedMaterials.push(currentMaterial);
+            }
             if (currentMaterial) {
                 currentLessonId = currentMaterial.lesson_id;
                 const foundLesson = cachedLessons.find(l => l.id == currentLessonId);
@@ -103,7 +165,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // 3. Đổ dữ liệu vào các Select bộ lọc
+    // *** TÁCH BIỆT: Row 1 = Điều hướng học liệu, Row 2 = Lọc câu hỏi nguồn ***
     function populateFilterDropdowns() {
+        // === ROW 1: Điều hướng Khóa học → Chương → Bài → Học liệu ===
         const qbFilterCourse = document.getElementById('qbFilterCourse');
         const qbFilterChapter = document.getElementById('qbFilterChapter');
         const qbFilterLesson = document.getElementById('qbFilterLesson');
@@ -140,20 +204,111 @@ document.addEventListener('DOMContentLoaded', async () => {
             qbFilterMaterial.onchange = (e) => {
                 currentMaterialId = parseInt(e.target.value);
                 currentMaterial = cachedMaterials.find(m => m.id == currentMaterialId);
+                // Khi đổi học liệu, cập nhật lại bộ lọc Chuyên đề/Dạng toán
+                syncTopicFiltersFromMaterial();
                 renderHeaderAndSections();
             };
         }
 
+        // === ROW 2: Lọc câu hỏi nguồn theo Chuyên đề & Dạng toán (nằm trong Quiz Section) ===
+        setupSourceFilterDropdowns();
+
         // Đổ dữ liệu vào các select trong Modal Form tạo câu hỏi
         populateModalFormDropdowns();
+    }
+
+    // Khởi tạo bộ lọc Chuyên đề & Dạng toán trong Cột trái (Ngân hàng câu hỏi nguồn)
+    function setupSourceFilterDropdowns() {
+        const qbFilterChuyenDe = document.getElementById('qbFilterChuyenDe');
+        const qbFilterTopic = document.getElementById('qbFilterTopic');
+        const qbFilterDifficulty = document.getElementById('qbFilterDifficulty');
+        const qbFilterType = document.getElementById('qbFilterType');
+        const btnSyncCurrentTopic = document.getElementById('btnSyncCurrentTopic');
+
+        if (qbFilterChuyenDe && typeof MathTopicService !== 'undefined') {
+            const allCD = MathTopicService.getAllChuyenDe();
+            qbFilterChuyenDe.innerHTML = `<option value="">Tất cả chuyên đề (1-19)</option>` + 
+                allCD.map(cd => `<option value="${cd.id}">${cd.short_name}</option>`).join('');
+
+            qbFilterChuyenDe.onchange = (e) => {
+                const cdId = e.target.value;
+                updateTopicFilterDropdown(cdId);
+                renderSourceQuestions();
+            };
+        }
+
+        if (qbFilterTopic) {
+            updateTopicFilterDropdown('');
+            qbFilterTopic.onchange = () => {
+                renderSourceQuestions();
+            };
+        }
+
+        if (qbFilterDifficulty) {
+            qbFilterDifficulty.onchange = () => {
+                renderSourceQuestions();
+            };
+        }
+
+        if (qbFilterType) {
+            qbFilterType.onchange = () => {
+                renderSourceQuestions();
+            };
+        }
+
+        if (btnSyncCurrentTopic) {
+            btnSyncCurrentTopic.onclick = () => {
+                syncTopicFiltersFromMaterial();
+                if (qbFilterDifficulty) qbFilterDifficulty.value = '';
+                if (qbFilterType) qbFilterType.value = '';
+                renderSourceQuestions();
+            };
+        }
+
+        // Tự động đồng bộ bộ lọc Chuyên đề/Dạng toán theo học liệu hiện tại
+        syncTopicFiltersFromMaterial();
+    }
+
+    // Đồng bộ bộ lọc Chuyên đề & Dạng toán theo material hiện tại
+    function syncTopicFiltersFromMaterial() {
+        const qbFilterChuyenDe = document.getElementById('qbFilterChuyenDe');
+        const qbFilterTopic = document.getElementById('qbFilterTopic');
+
+        if (!currentMaterial || typeof MathTopicService === 'undefined') return;
+        if (!qbFilterChuyenDe && !qbFilterTopic) return;
+
+        let matchedTopic = null;
+        if (currentMaterial.topic_id || currentMaterial.topic_code) {
+            const allTopics = MathTopicService.getAllTopics();
+            matchedTopic = allTopics.find(t => 
+                (currentMaterial.topic_id && String(t.id) === String(currentMaterial.topic_id)) ||
+                (currentMaterial.topic_code && String(t.code) === String(currentMaterial.topic_code))
+            );
+        }
+        if (matchedTopic) {
+            if (qbFilterChuyenDe) qbFilterChuyenDe.value = String(matchedTopic.chuyen_de_id);
+            updateTopicFilterDropdown(matchedTopic.chuyen_de_id);
+            if (qbFilterTopic) qbFilterTopic.value = String(matchedTopic.id);
+            console.log(`[Filter Sync] Học liệu "${currentMaterial.title}" → Chuyên đề ${matchedTopic.chuyen_de_id}, Dạng ${matchedTopic.code}`);
+        }
+    }
+
+    function updateTopicFilterDropdown(chuyenDeId) {
+        const qbFilterTopic = document.getElementById('qbFilterTopic');
+        if (!qbFilterTopic || typeof MathTopicService === 'undefined') return;
+
+        const topics = chuyenDeId ? MathTopicService.getTopicsByChuyenDe(chuyenDeId) : MathTopicService.getAllTopics();
+        qbFilterTopic.innerHTML = `<option value="">Tất cả dạng bài toán (${topics.length})</option>` + 
+            topics.map(t => `<option value="${t.id}">[Dạng ${t.code}] ${t.name.slice(0, 48)}${t.name.length > 48 ? '...' : ''}</option>`).join('');
     }
 
     function filterChaptersByCourse(courseId) {
         const qbFilterChapter = document.getElementById('qbFilterChapter');
         if (!qbFilterChapter) return;
         const filtered = courseId ? cachedChapters.filter(ch => ch.course_id == courseId) : cachedChapters;
+        const curChId = currentLessonId ? (cachedLessons.find(l => l.id == currentLessonId)?.chapter_id) : '';
         qbFilterChapter.innerHTML = `<option value="">Tất cả chương</option>` + 
-            filtered.map(ch => `<option value="${ch.id}">${ch.title}</option>`).join('');
+            filtered.map(ch => `<option value="${ch.id}" ${ch.id == curChId ? 'selected' : ''}>${ch.title}</option>`).join('');
     }
 
     function filterLessonsByChapter(chapterId) {
@@ -161,7 +316,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!qbFilterLesson) return;
         const filtered = chapterId ? cachedLessons.filter(l => l.chapter_id == chapterId) : cachedLessons;
         qbFilterLesson.innerHTML = `<option value="">Tất cả bài học</option>` + 
-            filtered.map(l => `<option value="${l.id}">${l.title}</option>`).join('');
+            filtered.map(l => `<option value="${l.id}" ${l.id == currentLessonId ? 'selected' : ''}>${l.title}</option>`).join('');
     }
 
     function filterMaterialsByLesson(lessonId) {
@@ -207,6 +362,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (quizSection) quizSection.style.display = 'none';
         if (textSection) textSection.style.display = 'none';
 
+        if (!currentMaterial && currentMaterialId) {
+            currentMaterial = cachedMaterials.find(m => m.id == currentMaterialId) || 
+                (typeof QuestionBankSeed !== 'undefined' ? QuestionBankSeed.getBankMaterials().find(m => m.id == currentMaterialId) : null);
+        }
+
         if (!currentMaterial && cachedMaterials.length > 0) {
             currentMaterial = cachedMaterials[0];
             currentMaterialId = currentMaterial.id;
@@ -214,7 +374,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if (!currentMaterial) {
             manageTitle.innerHTML = `<i class="fa-solid fa-layer-group" style="color: var(--accent-color);"></i> Quản Lý Nội Dung Học Liệu`;
-            manageBreadcrumb.innerHTML = `Vui lòng tạo hoặc chọn học liệu để cấu hình nội dung chi tiết.`;
+                    const currentMaterialBadge = document.getElementById('currentMaterialBadge');
+        if (currentMaterialBadge && currentMaterial) {
+            currentMaterialBadge.textContent = currentMaterial.title;
+        }
+
+        manageBreadcrumb.innerHTML = `Vui lòng tạo hoặc chọn học liệu để cấu hình nội dung chi tiết.`;
             return;
         }
 
@@ -1394,6 +1559,29 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
 
+        // Bổ sung các câu hỏi lưu local nếu có
+        try {
+            const localQuestions = JSON.parse(localStorage.getItem('db_questions')) || [];
+            localQuestions.forEach(lq => {
+                if (!allSourceQuestions.some(q => q.id == lq.id)) {
+                    allSourceQuestions.push(lq);
+                }
+            });
+        } catch (e) {}
+
+        // Bổ sung các câu hỏi đã chọn trong học liệu lưu local
+        if (selectedQuestions.length === 0 && currentMaterial) {
+            try {
+                const localMq = JSON.parse(localStorage.getItem('toansmart_mq_' + currentMaterial.id)) || [];
+                if (localMq.length > 0) {
+                    selectedQuestions = localMq.map((mq, idx) => {
+                        const q = allSourceQuestions.find(item => item.id == (mq.id || mq.question_id));
+                        return q ? { ...q, order_index: mq.order_index || (idx + 1) } : mq;
+                    }).filter(Boolean);
+                }
+            } catch (e) {}
+        }
+
         // Chuẩn hóa định dạng cho Câu #4 (Đúng/Sai) và Câu #5 (Trả lời ngắn)
         if (allSourceQuestions.length > 0) {
             allSourceQuestions = allSourceQuestions.map(q => {
@@ -1417,12 +1605,15 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (q.id == 5) {
                     return {
                         id: 5,
-                        lesson_id: 1001,
-                        question_text: "Cho phương trình bậc hai $x^2 - 5x + 3 = 0$ có hai nghiệm phân biệt $x_1, x_2$. Tính giá trị của biểu thức $P = x_1^2 + x_2^2$.",
+                        lesson_id: 1211,
+                        topic_id: 106,
+                        topic_code: "1.6",
+                        chuyen_de_id: 1,
+                        question_text: "Cho hàm số $y = f(x)$ có đạo hàm $f'(x) = x(x - 1)^2(x + 2)^3$ với mọi $x \\in \\mathbb{R}$. Hỏi hàm số $y = f(x)$ có bao nhiêu điểm cực trị?",
                         options: [],
-                        correct_option: "19",
-                        explanation: "<p><strong>Lời giải chi tiết:</strong></p><p>Theo hệ thức Vi-ét: $S = x_1 + x_2 = 5, P = x_1 \\cdot x_2 = 3$.</p><p>Biến đổi: $P = (x_1+x_2)^2 - 2x_1 x_2 = 5^2 - 2(3) = 25 - 6 = 19$.</p>",
-                        difficulty: "VD",
+                        correct_option: "2",
+                        explanation: "<p><strong>Lời giải chi tiết:</strong></p><p>Phương trình $f'(x) = 0 \\Leftrightarrow x = 0$, $x = 1$, hoặc $x = -2$.</p><p>- Tại $x = 0$ (nghiệm bội 1): $f'(x)$ đổi dấu.</p><p>- Tại $x = 1$ (nghiệm bội chẵn 2): $f'(x)$ không đổi dấu.</p><p>- Tại $x = -2$ (nghiệm bội lẻ 3): $f'(x)$ đổi dấu.</p><p>Vậy hàm số đã cho có đúng <strong>2</strong> điểm cực trị.</p>",
+                        difficulty: "TH",
                         question_type: "short_answer"
                     };
                 }
@@ -1494,29 +1685,85 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!container) return;
 
         const selectedIds = new Set(selectedQuestions.map(q => q.id));
-        const available = allSourceQuestions;
+        
+        // Lấy điều kiện lọc từ thanh công cụ Cột trái
+        const filterChuyenDe = document.getElementById('qbFilterChuyenDe')?.value;
+        const filterTopic = document.getElementById('qbFilterTopic')?.value;
+        const filterDiff = document.getElementById('qbFilterDifficulty')?.value;
+        const filterType = document.getElementById('qbFilterType')?.value;
+        
+        let available = [...allSourceQuestions];
+
+        if (filterTopic) {
+            available = available.filter(q => {
+                if (q.topic_id && String(q.topic_id) === String(filterTopic)) return true;
+                const autoT = (typeof MathTopicService !== 'undefined') ? MathTopicService.autoDetectTopic(q.question_text) : null;
+                return autoT && (String(autoT.id) === String(filterTopic) || String(autoT.code) === String(filterTopic));
+            });
+        } else if (filterChuyenDe) {
+            available = available.filter(q => {
+                if (q.chuyen_de_id && String(q.chuyen_de_id) === String(filterChuyenDe)) return true;
+                const autoT = (typeof MathTopicService !== 'undefined') ? MathTopicService.autoDetectTopic(q.question_text) : null;
+                return autoT && String(autoT.chuyen_de_id) === String(filterChuyenDe);
+            });
+        }
+
+        if (filterDiff) {
+            available = available.filter(q => (q.difficulty || 'NB').toUpperCase() === filterDiff.toUpperCase());
+        }
+
+        if (filterType) {
+            available = available.filter(q => (q.question_type || 'multiple_choice') === filterType);
+        }
         if (countBadge) countBadge.textContent = `${available.length} câu hỏi`;
+
+        if (available.length === 0) {
+            container.innerHTML = `
+                <div style="background: #FFFFFF; border: 1.5px dashed #CBD5E1; border-radius: 12px; padding: 36px 20px; text-align: center; color: #64748B;">
+                    <i class="fa-solid fa-filter-circle-xmark" style="font-size: 2rem; color: #CBD5E1; margin-bottom: 10px;"></i>
+                    <h5 style="margin: 0 0 6px 0; font-size: 1rem; color: #1E293B;">Không tìm thấy câu hỏi phù hợp</h5>
+                    <p style="margin: 0; font-size: 0.85rem;">Không có câu hỏi nào thuộc Chuyên đề hoặc Dạng toán đã chọn.</p>
+                </div>
+            `;
+            return;
+        }
 
         container.innerHTML = available.map(q => {
             const isSelected = selectedIds.has(q.id);
+            const detectedTopic = (typeof MathTopicService !== 'undefined') ? MathTopicService.autoDetectTopic(q.question_text) : null;
+            const vCount = getQuestionVariantCount(q);
+
             return `
                 <div class="q-card ${isSelected ? 'selected-item' : ''}" ondblclick="editQuestion(${q.id})">
-                    <div class="q-header" style="display:flex; justify-content:space-between; align-items:center;">
-                        <div style="display:flex; gap:6px; align-items:center;">
+                    <div class="q-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
+                        <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
                             <span class="q-id">Câu hỏi #${q.id}</span>
                             ${getQuestionTypeBadgeHtml(q)}
+                            ${detectedTopic ? `
+                                <span class="badge" style="background:#EEF2FF; color:#4338CA; border:1px solid #C7D2FE; font-size:0.75rem; padding:2px 8px; border-radius:6px; font-weight:700;" title="${detectedTopic.name}">
+                                    <i class="fa-solid fa-shapes"></i> Dạng ${detectedTopic.code}
+                                </span>
+                            ` : ''}
                         </div>
                         <div style="display:flex; gap:6px; align-items:center;">
                             <button class="btn-preview-q" onclick="previewQuestion(event, ${q.id})"><i class="fa-solid fa-eye"></i> Xem thử</button>
                             <span class="diff-badge diff-${q.difficulty ? q.difficulty.toLowerCase() : 'nb'}">${q.difficulty || 'NB'}</span>
                         </div>
                     </div>
+                    ${detectedTopic ? `
+                        <div style="font-size:0.78rem; color:#475569; margin:4px 0 8px 0; background:#F8FAFC; padding:5px 10px; border-radius:6px; border-left:3px solid #6366F1;">
+                            <strong>Dạng ${detectedTopic.code}:</strong> ${detectedTopic.name}
+                        </div>
+                    ` : ''}
                     <div class="q-text">${renderQuestionHtml(q.question_text)}</div>
                     <div class="q-footer">
                         <div class="q-badges">
                             ${getQuestionAnswerSummaryHtml(q)}
                         </div>
-                        <div class="q-actions">
+                        <div class="q-actions" style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+                            <button type="button" class="btn" onclick="openQuestionFamilyModal(event, ${q.id})" style="font-size:0.78rem; padding:5px 12px; width:auto; ${vCount > 0 ? 'background:#ECFDF5; color:#047857; border:1.5px solid #34D399;' : 'background:#EEF2FF; color:#4F46E5; border:1.5px solid #818CF8;'} border-radius:8px; font-weight:700; cursor:pointer;" title="Mở Quản lý Question Family để xem tất cả các câu biến thể">
+                                <i class="fa-solid fa-layer-group"></i> Question Family (<span class="v-count-${q.id}">${vCount}</span> biến thể)
+                            </button>
                             <button class="btn btn-secondary" onclick="editQuestion(${q.id})" style="font-size:0.78rem; padding:4px 10px; width:auto;"><i class="fa-solid fa-pen-to-square"></i> Sửa</button>
                             ${isSelected ? `
                                 <button class="btn btn-unselect" onclick="toggleSelectQuestion(${q.id}, false)"><i class="fa-solid fa-minus"></i> Gỡ khỏi đề</button>
@@ -1537,26 +1784,49 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if (countBadge) countBadge.textContent = `${selectedQuestions.length} câu hỏi`;
 
-        container.innerHTML = selectedQuestions.map((q, idx) => `
-            <div class="q-card selected-item" data-q-id="${q.id}" ondblclick="editQuestion(${q.id})">
-                <div class="q-header" style="display:flex; justify-content:space-between; align-items:center;">
-                    <div style="display:flex; gap:6px; align-items:center;">
-                        <span class="drag-handle"><i class="fa-solid fa-grip-vertical"></i></span>
-                        <span class="q-id" style="color: var(--accent-color);">Câu ${idx + 1} (ID #${q.id})</span>
-                        ${getQuestionTypeBadgeHtml(q)}
+        const statsEl = document.getElementById('selectedStats');
+        if (statsEl) {
+            const mcCount = selectedQuestions.filter(q => !q.question_type || q.question_type === 'multiple_choice').length;
+            const tfCount = selectedQuestions.filter(q => q.question_type === 'true_false').length;
+            const saCount = selectedQuestions.filter(q => q.question_type === 'short_answer').length;
+            statsEl.innerHTML = `<strong>${selectedQuestions.length} câu trong đề:</strong> ${mcCount} Trắc nghiệm | ${tfCount} Đúng/Sai | ${saCount} Trả lời ngắn`;
+        }
+
+        container.innerHTML = selectedQuestions.map((q, idx) => {
+            const detectedTopic = (typeof MathTopicService !== 'undefined') ? MathTopicService.autoDetectTopic(q.question_text) : null;
+            const vCount = getQuestionVariantCount(q);
+
+            return `
+                <div class="q-card selected-item" data-q-id="${q.id}" ondblclick="editQuestion(${q.id})">
+                    <div class="q-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
+                        <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+                            <span class="drag-handle"><i class="fa-solid fa-grip-vertical"></i></span>
+                            <span class="q-id" style="color: var(--accent-color);">Câu ${idx + 1} (ID #${q.id})</span>
+                            ${getQuestionTypeBadgeHtml(q)}
+                            ${detectedTopic ? `
+                                <span class="badge" style="background:#EEF2FF; color:#4338CA; border:1px solid #C7D2FE; font-size:0.75rem; padding:2px 8px; border-radius:6px; font-weight:700;">
+                                    <i class="fa-solid fa-shapes"></i> Dạng ${detectedTopic.code}
+                                </span>
+                            ` : ''}
+                        </div>
+                        <div style="display:flex; gap:6px; align-items:center;">
+                            <button class="btn-preview-q" onclick="previewQuestion(event, ${q.id})"><i class="fa-solid fa-eye"></i> Xem thử</button>
+                            <span class="diff-badge diff-${q.difficulty ? q.difficulty.toLowerCase() : 'nb'}">${q.difficulty || 'NB'}</span>
+                        </div>
                     </div>
-                    <div style="display:flex; gap:6px; align-items:center;">
-                        <button class="btn-preview-q" onclick="previewQuestion(event, ${q.id})"><i class="fa-solid fa-eye"></i> Xem thử</button>
-                        <span class="diff-badge diff-${q.difficulty ? q.difficulty.toLowerCase() : 'nb'}">${q.difficulty || 'NB'}</span>
+                    <div class="q-text">${renderQuestionHtml(q.question_text)}</div>
+                    <div class="q-footer" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                        <div>${getQuestionAnswerSummaryHtml(q)}</div>
+                        <div style="display:flex; gap:6px; align-items:center;">
+                            <button type="button" class="btn" onclick="openQuestionFamilyModal(event, ${q.id})" style="font-size:0.78rem; padding:4px 10px; width:auto; ${vCount > 0 ? 'background:#ECFDF5; color:#047857; border:1.5px solid #34D399;' : 'background:#EEF2FF; color:#4F46E5; border:1.5px solid #818CF8;'} border-radius:8px; font-weight:700; cursor:pointer;" title="Xem các câu biến thể của câu này">
+                                <i class="fa-solid fa-layer-group"></i> Question Family (<span class="v-count-${q.id}">${vCount}</span>)
+                            </button>
+                            <button class="btn btn-unselect" onclick="toggleSelectQuestion(${q.id}, false)"><i class="fa-solid fa-trash-can"></i> Gỡ khỏi đề</button>
+                        </div>
                     </div>
                 </div>
-                <div class="q-text">${renderQuestionHtml(q.question_text)}</div>
-                <div class="q-footer">
-                    <div>${getQuestionAnswerSummaryHtml(q)}</div>
-                    <button class="btn btn-unselect" onclick="toggleSelectQuestion(${q.id}, false)"><i class="fa-solid fa-trash-can"></i> Gỡ khỏi đề</button>
-                </div>
-            </div>
-        `).join('');
+            `;
+        }).join('');
 
         // Kích hoạt Sortable kéo thả thứ tự
         if (window.Sortable) {
@@ -1572,14 +1842,21 @@ document.addEventListener('DOMContentLoaded', async () => {
                     }).filter(Boolean);
 
                     selectedQuestions = newSelected;
+                    try {
+                        localStorage.setItem('toansmart_mq_' + currentMaterial.id, JSON.stringify(selectedQuestions));
+                    } catch (e) {}
                     if (isOnline && currentMaterial) {
-                        await supabaseClient.from('material_questions').delete().eq('material_id', currentMaterial.id);
-                        const newMq = selectedQuestions.map((q, idx) => ({
-                            material_id: currentMaterial.id,
-                            question_id: q.id,
-                            order_index: idx + 1
-                        }));
-                        await supabaseClient.from('material_questions').insert(newMq);
+                        try {
+                            await supabaseClient.from('material_questions').delete().eq('material_id', currentMaterial.id);
+                            const newMq = selectedQuestions.map((q, idx) => ({
+                                material_id: currentMaterial.id,
+                                question_id: q.id,
+                                order_index: idx + 1
+                            }));
+                            await supabaseClient.from('material_questions').insert(newMq);
+                        } catch (e) {
+                            console.warn("Lỗi đồng bộ thứ tự vào Supabase:", e);
+                        }
                     }
                     renderSelectedQuestions();
                 }
@@ -1594,19 +1871,26 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (q && !selectedQuestions.some(item => item.id == qId)) {
                 selectedQuestions.push({ ...q, order_index: selectedQuestions.length + 1 });
                 if (isOnline) {
-                    await supabaseClient.from('material_questions').insert([{
-                        material_id: currentMaterial.id,
-                        question_id: qId,
-                        order_index: selectedQuestions.length
-                    }]);
+                    try {
+                        await supabaseClient.from('material_questions').insert([{
+                            material_id: currentMaterial.id,
+                            question_id: qId,
+                            order_index: selectedQuestions.length
+                        }]);
+                    } catch (e) {}
                 }
             }
         } else {
             selectedQuestions = selectedQuestions.filter(item => item.id != qId);
             if (isOnline) {
-                await supabaseClient.from('material_questions').delete().eq('material_id', currentMaterial.id).eq('question_id', qId);
+                try {
+                    await supabaseClient.from('material_questions').delete().eq('material_id', currentMaterial.id).eq('question_id', qId);
+                } catch (e) {}
             }
         }
+        try {
+            localStorage.setItem('toansmart_mq_' + currentMaterial.id, JSON.stringify(selectedQuestions));
+        } catch (e) {}
         renderSourceQuestions();
         renderSelectedQuestions();
     };
@@ -2855,6 +3139,517 @@ let parsedWordQuestions = [];
 
     window.printFullQuiz = function() {
         window.print();
+    };
+
+    // ==========================================================
+    // QUESTION FAMILY: QUẢN LÝ CỤM BIẾN THỂ & SINH BẰNG AI
+    // ==========================================================
+
+    let currentFamilyMaster = null;
+
+    window.getQuestionVariantCount = function(q) {
+        if (!q) return 0;
+        const qId = String(q.id);
+        if (typeof QuestionFamilyEngine !== 'undefined' && QuestionFamilyEngine.localVariantsMap[qId]) {
+            return QuestionFamilyEngine.localVariantsMap[qId].length;
+        }
+        return q.variant_count || 0;
+    };
+
+    window.openQuestionFamilyModal = async function(event, questionId) {
+        if (event) event.stopPropagation();
+        const targetQ = allSourceQuestions.find(q => q.id === questionId) || selectedQuestions.find(q => q.id === questionId);
+        if (!targetQ) {
+            alert("Không tìm thấy câu hỏi #" + questionId);
+            return;
+        }
+
+        currentFamilyMaster = targetQ;
+        const modal = document.getElementById('questionFamilyModal');
+        if (!modal) return;
+
+        // Điền thông tin câu gốc Master
+        document.getElementById('qfMasterId').textContent = targetQ.id;
+        const detectedTopic = (typeof MathTopicService !== 'undefined') ? MathTopicService.autoDetectTopic(targetQ.question_text) : null;
+        const subEl = document.getElementById('qfMasterSub');
+        if (subEl) {
+            if (detectedTopic) {
+                subEl.innerHTML = `
+                    <div style="display:flex; align-items:center; gap:8px; margin-top:6px; flex-wrap:wrap;">
+                        <span style="background:#EEF2FF; color:#4338CA; border:1.5px solid #C7D2FE; padding:4px 12px; border-radius:8px; font-weight:700; font-size:0.88rem;">
+                            <i class="fa-solid fa-shapes"></i> Dạng ${detectedTopic.code}: ${detectedTopic.name}
+                        </span>
+                        <span class="diff-badge diff-${detectedTopic.level.toLowerCase()}" style="font-size:0.75rem;">Mức độ: ${detectedTopic.level}</span>
+                    </div>
+                `;
+            } else {
+                subEl.textContent = 'Tập hợp các câu hỏi cùng dạng toán, phương pháp giải và các biến thể thay số rèn luyện chống học vẹt';
+            }
+        }
+
+        document.getElementById('qfMasterBadge').innerHTML = `
+            ${getQuestionTypeBadgeHtml(targetQ)}
+            <span class="diff-badge diff-${targetQ.difficulty ? targetQ.difficulty.toLowerCase() : 'nb'}">${targetQ.difficulty || 'NB'}</span>
+            ${detectedTopic ? `<span class="badge" style="background:#ECFDF5; color:#065F46; border:1px solid #A7F3D0; font-size:0.75rem; padding: 2px 8px; border-radius: 6px; font-weight:700;"><i class="fa-solid fa-bookmark"></i> CĐ ${detectedTopic.chuyen_de_id}</span>` : ''}
+            ${targetQ.skill_tag ? `<span class="badge" style="background:#F1F5F9; color:#475569; font-size:0.75rem; padding: 2px 8px; border-radius: 6px;"><i class="fa-solid fa-tag"></i> ${targetQ.skill_tag}</span>` : ''}
+        `;
+
+        document.getElementById('qfMasterText').innerHTML = renderQuestionHtml(targetQ.question_text || '');
+
+        // Diagram nếu có
+        const diagramEl = document.getElementById('qfMasterDiagram');
+        if (diagramEl) {
+            diagramEl.innerHTML = (typeof TikZRenderer !== 'undefined' && (targetQ.tikz_code || targetQ.fallback_image_url)) ? 
+                TikZRenderer.render({ tikzCode: targetQ.tikz_code, fallbackUrl: targetQ.fallback_image_url }) : '';
+        }
+
+        // Phương án câu gốc
+        document.getElementById('qfMasterOptions').innerHTML = getQuestionAnswerSummaryHtml(targetQ);
+
+        // Lời giải câu gốc
+        const expEl = document.getElementById('qfMasterExp');
+        if (expEl) {
+            if (targetQ.explanation) {
+                expEl.innerHTML = `
+                    <div style="background: #FFFFFF; border: 1px dashed #A7F3D0; border-radius: 10px; padding: 10px 14px; margin-top: 10px; font-size: 0.88rem; color: #1E293B;">
+                        <strong style="color: #065F46;"><i class="fa-solid fa-lightbulb"></i> Lời giải câu gốc:</strong>
+                        <div class="math-render" style="margin-top: 4px;">${renderQuestionHtml(targetQ.explanation)}</div>
+                    </div>
+                `;
+            } else {
+                expEl.innerHTML = '';
+            }
+        }
+
+        // Tải danh sách biến thể
+        await renderFamilyVariantsList();
+
+        modal.classList.add('active');
+
+        // Kích hoạt KaTeX
+        if (window.renderMathInElement) {
+            renderMathInElement(document.getElementById('qfModalBody'), {
+                delimiters: [
+                    { left: "$$", right: "$$", display: true },
+                    { left: "$", right: "$", display: false },
+                    { left: "\\(", right: "\\)", display: false }
+                ],
+                throwOnError: false
+            });
+        }
+    };
+
+    window.closeQuestionFamilyModal = function() {
+        const modal = document.getElementById('questionFamilyModal');
+        if (modal) modal.classList.remove('active');
+        currentFamilyMaster = null;
+    };
+
+    async function renderFamilyVariantsList() {
+        if (!currentFamilyMaster) return;
+        const container = document.getElementById('qfVariantsContainer');
+        const countBadge = document.getElementById('qfVariantCountBadge');
+
+        let variants = [];
+        if (typeof QuestionFamilyEngine !== 'undefined') {
+            variants = await QuestionFamilyEngine.getVariants(currentFamilyMaster.id);
+        }
+
+        if (countBadge) countBadge.textContent = variants.length;
+
+        // Cập nhật lại số lượng hiển thị trên trang chính
+        currentFamilyMaster.variant_count = variants.length;
+        document.querySelectorAll(`.v-count-${currentFamilyMaster.id}`).forEach(el => {
+            el.textContent = variants.length;
+        });
+
+        if (variants.length === 0) {
+            container.innerHTML = `
+                <div style="background: #FFFFFF; border: 1.5px dashed #CBD5E1; border-radius: 14px; padding: 36px 20px; text-align: center; color: #64748B;">
+                    <i class="fa-solid fa-clone" style="font-size: 2.2rem; color: #CBD5E1; margin-bottom: 10px;"></i>
+                    <h5 style="margin: 0 0 6px 0; font-size: 1rem; color: #1E293B; font-weight: 700;">Chưa có biến thể thay số nào</h5>
+                    <p style="margin: 0 0 16px 0; font-size: 0.85rem;">Nhấn nút <b>"AI Sinh +3 Biến thể"</b> ở trên để tạo ngay 3 câu hỏi cùng dạng toán chỉ khác số liệu!</p>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = variants.map((v, idx) => {
+            let ansSummary = '';
+            if (v.question_type === 'short_answer') {
+                ansSummary = `<span style="font-weight: 700; color: #059669;"><i class="fa-solid fa-key"></i> Đáp số mới: <strong>${v.options?.[0] || v.correct_option || 'Chưa có'}</strong></span>`;
+            } else if (v.question_type === 'true_false') {
+                ansSummary = `<span style="font-weight: 700; color: #7E22CE;"><i class="fa-solid fa-square-check"></i> Đ/S biến thể</span>`;
+            } else {
+                const optIndex = (typeof v.correct_option === 'number') ? v.correct_option : parseInt(v.correct_option) || 0;
+                const letters = ['A', 'B', 'C', 'D'];
+                ansSummary = `<span style="font-weight: 700; color: #0369A1;"><i class="fa-solid fa-check"></i> Phương án đúng mới: ${letters[optIndex] || 'A'}</span>`;
+            }
+
+            return `
+                <div class="q-variant-card" style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 12px; padding: 16px; margin-bottom: 12px; box-shadow: 0 2px 6px rgba(15,23,42,0.02);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #F1F5F9; padding-bottom: 8px; margin-bottom: 10px;">
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <span style="font-weight: 800; font-size: 0.92rem; color: #0F172A;"><i class="fa-solid fa-bezier-curve" style="color: #10B981;"></i> Biến thể #${idx + 1}</span>
+                            <span style="font-size: 0.75rem; color: #94A3B8;">(ID: #${v.id})</span>
+                            ${getQuestionTypeBadgeHtml(v)}
+                        </div>
+                        <div style="display: flex; gap: 6px; align-items: center;">
+                            <button type="button" class="btn" onclick="deleteVariantFromModal('${v.id}')" style="padding: 4px 10px; font-size: 0.76rem; border: 1px solid #FECDD3; background: #FFF1F2; color: #EF4444; border-radius: 6px; cursor: pointer;">
+                                <i class="fa-solid fa-trash-can"></i> Xóa
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Đề bài biến thể -->
+                    <div class="math-render" style="font-size: 0.94rem; line-height: 1.65; color: #1E293B; margin-bottom: 10px;">
+                        ${renderQuestionHtml(v.question_text || '')}
+                    </div>
+
+                    <!-- Đáp án biến thể -->
+                    <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 8px 12px; font-size: 0.85rem; margin-bottom: 8px;">
+                        ${ansSummary}
+                    </div>
+
+                    <!-- Lời giải biến thể nếu có -->
+                    ${v.explanation ? `
+                        <div style="font-size: 0.82rem; color: #64748B; background: #F0FDF4; border: 1px dashed #86EFAC; border-radius: 8px; padding: 8px 12px;">
+                            <strong style="color: #166534;"><i class="fa-solid fa-lightbulb"></i> Lời giải chi tiết biến thể:</strong>
+                            <div class="math-render" style="margin-top: 3px;">${renderQuestionHtml(v.explanation)}</div>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }).join('');
+
+        // Render KaTeX cho danh sách biến thể
+        if (window.renderMathInElement) {
+            renderMathInElement(container, {
+                delimiters: [
+                    { left: "$$", right: "$$", display: true },
+                    { left: "$", right: "$", display: false },
+                    { left: "\\(", right: "\\)", display: false }
+                ],
+                throwOnError: false
+            });
+        }
+    }
+
+    window.generateMoreVariantsFromModal = async function(count = 3) {
+        if (!currentFamilyMaster) return;
+        if (typeof count !== 'number' || isNaN(count) || count < 1) {
+            count = 3;
+        }
+
+        const btn = document.getElementById(count === 1 ? 'btnModalAdd1Variant' : 'btnModalAdd3Variants');
+        const origText = btn ? btn.innerHTML : '';
+        if (btn) {
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Đang sinh...';
+            btn.disabled = true;
+        }
+
+        try {
+            const created = await QuestionFamilyEngine.generateMultipleVariants(currentFamilyMaster, count);
+            await renderFamilyVariantsList();
+            alert(`🎉 Đã sinh thành công ${created.length} câu hỏi biến thể thay số cho Câu hỏi #${currentFamilyMaster.id}!`);
+        } catch (err) {
+            alert("Lỗi khi sinh biến thể: " + err.message);
+        } finally {
+            if (btn) {
+                btn.innerHTML = origText;
+                btn.disabled = false;
+            }
+        }
+    };
+
+    window.deleteVariantFromModal = async function(variantId) {
+        if (!currentFamilyMaster) return;
+        if (confirm("Bạn có chắc muốn xóa biến thể này khỏi Question Family?")) {
+            QuestionFamilyEngine.deleteVariant(currentFamilyMaster.id, variantId);
+            await renderFamilyVariantsList();
+        }
+    };
+
+    window.generateAiVariantsForQuestion = async function(event, questionId) {
+        if (event) event.stopPropagation();
+        openQuestionFamilyModal(event, questionId);
+    };
+
+    // ==========================================================
+    // BỐC CÂU HỎI TỪ NGÂN HÀNG CÂU HỎI (NHCH TOÁN 12)
+    // ==========================================================
+
+    let borrowSelectedQuestions = new Set();
+    let currentBorrowTopicId = null;
+
+    window.openBorrowFromBankModal = function() {
+        const modal = document.getElementById('borrowFromBankModal');
+        if (!modal) return;
+
+        borrowSelectedQuestions.clear();
+        updateBorrowSelectedCount();
+
+        const targetTitleEl = document.getElementById('borrowTargetTitle');
+        if (targetTitleEl && currentMaterial) {
+            targetTitleEl.textContent = currentMaterial.title;
+        }
+
+        renderBorrowBankTree();
+
+        // Mặc định chọn dạng 19.4 hoặc dạng đầu tiên
+        const bankMaterials = (typeof QuestionBankSeed !== 'undefined') ? QuestionBankSeed.getBankMaterials() : [];
+        const defaultTopic = bankMaterials.find(m => m.id === 12624) || bankMaterials[0];
+        if (defaultTopic) {
+            selectBorrowTopic(defaultTopic.id);
+        }
+
+        modal.classList.add('active');
+    };
+
+    window.closeBorrowFromBankModal = function() {
+        const modal = document.getElementById('borrowFromBankModal');
+        if (modal) modal.classList.remove('active');
+    };
+
+    function renderBorrowBankTree() {
+        const container = document.getElementById('borrowBankTreeContainer');
+        if (!container) return;
+
+        const chapters = (typeof QuestionBankSeed !== 'undefined') ? QuestionBankSeed.getBankChapters() : [];
+        const lessons = (typeof QuestionBankSeed !== 'undefined') ? QuestionBankSeed.getBankLessons() : [];
+        const materials = (typeof QuestionBankSeed !== 'undefined') ? QuestionBankSeed.getBankMaterials() : [];
+
+        container.innerHTML = chapters.map(ch => {
+            const chLessons = lessons.filter(l => l.chapter_id === ch.id);
+            return `
+                <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px; overflow: hidden; margin-bottom: 8px;">
+                    <div style="padding: 10px 12px; background: #EEF2FF; font-weight: 800; font-size: 0.85rem; color: #3730A3; border-bottom: 1px solid #E0E7FF; display: flex; align-items: center; gap: 6px;">
+                        <i class="fa-solid fa-bookmark" style="color: #6366F1;"></i> ${ch.title}
+                    </div>
+                    <div style="padding: 8px;">
+                        ${chLessons.map(l => {
+                            const lTopics = materials.filter(m => m.lesson_id === l.id);
+                            return `
+                                <div style="margin-bottom: 8px;">
+                                    <div style="font-weight: 700; font-size: 0.82rem; color: #1E293B; padding: 4px 6px; display: flex; align-items: center; gap: 6px;">
+                                        <i class="fa-solid fa-folder" style="color: #F59E0B; font-size: 0.8rem;"></i> ${l.title}
+                                    </div>
+                                    <div style="display: flex; flex-direction: column; gap: 4px; padding-left: 12px; margin-top: 4px;">
+                                        ${lTopics.map(m => `
+                                            <button type="button" class="btn borrow-topic-btn" id="borrow_topic_btn_${m.id}" onclick="selectBorrowTopic(${m.id})" style="text-align: left; font-size: 0.78rem; padding: 6px 10px; border-radius: 6px; border: 1px solid #E2E8F0; background: #FFFFFF; color: #334155; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: space-between;">
+                                                <span><i class="fa-solid fa-shapes" style="color: #8B5CF6; font-size: 0.75rem; margin-right: 4px;"></i> ${m.title}</span>
+                                                <span class="badge" style="font-size: 0.7rem; background: #F1F5F9; color: #64748B;">Quiz</span>
+                                            </button>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    window.selectBorrowTopic = function(topicMaterialId) {
+        currentBorrowTopicId = topicMaterialId;
+
+        // Highlight selected topic button
+        document.querySelectorAll('.borrow-topic-btn').forEach(btn => {
+            btn.style.borderColor = '#E2E8F0';
+            btn.style.background = '#FFFFFF';
+            btn.style.color = '#334155';
+        });
+        const activeBtn = document.getElementById(`borrow_topic_btn_${topicMaterialId}`);
+        if (activeBtn) {
+            activeBtn.style.borderColor = '#8B5CF6';
+            activeBtn.style.background = '#F5F3FF';
+            activeBtn.style.color = '#6D28D9';
+        }
+
+        renderBorrowTopicQuestions(topicMaterialId);
+    };
+
+    function renderBorrowTopicQuestions(topicMaterialId) {
+        const container = document.getElementById('borrowQuestionsContainer');
+        if (!container) return;
+
+        const materials = (typeof QuestionBankSeed !== 'undefined') ? QuestionBankSeed.getBankMaterials() : [];
+        const currentM = materials.find(m => m.id === topicMaterialId);
+        if (!currentM) return;
+
+        // Tìm các câu hỏi thuộc dạng này từ allSourceQuestions hoặc MathTopicService
+        const matchedQuestions = allSourceQuestions.filter(q => {
+            if (q.material_id == topicMaterialId) return true;
+            if (currentM.topic_id && q.topic_id == currentM.topic_id) return true;
+            if (currentM.topic_code) {
+                const autoT = (typeof MathTopicService !== 'undefined') ? MathTopicService.autoDetectTopic(q.question_text) : null;
+                if (autoT && (autoT.code === currentM.topic_code || String(autoT.id) === String(currentM.topic_id))) return true;
+            }
+            return false;
+        });
+
+        // Nếu Dạng 19.4 và có câu #28, luôn đảm bảo câu #28 xuất hiện
+        if (currentM.topic_code === '19.4' || topicMaterialId === 12624) {
+            const q28 = allSourceQuestions.find(q => q.id === 28);
+            if (q28 && !matchedQuestions.some(q => q.id === 28)) {
+                matchedQuestions.unshift(q28);
+            }
+        }
+
+        if (matchedQuestions.length === 0) {
+            container.innerHTML = `
+                <div style="background: #FFFFFF; border: 1.5px dashed #CBD5E1; border-radius: 12px; padding: 40px 20px; text-align: center; color: #64748B;">
+                    <i class="fa-solid fa-inbox" style="font-size: 2.2rem; color: #CBD5E1; margin-bottom: 10px;"></i>
+                    <h5 style="margin: 0 0 6px 0; font-size: 1rem; color: #1E293B;">Dạng toán này chưa có câu hỏi trong kho nguồn</h5>
+                    <p style="margin: 0 0 16px 0; font-size: 0.85rem;">Thầy có thể dùng <b>AI Import Studio</b> để nạp thêm câu hỏi hoặc tạo mới.</p>
+                    <a href="import-studio.html" class="btn" style="background: #EEF2FF; color: #4F46E5; border: 1px solid #818CF8; border-radius: 8px; font-weight: 700; text-decoration: none; padding: 6px 14px; display: inline-flex; align-items: center; gap: 6px;">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> Mở AI Import Studio
+                    </a>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; background: #FFFFFF; padding: 12px 16px; border-radius: 10px; border: 1px solid #E2E8F0;">
+                <div>
+                    <h4 style="margin: 0; font-size: 0.98rem; font-weight: 800; color: #1E293B;">${currentM.title}</h4>
+                    <span style="font-size: 0.8rem; color: #059669; font-weight: 600;"><i class="fa-solid fa-check-double"></i> Tìm thấy ${matchedQuestions.length} câu hỏi phù hợp trong kho</span>
+                </div>
+                <button type="button" class="btn" onclick="toggleSelectAllBorrow(${topicMaterialId})" style="font-size: 0.78rem; padding: 6px 12px; background: #F5F3FF; color: #6D28D9; border: 1px solid #C4B5FD; border-radius: 6px; font-weight: 700; cursor: pointer;">
+                    <i class="fa-solid fa-check-square"></i> Chọn tất cả
+                </button>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+                ${matchedQuestions.map(q => {
+                    const isChecked = borrowSelectedQuestions.has(q.id);
+                    const vCount = getQuestionVariantCount(q);
+
+                    return `
+                        <div style="background: #FFFFFF; border: 1.5px solid ${isChecked ? '#8B5CF6' : '#E2E8F0'}; border-radius: 12px; padding: 14px; transition: all 0.2s; box-shadow: 0 1px 4px rgba(0,0,0,0.02);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border-bottom: 1px solid #F1F5F9; padding-bottom: 6px;">
+                                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin: 0;">
+                                    <input type="checkbox" onchange="toggleBorrowQuestion(${q.id}, this.checked)" ${isChecked ? 'checked' : ''} style="width: 17px; height: 17px; accent-color: #8B5CF6; cursor: pointer;">
+                                    <span style="font-weight: 800; font-size: 0.9rem; color: #1E293B;">Câu hỏi #${q.id}</span>
+                                    ${getQuestionTypeBadgeHtml(q)}
+                                    <span class="diff-badge diff-${q.difficulty ? q.difficulty.toLowerCase() : 'nb'}">${q.difficulty || 'NB'}</span>
+                                </label>
+                                <div style="display: flex; gap: 6px; align-items: center;">
+                                    <span style="font-size: 0.75rem; background: #EEF2FF; color: #4338CA; padding: 2px 8px; border-radius: 6px; font-weight: 700;">
+                                        <i class="fa-solid fa-layer-group"></i> ${vCount} biến thể
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="math-render" style="font-size: 0.92rem; line-height: 1.6; color: #1E293B; margin-bottom: 8px;">
+                                ${renderQuestionHtml(q.question_text || '')}
+                            </div>
+                            <div style="background: #F8FAFC; padding: 6px 10px; border-radius: 6px; font-size: 0.82rem;">
+                                ${getQuestionAnswerSummaryHtml(q)}
+                            </div>
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+        `;
+
+        if (window.renderMathInElement) {
+            renderMathInElement(container, {
+                delimiters: [
+                    { left: "$$", right: "$$", display: true },
+                    { left: "$", right: "$", display: false },
+                    { left: "\\(", right: "\\)", display: false }
+                ],
+                throwOnError: false
+            });
+        }
+    }
+
+    window.toggleBorrowQuestion = function(questionId, isChecked) {
+        if (isChecked) {
+            borrowSelectedQuestions.add(questionId);
+        } else {
+            borrowSelectedQuestions.delete(questionId);
+        }
+        updateBorrowSelectedCount();
+    };
+
+    window.toggleSelectAllBorrow = function(topicMaterialId) {
+        const checkboxes = document.querySelectorAll('#borrowQuestionsContainer input[type="checkbox"]');
+        const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+        checkboxes.forEach(cb => {
+            cb.checked = !allChecked;
+            cb.dispatchEvent(new Event('change'));
+        });
+    };
+
+    function updateBorrowSelectedCount() {
+        const countEl = document.getElementById('borrowSelectedCount');
+        if (countEl) countEl.textContent = borrowSelectedQuestions.size;
+    }
+
+    window.commitBorrowQuestions = async function() {
+        if (!currentMaterial) {
+            alert("Vui lòng chọn học liệu đề thi trước khi nạp.");
+            return;
+        }
+
+        if (borrowSelectedQuestions.size === 0) {
+            alert("Thầy chưa chọn câu hỏi nào để nạp. Vui lòng tích chọn câu hỏi trước!");
+            return;
+        }
+
+        const btn = document.getElementById('btnCommitBorrow');
+        const origText = btn ? btn.innerHTML : '';
+        if (btn) {
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Đang nạp...';
+            btn.disabled = true;
+        }
+
+        try {
+            const toAddIds = Array.from(borrowSelectedQuestions);
+            let addedCount = 0;
+
+            for (const qId of toAddIds) {
+                const q = allSourceQuestions.find(item => item.id == qId);
+                if (q && !selectedQuestions.some(item => item.id == qId)) {
+                    selectedQuestions.push({
+                        ...q,
+                        order_index: selectedQuestions.length + 1
+                    });
+                    addedCount++;
+
+                    if (isOnline) {
+                        try {
+                            await supabaseClient.from('material_questions').insert([{
+                                material_id: currentMaterial.id,
+                                question_id: qId,
+                                order_index: selectedQuestions.length
+                            }]);
+                        } catch (e) {
+                            console.warn("Lưu câu hỏi bốc từ NHCH vào CSDL bị gián đoạn, đã lưu local:", e);
+                        }
+                    }
+                }
+            }
+
+            try {
+                localStorage.setItem('toansmart_mq_' + currentMaterial.id, JSON.stringify(selectedQuestions));
+            } catch (e) {}
+
+            renderSelectedQuestions();
+            renderSourceQuestions();
+            closeBorrowFromBankModal();
+            alert(`🎉 Đã nạp thành công ${addedCount} câu hỏi từ Ngân hàng vào đề thi hiện tại!`);
+        } catch (err) {
+            alert("Lỗi khi bốc câu hỏi: " + err.message);
+        } finally {
+            if (btn) {
+                btn.innerHTML = origText;
+                btn.disabled = false;
+            }
+        }
     };
 
 });

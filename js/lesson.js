@@ -116,24 +116,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </div>
             `;
 
-            if (isAdminLoggedIn) {
-                // Insert Question Bank link next to Resources link for Admin
-                const navLinks = document.querySelectorAll('.nav-menu a');
-                let resourcesLi = null;
-                navLinks.forEach(link => {
-                    const href = link.getAttribute('href') || '';
-                    if (href.includes('resources')) {
-                        resourcesLi = link.closest('li');
-                    }
-                });
-                if (resourcesLi && !document.getElementById('headerQBankLink')) {
-                    const qbLi = document.createElement('li');
-                    qbLi.id = 'headerQBankLink';
-                    qbLi.innerHTML = `<a href="admin.html?tab=questions" class="nav-link" style="color: var(--accent-color); font-weight: 600;"><i class="fa-solid fa-database" style="margin-right: 4px;"></i> Ngân hàng câu hỏi</a>`;
-                    resourcesLi.parentNode.insertBefore(qbLi, resourcesLi.nextSibling);
-                }
-            }
-
             const trigger = document.getElementById('profileTrigger');
             const dropdown = document.getElementById('profileDropdown');
 
@@ -697,29 +679,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             let contentStr = '';
             if (type === 'quiz') {
-                contentStr = JSON.stringify([
-                    {
-                        id: 1,
-                        question: "Cho phương trình bậc hai $x^2 - 5x + 6 = 0$. Tổng hai nghiệm $S = x_1 + x_2$ bằng bao nhiêu?",
-                        options: ["A. $S = 5$", "B. $S = -5$", "C. $S = 6$", "D. $S = -6$"],
-                        correct_option: 0,
-                        explanation: "Theo hệ thức Vi-ét, tổng hai nghiệm $S = x_1 + x_2 = -\\frac{b}{a} = -\\frac{-5}{1} = 5$."
-                    },
-                    {
-                        id: 2,
-                        question: "Tính biệt thức $\\Delta$ của phương trình bậc hai $2x^2 - 4x + 1 = 0$.",
-                        options: ["A. $\\Delta = 8$", "B. $\\Delta = 12$", "C. $\\Delta = 0$", "D. $\\Delta = 16$"],
-                        correct_option: 0,
-                        explanation: "Ta có $a = 2, b = -4, c = 1$. Biệt thức $\\Delta = b^2 - 4ac = (-4)^2 - 4 \\cdot 2 \\cdot 1 = 16 - 8 = 8 > 0$."
-                    },
-                    {
-                        id: 3,
-                        question: "Rút gọn biểu thức $P = \\sqrt{a^2}$ với $a \\ge 0$.",
-                        options: ["A. $P = a$", "B. $P = -a$", "C. $P = |a|$", "D. $P = a^2$"],
-                        correct_option: 0,
-                        explanation: "Với $a \\ge 0$, ta có $\\sqrt{a^2} = |a| = a$."
-                    }
-                ], null, 2);
+                contentStr = JSON.stringify([], null, 2);
             }
 
             const materialData = {

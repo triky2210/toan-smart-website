@@ -1,5 +1,6 @@
 .system_generated/
 .agents/
+scratch/
 *.log
 tmp/
 .git/

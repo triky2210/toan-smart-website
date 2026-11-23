@@ -1598,6 +1598,72 @@
 
             </div>
 
+            <!-- Tab Content: Question Bank Courses (Ngân Hàng Câu Hỏi) -->
+            <div class="tab-pane" id="questionBankCoursesPane" style="display: none;">
+                <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+                    <div>
+                        <h3 style="margin: 0; font-size: 1.3rem; font-weight: 800; color: #1E1B4B; display: flex; align-items: center; gap: 10px;">
+                            <i class="fa-solid fa-vault" style="color: #4F46E5;"></i> Hệ Thống Ngân Hàng Câu Hỏi (NHCH)
+                        </h3>
+                        <p style="margin: 4px 0 0 0; font-size: 0.88rem; color: #64748B;">Cấu trúc chuẩn SGK KNTT & Bộ GD 2025: Chương ➔ Bài ➔ Dạng toán (Quiz) ➔ Question Family</p>
+                    </div>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <a href="import-studio.html" class="btn" style="background: #EEF2FF; color: #4F46E5; border: 1.5px solid #818CF8; font-weight: 700; border-radius: 8px; text-decoration: none; padding: 8px 16px; display: inline-flex; align-items: center; gap: 6px;">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> AI Import Studio
+                        </a>
+                        <a href="course-detail.html?id=1200" class="btn btn-primary" style="background: #4F46E5; color: #FFFFFF; font-weight: 700; border-radius: 8px; text-decoration: none; padding: 8px 18px; display: inline-flex; align-items: center; gap: 6px;">
+                            <i class="fa-solid fa-folder-tree"></i> Xem Cây Thư Mục NHCH 12
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Thẻ tóm tắt khóa NHCH 12 -->
+                <div style="background: linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%); border: 1.5px solid #C7D2FE; border-radius: 16px; padding: 22px; margin-bottom: 24px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+                        <div>
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                                <span style="background: #4F46E5; color: #FFFFFF; font-size: 0.75rem; font-weight: 800; padding: 3px 10px; border-radius: 20px;">KHÓA #1200</span>
+                                <span style="background: #ECFDF5; color: #065F46; font-size: 0.75rem; font-weight: 700; padding: 3px 10px; border-radius: 20px; border: 1px solid #A7F3D0;"><i class="fa-solid fa-check"></i> Đang hoạt động</span>
+                            </div>
+                            <h4 style="margin: 0 0 6px 0; font-size: 1.25rem; font-weight: 800; color: #1E1B4B;">NHCH Toán 12 (Chuẩn SGK KNTT & Bộ GD 2025)</h4>
+                            <p style="margin: 0; font-size: 0.88rem; color: #475569;">Bao gồm Chương 1 (Đạo hàm & Khảo sát hàm số) và Chương 6 (Xác suất có điều kiện), phân chia thành 23 dạng toán chuẩn sư phạm.</p>
+                        </div>
+                        <div style="display: flex; gap: 16px;">
+                            <div style="background: #FFFFFF; border: 1px solid #C7D2FE; border-radius: 12px; padding: 12px 18px; text-align: center;">
+                                <div style="font-size: 1.5rem; font-weight: 800; color: #4F46E5;" id="bankChaptersCount">2</div>
+                                <div style="font-size: 0.78rem; font-weight: 700; color: #64748B;">Chương SGK</div>
+                            </div>
+                            <div style="background: #FFFFFF; border: 1px solid #C7D2FE; border-radius: 12px; padding: 12px 18px; text-align: center;">
+                                <div style="font-size: 1.5rem; font-weight: 800; color: #059669;" id="bankLessonsCount">7</div>
+                                <div style="font-size: 0.78rem; font-weight: 700; color: #64748B;">Bài học</div>
+                            </div>
+                            <div style="background: #FFFFFF; border: 1px solid #C7D2FE; border-radius: 12px; padding: 12px 18px; text-align: center;">
+                                <div style="font-size: 1.5rem; font-weight: 800; color: #D97706;" id="bankTopicsCount">23</div>
+                                <div style="font-size: 0.78rem; font-weight: 700; color: #64748B;">Dạng toán (Quiz)</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bảng Danh sách các Dạng toán của NHCH Toán 12 -->
+                <div class="table-responsive">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="background: #F8FAFC;">
+                                <th style="width: 80px;">Mã dạng</th>
+                                <th>Tên Dạng Toán (Học liệu Quiz)</th>
+                                <th>Chương & Bài học</th>
+                                <th style="text-align: center; width: 140px;">Học liệu ID</th>
+                                <th style="text-align: right; width: 220px;">Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bankTopicsTableBody">
+                            <!-- Dynamic rows -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
         </header>
 
 
@@ -1609,17 +1675,12 @@
             
 
             <!-- Tab Links -->
-
             <div class="dashboard-tabs">
-
-                <button class="tab-btn active" data-tab="courses">Khóa học</button>
-
+                <button class="tab-btn active" data-tab="courses"><i class="fa-solid fa-graduation-cap" style="margin-right: 6px;"></i>Khóa học giảng dạy</button>
+                <button class="tab-btn" data-tab="questionBankCourses" style="color: #4F46E5; font-weight: 700;"><i class="fa-solid fa-vault" style="margin-right: 6px;"></i>Ngân hàng câu hỏi</button>
                 <button class="tab-btn" data-tab="chapters">Chương học</button>
-
                 <button class="tab-btn" data-tab="lessons">Bài giảng</button>
-
-                <button class="tab-btn" data-tab="questions"><i class="fa-solid fa-database" style="margin-right: 6px;"></i>Ngân hàng câu hỏi</button>
-
+                <button class="tab-btn" data-tab="questions"><i class="fa-solid fa-database" style="margin-right: 6px;"></i>Kho câu hỏi chi tiết</button>
             </div>
 
 
@@ -1672,7 +1733,8 @@
 
             </div>
 
-
+            <!-- Tab Content: Question Bank Courses (Ngân Hàng Câu Hỏi) -->
+                        </div>
 
             <!-- Tab Content 2: Chapters -->
 
@@ -1720,8 +1782,7 @@
 
             </div>
 
-
-
+            <!-- Tab Content: Question Bank Courses (Ngân Hàng Câu Hỏi) -->
             <!-- Tab Content 3: Lessons -->
 
             <div class="tab-pane" id="lessonsPane" style="display: none;">
@@ -1770,8 +1831,7 @@
 
             </div>
 
-
-
+            <!-- Tab Content: Question Bank Courses (Ngân Hàng Câu Hỏi) -->
             <!-- Tab Content 4: Ngân hàng câu hỏi -->
 
             <div class="tab-pane" id="questionsPane" style="display: none;">
@@ -1884,8 +1944,7 @@
 
             </div>
 
-
-
+            <!-- Tab Content: Question Bank Courses (Ngân Hàng Câu Hỏi) -->
         </main>
 
     </div>
@@ -2137,6 +2196,7 @@
     <!-- Config file -->
 
     <script src="js/config.js"></script>
+    <script src="js/question-bank-seed.js"></script>
 
     <!-- Admin Page Dashboard Script -->
 
@@ -2228,68 +2288,8 @@
 
             </div>
 
-
-
-            <!-- Thanh điều khiển và chọn đích đến -->
-
-            <div class="word-toolbar">
-
-                <div style="display: flex; align-items: center; gap: 12px;">
-
-                    <label class="checkbox-container" style="font-weight: 600; margin: 0;">
-
-                        <input type="checkbox" id="adminWCheckAll" checked onchange="toggleSelectAllAdminWord(this.checked)">
-
-                        <span>Chọn tất cả (<span id="adminWSelectedCount">0</span> câu)</span>
-
-                    </label>
-
-                </div>
-
-                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-
-                    <span style="font-size: 0.8rem; font-weight: 600; color: #475569;">Đích đến:</span>
-
-                    <select class="form-control" id="adminWTargetCourse" style="font-size: 0.8rem; padding: 4px 8px; width: 150px;">
-
-                        <option value="">Khóa học chung</option>
-
-                    </select>
-
-                    <select class="form-control" id="adminWTargetChapter" style="font-size: 0.8rem; padding: 4px 8px; width: 150px;">
-
-                        <option value="">Tất cả chương</option>
-
-                    </select>
-
-                    <select class="form-control" id="adminWTargetLesson" style="font-size: 0.8rem; padding: 4px 8px; width: 150px;">
-
-                        <option value="">Tất cả bài học</option>
-
-                    </select>
-
-                    <select class="form-control" id="adminWTargetMaterial" style="font-size: 0.8rem; padding: 4px 8px; width: 140px;">
-
-                        <option value="">Tất cả học liệu</option>
-
-                    </select>
-
-                </div>
-
-            </div>
-
-
-
-            <!-- Danh sách câu hỏi xem trước -->
-
-            <div class="word-questions-list" id="adminWordQuestionsList">
-
-                <!-- Javascript will dynamically render preview cards here -->
-
-            </div>
-
-
-
+            <!-- Tab Content: Question Bank Courses (Ngân Hàng Câu Hỏi) -->
+            <!-- Tab Content: Question Bank Courses (Ngân Hàng Câu Hỏi) -->
             <!-- Modal Footer -->
 
             <div class="modal-footer" style="margin-top: 16px; display: flex; justify-content: space-between; align-items: center;">
@@ -2314,25 +2314,4 @@
 
             </div>
 
-
-
-        </div>
-
-    </div>
-
-
-
-    <!-- JSZip library for Word .docx unpacking -->
-
-    <script src="js/jszip.min.js"></script>
-
-    <script src="js/docx-math-parser.js"></script>
-
-
-
-    <script src="js/admin.js"></script>
-
-</body>
-
-</html>
-
+            <!-- Tab Content: Question Bank Courses (Ngân Hàng Câu Hỏi) -->

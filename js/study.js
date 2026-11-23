@@ -214,42 +214,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 
 
-            if (isAdminLoggedIn) {
-
-                // Insert Question Bank link next to Resources link for Admin
-
-                const navLinks = document.querySelectorAll('.nav-menu a');
-
-                let resourcesLi = null;
-
-                navLinks.forEach(link => {
-
-                    const href = link.getAttribute('href') || '';
-
-                    if (href.includes('resources')) {
-
-                        resourcesLi = link.closest('li');
-
-                    }
-
-                });
-
-                if (resourcesLi && !document.getElementById('headerQBankLink')) {
-
-                    const qbLi = document.createElement('li');
-
-                    qbLi.id = 'headerQBankLink';
-
-                    qbLi.innerHTML = `<a href="admin.html?tab=questions" class="nav-link" style="color: var(--accent-color); font-weight: 600;"><i class="fa-solid fa-database" style="margin-right: 4px;"></i> Ngân hàng câu hỏi</a>`;
-
-                    resourcesLi.parentNode.insertBefore(qbLi, resourcesLi.nextSibling);
-
-                }
-
-            }
-
-
-
             const trigger = document.getElementById('profileTrigger');
 
             const dropdown = document.getElementById('profileDropdown');
@@ -429,17 +393,15 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
 
             } catch (err) {
-
                 console.error("Lỗi Supabase, tải offline:", err);
-
                 loadOfflineStudyData();
-
             }
 
+            if (!currentCourse || !chapters || chapters.length === 0) {
+                loadOfflineStudyData();
+            }
         } else {
-
             loadOfflineStudyData();
-
         }
 
 
@@ -519,137 +481,50 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 
     function ensureQuizMaterialsInMap() {
-
-        const demoQuizQuestions = [
-
-            {
-
-                id: 1,
-
-                question: "Cho phương trình bậc hai $x^2 - 5x + 6 = 0$. Tổng hai nghiệm $S = x_1 + x_2$ bằng bao nhiêu?",
-
-                options: ["A. $S = 5$", "B. $S = -5$", "C. $S = 6$", "D. $S = -6$"],
-
-                correct_option: 0,
-
-                explanation: "Theo hệ thức Vi-ét, tổng hai nghiệm $S = x_1 + x_2 = -\\frac{b}{a} = -\\frac{-5}{1} = 5$."
-
-            },
-
-            {
-
-                id: 2,
-
-                question: "Tính biệt thức $\\Delta$ của phương trình bậc hai $2x^2 - 4x + 1 = 0$.",
-
-                options: ["A. $\\Delta = 8$", "B. $\\Delta = 12$", "C. $\\Delta = 0$", "D. $\\Delta = 16$"],
-
-                correct_option: 0,
-
-                explanation: "Ta có $a = 2, b = -4, c = 1$. Biệt thức $\\Delta = b^2 - 4ac = (-4)^2 - 4 \\cdot 2 \\cdot 1 = 16 - 8 = 8 > 0$."
-
-            },
-
-            {
-
-                id: 3,
-
-                question: "Rút gọn biểu thức $P = \\sqrt{a^2}$ với $a \\ge 0$.",
-
-                options: ["A. $P = a$", "B. $P = -a$", "C. $P = |a|$", "D. $P = a^2$"],
-
-                correct_option: 0,
-
-                explanation: "Với $a \\ge 0$, ta có $\\sqrt{a^2} = |a| = a$."
-
-            }
-
-        ];
-
-
-
-        const allLessonIds = new Set();
-
-        if (currentLessonId) allLessonIds.add(currentLessonId);
-
-        allLessonIds.add(3006);
-
-        for (let chId in lessonsMap) {
-
-            (lessonsMap[chId] || []).forEach(l => allLessonIds.add(l.id));
-
+        // Chỉ chạy cho các khóa học thông thường nếu cần, KHÔNG can thiệp vào Khóa NHCH (1200)
+        if (currentCourseId == 1200 || (currentCourse && currentCourse.course_type === 'question_bank')) {
+            return;
         }
 
-
-
-        allLessonIds.forEach(lId => {
-
-            if (!materialsMap[lId]) materialsMap[lId] = [];
-
-            const hasQuiz = materialsMap[lId].some(m => m.type === 'quiz' || m.title === 'Quiz Test' || m.id == currentMaterialId);
-
-            if (!hasQuiz) {
-
-                const targetMatId = (currentMaterialId && (currentMaterialId == 30159 || currentMaterialId.toString().startsWith(lId.toString()))) ? currentMaterialId : ((lId * 10) + 99);
-
-                materialsMap[lId].push({
-
-                    id: targetMatId,
-
-                    lesson_id: lId,
-
-                    title: "Quiz Test",
-
-                    type: "quiz",
-
-                    url: "",
-
-                    content: JSON.stringify(demoQuizQuestions, null, 2),
-
-                    is_preview: true,
-
-                    order_index: materialsMap[lId].length + 1
-
-                });
-
-            }
-
-        });
-
+        // Không tự tiện chèn câu hỏi mẫu lạc loài nếu bài học chưa có quiz
     }
 
 
 
     function loadOfflineStudyData() {
-
         const dbCourses = JSON.parse(localStorage.getItem('db_courses')) || [];
-
         const dbChapters = JSON.parse(localStorage.getItem('db_chapters')) || [];
-
         const dbLessons = JSON.parse(localStorage.getItem('db_lessons')) || [];
-
         const dbMaterials = JSON.parse(localStorage.getItem('db_materials')) || [];
-
-
 
         currentCourse = dbCourses.find(c => c.id == courseId);
 
+        // Fallback sang QuestionBankSeed nếu là khóa NHCH (1200)
+        if (!currentCourse && typeof QuestionBankSeed !== 'undefined') {
+            const bankCourse = QuestionBankSeed.getBankCourse();
+            if (bankCourse && bankCourse.id == courseId) {
+                currentCourse = bankCourse;
+                chapters = QuestionBankSeed.getBankChapters().filter(ch => ch.course_id == courseId);
+                const bankLessons = QuestionBankSeed.getBankLessons();
+                const bankMaterials = QuestionBankSeed.getBankMaterials();
+                chapters.forEach(ch => {
+                    lessonsMap[ch.id] = bankLessons.filter(l => l.chapter_id == ch.id);
+                    lessonsMap[ch.id].forEach(l => {
+                        materialsMap[l.id] = bankMaterials.filter(m => m.lesson_id == l.id);
+                    });
+                });
+                return;
+            }
+        }
+
         chapters = dbChapters.filter(ch => ch.course_id == courseId).sort((a, b) => a.order_index - b.order_index);
 
-
-
         chapters.forEach(ch => {
-
             lessonsMap[ch.id] = dbLessons.filter(l => l.chapter_id == ch.id).sort((a, b) => a.order_index - b.order_index);
-
             lessonsMap[ch.id].forEach(l => {
-
                 materialsMap[l.id] = dbMaterials.filter(m => m.lesson_id == l.id).sort((a, b) => a.order_index - b.order_index);
-
             });
-
         });
-
     }
 
 
@@ -2066,7 +1941,11 @@ async function initQuizEngine(material) {
 
                         tikz_code: mq.questions.tikz_code || '',
 
-                        fallback_image_url: mq.questions.fallback_image_url || ''
+                        fallback_image_url: mq.questions.fallback_image_url || '',
+
+                        family_id: mq.questions.family_id || mq.questions.id,
+
+                        topic_id: mq.questions.topic_id || null
 
                     }));
 
@@ -2084,121 +1963,74 @@ async function initQuizEngine(material) {
 
 
 
-    // 2. FALLBACK: Đọc danh sách câu hỏi từ material.content (JSON cũ)
-
+    // 2. FALLBACK: Đọc từ LocalStorage toansmart_mq_<material_id>
     if (!parsedQuestions || parsedQuestions.length === 0) {
+        try {
+            const localMq = JSON.parse(localStorage.getItem('toansmart_mq_' + material.id));
+            if (localMq && localMq.length > 0) {
+                parsedQuestions = localMq.map(q => ({
+                    id: q.id,
+                    question: q.question_text || q.question,
+                    options: q.options || [],
+                    correct_option: q.correct_option,
+                    explanation: q.explanation || '',
+                    question_type: q.question_type || 'multiple_choice',
+                    skill_tag: q.skill_tag || '',
+                    tikz_code: q.tikz_code || '',
+                    fallback_image_url: q.fallback_image_url || '',
+                    family_id: q.family_id || q.id,
+                    topic_id: q.topic_id || null
+                }));
+                console.log(`✅ Đã tải ${parsedQuestions.length} câu hỏi từ LocalStorage toansmart_mq_${material.id}`);
+            }
+        } catch (e) {}
+    }
 
+    // 3. FALLBACK: Đọc danh sách câu hỏi từ material.content (JSON cũ)
+    if (!parsedQuestions || parsedQuestions.length === 0) {
         if (material.content) {
-
             try {
-
                 if (typeof material.content === 'string') {
-
                     parsedQuestions = JSON.parse(material.content);
-
                 } else if (Array.isArray(material.content)) {
-
                     parsedQuestions = material.content;
-
                 }
-
             } catch (e) {
-
                 console.warn("Không thể parse JSON từ material.content, sử dụng bộ câu hỏi mẫu:", e);
-
             }
-
         }
-
     }
 
 
 
-    // 3. FALLBACK CUỐI: Sử dụng bộ câu hỏi mẫu cứng (Mock Data)
-
-    if (!parsedQuestions || !Array.isArray(parsedQuestions) || parsedQuestions.length === 0) {
-
-        parsedQuestions = [
-
-            {
-
-                id: 1,
-
-                question: "Cho phương trình bậc hai $x^2 - 5x + 6 = 0$. Phương trình có hai nghiệm $x_1, x_2$. Tính tổng $S = x_1 + x_2$ và tích $P = x_1 \\cdot x_2$.",
-
-                options: [
-
-                    "A. $S = 5, P = 6$",
-
-                    "B. $S = -5, P = 6$",
-
-                    "C. $S = 5, P = -6$",
-
-                    "D. $S = -5, P = -6$"
-
-                ],
-
-                correct_option: 0,
-
-                explanation: "Theo hệ thức Vi-ét, đối với phương trình $ax^2 + bx + c = 0$ ($a \\neq 0$):\n- Tổng hai nghiệm: $S = x_1 + x_2 = -\\frac{b}{a} = -\\frac{-5}{1} = 5$.\n- Tích hai nghiệm: $P = x_1 \\cdot x_2 = \\frac{c}{a} = \\frac{6}{1} = 6$.\nVậy chọn đáp án **A**."
-
-            },
-
-            {
-
-                id: 2,
-
-                question: "Tính biệt thức $\\Delta$ của phương trình bậc hai $2x^2 - 4x + 1 = 0$.",
-
-                options: [
-
-                    "A. $\\Delta = 8$",
-
-                    "B. $\\Delta = 12$",
-
-                    "C. $\\Delta = 0$",
-
-                    "D. $\\Delta = 16$"
-
-                ],
-
-                correct_option: 0,
-
-                explanation: "Ta có $a = 2, b = -4, c = 1$.\nCông thức biệt thức $\\Delta = b^2 - 4ac$.\nThay số: $\\Delta = (-4)^2 - 4 \\cdot 2 \\cdot 1 = 16 - 8 = 8 > 0$.\nVậy chọn đáp án **A**."
-
-            },
-
-            {
-
-                id: 3,
-
-                question: "Rút gọn biểu thức $A = \\sqrt{(2 - \\sqrt{5})^2} + \\sqrt{5}$.",
-
-                options: [
-
-                    "A. $A = 2$",
-
-                    "B. $A = 2\\sqrt{5} - 2$",
-
-                    "C. $A = -2$",
-
-                    "D. $A = 2\\sqrt{5}$"
-
-                ],
-
-                correct_option: 0,
-
-                explanation: "Ta có $\\sqrt{(2 - \\sqrt{5})^2} = |2 - \\sqrt{5}|$.\nVì $2 = \\sqrt{4} < \\sqrt{5}$ nên $2 - \\sqrt{5} < 0$.\nDo đó $|2 - \\sqrt{5}| = -(2 - \\sqrt{5}) = \\sqrt{5} - 2$.\nThay vào $A$: $A = (\\sqrt{5} - 2) + \\sqrt{5} = 2\\sqrt{5} - 2$... Ồ lưu ý! Ta có $A = \\sqrt{5} - 2 + \\sqrt{5} = 2\\sqrt{5} - 2$.\nChờ chút! Biểu thức ban đầu nếu là $\\sqrt{(\\sqrt{5} - 2)^2} = \\sqrt{5} - 2$.\nKết quả $A = (\\sqrt{5} - 2) + 2 = \\sqrt{5}$. Ở đây hằng đẳng thức cho ra $A = 2$. Khảo sát $A = 2$."
-
+    // 3. FALLBACK: Lấy câu hỏi chuẩn từ QuestionBankSeed nếu là học liệu thuộc NHCH
+    if (!parsedQuestions || parsedQuestions.length === 0) {
+        if (typeof QuestionBankSeed !== 'undefined') {
+            const seedQuestions = QuestionBankSeed.getQuestionsByMaterial(material.id);
+            if (seedQuestions && seedQuestions.length > 0) {
+                parsedQuestions = seedQuestions.map(q => ({
+                    id: q.id,
+                    question: q.question_text || q.question,
+                    options: q.options || [],
+                    correct_option: q.correct_option,
+                    explanation: q.explanation || '',
+                    question_type: q.question_type || 'multiple_choice',
+                    skill_tag: q.skill_tag || '',
+                    family_id: q.family_id || q.id,
+                    topic_id: q.topic_id || null
+                }));
+                console.log(`✅ Đã nạp ${parsedQuestions.length} câu hỏi chuẩn lớp 12 từ QuestionBankSeed cho material_id=${material.id}`);
             }
-
-        ];
-
+        }
     }
 
+    // 4. NẾU HOÀN TOÀN KHÔNG CÓ CÂU HỎI: Hiển thị giao diện thông báo học liệu chưa có câu hỏi (Tuyệt đối không hiển thị câu hỏi lớp 9 lạc loài)
+    if (!parsedQuestions || !Array.isArray(parsedQuestions) || parsedQuestions.length === 0) {
+        renderEmptyQuizState(material);
+        return;
+    }
 
-
-    // Đọc lịch sử 3 lần làm gần nhất
+    // Đọc lịch sử 3 lần làm gần nhất    // Đọc lịch sử 3 lần làm gần nhất
 
     let history = [];
 
@@ -2737,6 +2569,14 @@ function renderCurrentQuizQuestion() {
                 <div style="font-weight: 700; margin-bottom: 6px; color: var(--text-primary);">Hướng dẫn giải chi tiết:</div>
 
                 <div class="quiz-explanation-body">${q.explanation || 'Không có hướng dẫn giải chi tiết cho câu hỏi này.'}</div>
+
+                ${!viewingIsCorrect ? `
+                    <div style="margin-top: 14px; padding-top: 12px; border-top: 1px dashed rgba(239,68,68,0.3); text-align: center;">
+                        <button type="button" class="btn btn-primary" onclick="retryWithFamilyVariant(${q.id})" style="padding: 10px 20px; font-weight: 700; border-radius: 10px; background: linear-gradient(135deg, #4F46E5 0%, #3730A3 100%); color: #FFFFFF; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);">
+                            <i class="fa-solid fa-arrows-rotate"></i> Làm câu tương tự để rèn luyện (Thay số)
+                        </button>
+                    </div>
+                ` : ''}
 
             </div>
 
@@ -3381,6 +3221,12 @@ function renderQuizSummary() {
 
                 </button>
 
+                ${(state.submissionHistory && state.submissionHistory.some(s => !s.isCorrect)) ? `
+                    <button class="btn" onclick="startRemedialVariantQuiz()" style="padding: 12px 28px; border-radius: 10px; font-weight: 700; border: none; background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: #FFFFFF; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);">
+                        <i class="fa-solid fa-graduation-cap"></i> Tạo Đề Ôn Luyện Từ Các Câu Sai (Thay số)
+                    </button>
+                ` : ''}
+
             </div>
 
 
@@ -3581,45 +3427,177 @@ function triggerKaTeXRender(container) {
 
 }
 
+// ==============================================================================
+// QUESTION FAMILY & DYNAMIC VARIANT INTEGRATION
+// ==============================================================================
 
+// 1. Chế độ Luyện tập: Làm câu tương tự cùng dạng (thay số)
+window.retryWithFamilyVariant = async function(questionId) {
+    if (!currentQuizState || !currentQuizState.questions) return;
+    const qObj = currentQuizState.questions.find(q => q.id === questionId) || currentQuizState.currentQueue[currentQuizState.currentIndex];
+    if (!qObj) return;
 
-// Tự động kích hoạt KaTeX render công thức toán
-
-function triggerKaTeXRender(container) {
-
-    if (typeof renderMathInElement === 'function' && container) {
-
-        try {
-
-            renderMathInElement(container, {
-
-                delimiters: [
-
-                    { left: '$$', right: '$$', display: true },
-
-                    { left: '$', right: '$', display: false },
-
-                    { left: '\\(', right: '\\)', display: false },
-
-                    { left: '\\[', right: '\\]', display: true }
-
-                ],
-
-                throwOnError: false
-
-            });
-
-        } catch (e) {
-
-            console.error("Lỗi KaTeX auto-render:", e);
-
-        }
-
+    if (typeof QuestionFamilyEngine === 'undefined') {
+        alert("Tính năng câu hỏi động chưa sẵn sàng.");
+        return;
     }
 
+    const contentViewer = document.getElementById('studyContentViewer') || document.getElementById('contentViewer');
+    let overlay = null;
+    if (contentViewer) {
+        overlay = document.createElement('div');
+        overlay.id = 'variantLoadingOverlay';
+        overlay.style.cssText = 'position: absolute; top:0; left:0; right:0; bottom:0; background:rgba(255,255,255,0.9); display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:50; border-radius:16px; font-weight:700; color:#4F46E5;';
+        overlay.innerHTML = '<i class="fa-solid fa-arrows-rotate fa-spin" style="font-size:2.4rem; margin-bottom:12px; color:#4F46E5;"></i><span>Đang chuẩn bị câu hỏi tương tự cùng dạng (thay số)...</span>';
+        contentViewer.style.position = 'relative';
+        contentViewer.appendChild(overlay);
+    }
+
+    try {
+        const excludedIds = currentQuizState.questions.map(q => q.id);
+        const variantQuestion = await QuestionFamilyEngine.getOrGenerateVariant(qObj, excludedIds);
+
+        const formattedVariant = {
+            id: variantQuestion.id || ('var_' + Date.now()),
+            question: variantQuestion.question_text || variantQuestion.question,
+            options: variantQuestion.options || [],
+            correct_option: variantQuestion.correct_option,
+            explanation: variantQuestion.explanation || '',
+            question_type: variantQuestion.question_type || 'multiple_choice',
+            skill_tag: variantQuestion.skill_tag || 'Biến thể rèn luyện',
+            tikz_code: variantQuestion.tikz_code || '',
+            fallback_image_url: variantQuestion.fallback_image_url || '',
+            family_id: variantQuestion.family_id || qObj.id,
+            is_variant: true
+        };
+
+        // Chèn câu biến thể vào ngay sau câu hiện tại
+        currentQuizState.currentQueue.splice(currentQuizState.currentIndex + 1, 0, formattedVariant);
+        currentQuizState.questions.push(formattedVariant);
+
+        // Chuyển sang câu biến thể
+        currentQuizState.currentIndex++;
+        currentQuizState.selectedOption = (formattedVariant.question_type === 'true_false') ? {} : (formattedVariant.question_type === 'short_answer' ? '' : null);
+        currentQuizState.isSubmitted = false;
+        currentQuizState.viewingAttemptIndex = null;
+        currentQuizState.isReviewMode = false;
+
+        saveQuizState();
+        renderCurrentQuizQuestion();
+    } catch (err) {
+        alert("Lỗi khi tải câu hỏi biến thể: " + err.message);
+        if (overlay) overlay.remove();
+    }
+};
+
+// 2. Chế độ Đề thi: Tạo Đề Ôn Luyện Từ Các Câu Sai (Thay số)
+window.startRemedialVariantQuiz = async function() {
+    if (!currentQuizState) return;
+    const wrongSubs = (currentQuizState.submissionHistory || []).filter(s => !s.isCorrect);
+    if (wrongSubs.length === 0) {
+        alert("Tuyệt vời! Bạn không làm sai câu nào nên không cần tạo đề ôn luyện.");
+        return;
+    }
+
+    const familyMap = new Map();
+    wrongSubs.forEach(s => {
+        const q = s.questionObj;
+        const famId = q.family_id || q.id;
+        if (!familyMap.has(famId)) {
+            familyMap.set(famId, q);
+        }
+    });
+
+    const wrongQuestions = Array.from(familyMap.values());
+    const contentViewer = document.getElementById('studyContentViewer') || document.getElementById('contentViewer');
+    if (contentViewer) {
+        contentViewer.innerHTML = `
+            <div class="quiz-container" style="text-align: center; padding: 48px 20px;">
+                <i class="fa-solid fa-graduation-cap fa-bounce" style="font-size: 3.5rem; color: #10B981; margin-bottom: 18px;"></i>
+                <h3 style="font-weight: 800; color: #0F172A; margin-bottom: 10px; font-size: 1.4rem;">Đang Khởi Tạo Đề Ôn Luyện Biến Thể...</h3>
+                <p style="color: #64748B; font-size: 0.95rem;">Hệ thống đang chuẩn bị các câu hỏi thay số tương ứng với ${wrongQuestions.length} dạng câu bạn đã làm sai.</p>
+            </div>
+        `;
+    }
+
+    const remedialQuestions = [];
+    for (let masterQ of wrongQuestions) {
+        try {
+            const variant = await QuestionFamilyEngine.getOrGenerateVariant(masterQ, [masterQ.id]);
+            remedialQuestions.push({
+                id: variant.id || ('rem_' + Date.now()),
+                question: variant.question_text || variant.question,
+                options: variant.options || [],
+                correct_option: variant.correct_option,
+                explanation: variant.explanation || '',
+                question_type: variant.question_type || 'multiple_choice',
+                skill_tag: variant.skill_tag || 'Ôn luyện biến thể',
+                tikz_code: variant.tikz_code || '',
+                fallback_image_url: variant.fallback_image_url || '',
+                family_id: variant.family_id || masterQ.id
+            });
+        } catch (e) {
+            console.warn("Lỗi sinh câu biến thể ôn luyện:", e);
+        }
+    }
+
+    if (remedialQuestions.length === 0) {
+        alert("Không thể tạo câu hỏi biến thể. Sẽ khởi động lại đề gốc.");
+        restartFullQuiz();
+        return;
+    }
+
+    currentQuizState = {
+        materialId: currentQuizState.materialId,
+        questions: remedialQuestions,
+        submissionHistory: [],
+        currentQueue: [...remedialQuestions],
+        currentIndex: 0,
+        selectedOption: (remedialQuestions[0].question_type === 'true_false') ? {} : (remedialQuestions[0].question_type === 'short_answer' ? '' : null),
+        isSubmitted: false,
+        wrongQuestions: [],
+        round: 1,
+        totalAttempts: 0,
+        totalCorrectAnswers: 0,
+        userAnswers: {},
+        isCompleted: false,
+        viewingAttemptIndex: null,
+        isReviewMode: false,
+        reviewIndex: 0,
+        attemptsHistory: currentQuizState.attemptsHistory || []
+    };
+
+    saveQuizState();
+    renderCurrentQuizQuestion();
+};
+
+
+// ==========================================================
+// RENDER GIAO DIỆN HỌC LIỆU CHƯA CÓ CÂU HỎI (EMPTY STATE)
+// ==========================================================
+function renderEmptyQuizState(material) {
+    const contentViewer = document.getElementById('studyContentViewer') || document.getElementById('contentViewer');
+    if (!contentViewer) return;
+
+    contentViewer.innerHTML = `
+        <div style="max-width: 680px; margin: 40px auto; padding: 48px 32px; background: #FFFFFF; border-radius: 20px; border: 1.5px dashed #CBD5E1; text-align: center; box-shadow: 0 4px 20px rgba(15, 23, 42, 0.03);">
+            <div style="width: 72px; height: 72px; border-radius: 50%; background: #EEF2FF; color: #6366F1; display: inline-flex; align-items: center; justify-content: center; font-size: 2rem; margin-bottom: 20px;">
+                <i class="fa-solid fa-shapes"></i>
+            </div>
+            <h3 style="font-size: 1.3rem; font-weight: 700; color: #1E293B; margin: 0 0 10px 0;">
+                ${material ? (material.title || 'Học liệu trắc nghiệm') : 'Học liệu trắc nghiệm'}
+            </h3>
+            <p style="color: #64748B; font-size: 0.95rem; line-height: 1.6; margin: 0 auto 24px; max-width: 500px;">
+                Dạng toán này hiện chưa có câu hỏi trong đề luyện tập. Thầy/Cô có thể vào trang <strong>Quản lý câu hỏi</strong> để soạn câu hỏi mới hoặc bốc câu hỏi từ Ngân hàng câu hỏi nguồn.
+            </p>
+            <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+                <a href="material-manage.html?id=${currentCourseId || 1200}&material_id=${material ? material.id : ''}" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 8px; padding: 12px 24px; border-radius: 12px; font-weight: 700; text-decoration: none; font-size: 0.95rem; background: #4F46E5; color: #FFFFFF;">
+                    <i class="fa-solid fa-pen-to-square"></i> Quản lý câu hỏi dạng này
+                </a>
+                <a href="course-detail.html?id=${currentCourseId || 1200}" class="btn btn-outline" style="display: inline-flex; align-items: center; gap: 8px; padding: 12px 20px; border-radius: 12px; font-weight: 600; text-decoration: none; font-size: 0.95rem; border: 1.5px solid #CBD5E1; color: #475569; background: #FFFFFF;">
+                    <i class="fa-solid fa-arrow-left"></i> Về danh sách dạng toán
+                </a>
+            </div>
+        </div>
+    `;
 }
-
-
-
-
-

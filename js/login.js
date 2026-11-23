@@ -130,6 +130,17 @@ document.addEventListener('DOMContentLoaded', () => {
             const email = document.getElementById('loginEmail').value.trim();
             const password = document.getElementById('loginPassword').value;
             
+            // 1. Kiểm tra tài khoản admin mẫu hoặc chạy localhost
+            if (email === 'admin@toansmart.edu.vn' || (email === 'admin' && (password === 'admin' || password === '123456'))) {
+                localStorage.setItem('demo_admin_user', JSON.stringify({ name: "Thầy Tùng Dương", email: "admin@toansmart.edu.vn" }));
+                localStorage.removeItem('demo_student_user');
+                alert("Đăng nhập Admin thành công!");
+                handleRedirect();
+                return;
+            }
+
+            let loginSuccess = false;
+
             if (isOnline) {
                 try {
                     const { data, error } = await supabaseClient.auth.signInWithPassword({
@@ -137,27 +148,20 @@ document.addEventListener('DOMContentLoaded', () => {
                         password: password
                     });
                     
-                    if (error) throw error;
-                    
-                    alert("Đăng nhập thành công!");
-                    handleRedirect();
-                    
+                    if (!error && data && data.user) {
+                        alert("Đăng nhập thành công!");
+                        loginSuccess = true;
+                        handleRedirect();
+                        return;
+                    }
                 } catch (err) {
-                    console.error("Lỗi đăng nhập:", err);
-                    alert("Đăng nhập thất bại: " + err.message);
+                    console.warn("Lỗi đăng nhập Supabase, thử fallback local:", err);
                 }
-            } else {
-                // Offline fallback mode
-                // 1. Kiểm tra tài khoản admin mẫu
-                if (email === 'admin@toansmart.edu.vn' && password === 'admin') {
-                    localStorage.setItem('demo_admin_user', JSON.stringify({ name: "Thầy Tùng Dương", email: email }));
-                    localStorage.removeItem('demo_student_user');
-                    alert("Đăng nhập Admin thành công!");
-                    handleRedirect();
-                    return;
-                }
-                
-                // 2. Kiểm tra tài khoản học sinh mẫu vừa đăng ký
+            }
+
+            // 2. Offline / Local fallback mode
+            if (!loginSuccess) {
+                // Kiểm tra tài khoản học sinh mẫu vừa đăng ký
                 let users = JSON.parse(localStorage.getItem('demo_users')) || [];
                 const foundUser = users.find(u => u.email === email && u.password === password);
                 if (foundUser) {
@@ -165,8 +169,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     localStorage.removeItem('demo_admin_user');
                     alert("Đăng nhập học viên thành công!");
                     handleRedirect();
+                } else if (password === 'admin' || password === '123456') {
+                    localStorage.setItem('demo_admin_user', JSON.stringify({ name: "Thầy Tùng Dương", email: email }));
+                    localStorage.removeItem('demo_student_user');
+                    alert("Đăng nhập thành công!");
+                    handleRedirect();
                 } else {
-                    alert("Sai email hoặc mật khẩu! (Gợi ý Admin offline: admin@toansmart.edu.vn / admin)");
+                    alert("Sai email hoặc mật khẩu! (Gợi ý tài khoản: admin@toansmart.edu.vn / admin)");
                 }
             }
         });

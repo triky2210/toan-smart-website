@@ -427,24 +427,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </div>
             `;
 
-            if (isAdminLoggedIn) {
-                // Insert Question Bank link next to Resources link for Admin
-                const navLinks = document.querySelectorAll('.nav-menu a');
-                let resourcesLi = null;
-                navLinks.forEach(link => {
-                    const href = link.getAttribute('href') || '';
-                    if (href.includes('resources')) {
-                        resourcesLi = link.closest('li');
-                    }
-                });
-                if (resourcesLi && !document.getElementById('headerQBankLink')) {
-                    const qbLi = document.createElement('li');
-                    qbLi.id = 'headerQBankLink';
-                    qbLi.innerHTML = `<a href="admin.html?tab=questions" class="nav-link" style="color: var(--accent-color); font-weight: 600;"><i class="fa-solid fa-database" style="margin-right: 4px;"></i> Ngân hàng câu hỏi</a>`;
-                    resourcesLi.parentNode.insertBefore(qbLi, resourcesLi.nextSibling);
-                }
-            }
-
             // Dropdown toggle
             const trigger = document.getElementById('profileTrigger');
             const dropdown = document.getElementById('profileDropdown');
@@ -792,16 +774,47 @@ document.addEventListener('DOMContentLoaded', async () => {
                         previewBadgeHTML = `<span class="lesson-preview-badge" style="font-size: 0.7rem; background-color: var(--accent-color); color: white; padding: 2px 8px; border-radius: 12px; font-weight: 600;">Học thử</span>`;
                     }
 
+                    // Tối ưu riêng cho Khóa học Ngân Hàng Câu Hỏi (course_type === 'question_bank')
+                    const isBankCourse = currentCourse && (currentCourse.course_type === 'question_bank' || currentCourse.id == 1200);
+
+                    let bankTopicsHTML = '';
+                    if (isBankCourse && materials.length > 0) {
+                        bankTopicsHTML = `
+                            <div class="bank-topics-list" style="padding: 10px 14px; margin: 4px 14px 12px 14px; background: #F8FAFC; border-radius: 12px; border: 1.5px solid #E2E8F0; display: flex; flex-direction: column; gap: 8px;">
+                                <div style="font-size: 0.76rem; font-weight: 800; color: #4338CA; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px dashed #CBD5E1; padding-bottom: 6px;">
+                                    <span><i class="fa-solid fa-shapes"></i> Danh sách Dạng toán (${materials.length} dạng)</span>
+                                    <span style="font-size: 0.72rem; color: #64748B; font-weight: 600;">Mỗi dạng là 1 học liệu Quiz chứa câu hỏi</span>
+                                </div>
+                                ${materials.map((m, mIdx) => `
+                                    <div style="display: flex; justify-content: space-between; align-items: center; background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 8px; padding: 8px 12px; gap: 10px; flex-wrap: wrap;">
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <span style="font-size: 0.74rem; background: #EEF2FF; color: #4F46E5; padding: 2px 8px; border-radius: 6px; font-weight: 800;">Dạng ${mIdx + 1}</span>
+                                            <span style="font-weight: 700; color: #1E293B; font-size: 0.88rem;">${m.title}</span>
+                                        </div>
+                                        <div style="display: flex; gap: 6px; align-items: center;">
+                                            <a href="material-manage.html?id=1200&lesson_id=${lesson.id}&material_id=${m.id}" class="btn" style="font-size: 0.76rem; padding: 4px 10px; background: #EEF2FF; color: #4338CA; border: 1px solid #C7D2FE; border-radius: 6px; text-decoration: none; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;" title="Biên soạn & Quản lý câu hỏi">
+                                                <i class="fa-solid fa-layer-group"></i> Quản lý câu hỏi
+                                            </a>
+                                            <a href="study.html?id=1200&lesson_id=${lesson.id}&material_id=${m.id}" class="btn" style="font-size: 0.76rem; padding: 4px 10px; background: #ECFDF5; color: #047857; border: 1px solid #A7F3D0; border-radius: 6px; text-decoration: none; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;" title="Làm bài thử dạng này">
+                                                <i class="fa-solid fa-play"></i> Giải thử
+                                            </a>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        `;
+                    }
+
                     li.innerHTML = `
                         <div class="lesson-row" style="display: flex; justify-content: space-between; align-items: center; padding: 5px 24px; cursor: pointer;" data-lesson-id="${lesson.id}">
                             <div class="lesson-left" style="display: flex; align-items: center; gap: 10px; flex-grow: 1;">
                                 ${lessonDragHTML}
-                                <i class="fa-solid fa-folder-open" style="color: #6366F1; font-size: 0.95rem;"></i>
+                                <i class="fa-solid ${isBankCourse ? 'fa-book-bookmark' : 'fa-folder-open'}" style="color: #6366F1; font-size: 0.95rem;"></i>
                                 <span class="lesson-title-text" style="font-weight: 600; color: var(--text-primary);">${lesson.title}</span>
                                 ${previewBadgeHTML}
                             </div>
                             <div class="lesson-right" style="display: flex; align-items: center; gap: 12px;">
-                                ${materialsIconsHTML}
+                                ${!isBankCourse ? materialsIconsHTML : `<span style="font-size: 0.76rem; font-weight: 700; color: #4F46E5; background: #EEF2FF; padding: 2px 10px; border-radius: 12px;">${materials.length} dạng toán</span>`}
                                 ${isEditModeActive ? `
                                     <div class="materials-count-badge" style="font-size: 0.75rem; background: rgba(99, 102, 241, 0.06); color: var(--accent-color); padding: 2px 8px; border-radius: 12px; font-weight: 600; white-space: nowrap;">
                                         ${materials.length} học liệu
@@ -812,6 +825,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                                 `}
                             </div>
                         </div>
+                        ${bankTopicsHTML}
                     `;
                     list.appendChild(li);
                 });
@@ -829,7 +843,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         lessonRows.forEach(row => {
             row.addEventListener('click', (e) => {
                 // Tránh điều hướng khi click vào các nút sửa của admin hoặc icon học liệu trực tiếp
-                if (e.target.closest('.lesson-item-actions') || e.target.closest('.lesson-materials-icons')) return;
+                if (e.target.closest('.lesson-item-actions') || e.target.closest('.lesson-materials-icons') || e.target.closest('.bank-topics-list')) return;
+
+                // Nếu là Khóa Ngân Hàng Câu Hỏi, click vào bài sẽ ẩn/hiện danh sách dạng toán của bài đó
+                if (currentCourse && (currentCourse.course_type === 'question_bank' || currentCourse.id == 1200)) {
+                    const li = row.closest('.lesson-item');
+                    const bList = li ? li.querySelector('.bank-topics-list') : null;
+                    if (bList) {
+                        bList.style.display = (bList.style.display === 'none') ? 'flex' : 'none';
+                    }
+                    return;
+                }
 
                 const lessonId = row.getAttribute('data-lesson-id');
                 window.location.href = `lesson.html?id=${currentCourseId}&lesson_id=${lessonId}`;
@@ -1355,7 +1379,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const mContentArea = document.getElementById('m_content');
                 if (type === 'quiz') {
                     if (mContentLabel) mContentLabel.innerHTML = 'Danh sách câu hỏi trắc nghiệm (Định dạng JSON có hỗ trợ công thức Toán KaTeX)';
-                    if (mContentArea) mContentArea.placeholder = '[\n  {\n    "question": "Cho phương trình $x^2 - 5x + 6 = 0$. Tính $S = x_1 + x_2$.",\n    "options": ["A. $S = 5$", "B. $S = -5$", "C. $S = 6$", "D. $S = -6$"],\n    "correct_option": 0,\n    "explanation": "Theo hệ thức Vi-ét, $S = -b/a = -(-5)/1 = 5$."\n  }\n]';
+                    if (mContentArea) mContentArea.placeholder = '[\n  {\n    "question": "Tìm khoảng đồng biến của hàm số $y = x^3 - 3x$.",\n    "options": ["A. $(-\\infty; -1)$", "B. $(-1; 1)$", "C. $(1; +\\infty)$", "D. $(-\\infty; -1) \\cup (1; +\\infty)$"],\n    "correct_option": 0,\n    "explanation": "Ta có $y\' = 3x^2 - 3 > 0 \\Leftrightarrow x < -1$ hoặc $x > 1$."\n  }\n]';
                 } else {
                     if (mContentLabel) mContentLabel.innerHTML = 'Nội dung lý thuyết (Hỗ trợ HTML)';
                     if (mContentArea) mContentArea.placeholder = '<p>Nhập văn bản bài học tại đây...</p>';
@@ -1539,7 +1563,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <button type="button" class="btn btn-danger" onclick="removeAdminQuizQuestion(${idx})" style="font-size: 0.7rem; padding: 2px 6px; width: auto;" title="Xóa câu này"><i class="fa-solid fa-trash"></i> Xóa</button>
                 </div>
                 <div style="margin-bottom: 6px;">
-                    <input type="text" class="form-control q-title-input" value="${(q.question || '').replace(/"/g, '&quot;')}" placeholder="Nội dung câu hỏi (VD: Cho $x^2 - 5x + 6 = 0$...)" style="font-size: 0.85rem; padding: 4px 8px;">
+                    <input type="text" class="form-control q-title-input" value="${(q.question || '').replace(/"/g, '&quot;')}" placeholder="Nội dung câu hỏi (VD: Cho hàm số $y = f(x)$...)" style="font-size: 0.85rem; padding: 4px 8px;">
                 </div>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-bottom: 6px;">
                     <input type="text" class="form-control q-opt-0" value="${(opts[0] || 'A. ').replace(/"/g, '&quot;')}" placeholder="Đáp án A" style="font-size: 0.8rem; padding: 4px 8px;">
